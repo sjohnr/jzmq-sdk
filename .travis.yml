@@ -13,6 +13,7 @@ before_install:
  - cd maven-protoc-plugin
  - git checkout tags/maven-protoc-plugin-0.3.2
  - mvn install --quiet -DskipTests=true
+ - cd ..
 
 install: mvn clean install --quiet -DskipTests=true
 
