@@ -10,10 +10,10 @@ before_install:
  - sudo apt-get install protobuf-compiler -y
 
  - sudo git clone https://github.com/sergei-ivanov/maven-protoc-plugin.git
- - sudo cd maven-protoc-plugin
+ - cd maven-protoc-plugin
  - sudo git checkout tags/maven-protoc-plugin-0.3.2
  - sudo mvn install --quiet -DskipTests=true
- - sudo cd ..
+ - cd ..
 
 install: mvn clean install --quiet -DskipTests=true
 

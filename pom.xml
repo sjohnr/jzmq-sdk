@@ -29,6 +29,7 @@
     <maven.compiler.target>1.6</maven.compiler.target>
     <jopt-simple.version>4.5</jopt-simple.version>
     <protobuf.version>2.5.0</protobuf.version>
+    <maven-protoc-plugin.version>0.3.2</maven-protoc-plugin.version>
     <guava.version>12.0</guava.version>
     <junit.version>4.10</junit.version>
     <mockito-all.version>1.9.0</mockito-all.version>
@@ -111,7 +112,7 @@
       <plugin>
         <groupId>com.google.protobuf.tools</groupId>
         <artifactId>maven-protoc-plugin</artifactId>
-        <version>0.3.2</version>
+        <version>${maven-protoc-plugin.version}</version>
         <executions>
           <execution>
             <goals>
