@@ -33,7 +33,7 @@ before_install:
  - cd ..
 
 install:
- - sudo mvn clean install -e --quiet -DskipTests=true
+ - sudo mvn install -e --quiet -DskipTests=true
 
 script:
- - sudo mvn clean test
+ - sudo mvn test -e --quiet
