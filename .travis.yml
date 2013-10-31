@@ -33,3 +33,6 @@ install:
 - sudo make
 - sudo make install
 - cd ..
+
+script:
+ - mvn test -B -e
