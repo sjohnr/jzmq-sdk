@@ -35,7 +35,7 @@ install:
 - cd ..
 
 before_script:
- - mvn -B -e install -DskipTests
+ - mvn -B -e install -DskipTests -Dmaven.plugin.skipErrorNoDescriptorsFound=true
 
 script:
- - mvn test -B -e
+ - mvn test -B -e -Dmaven.plugin.skipErrorNoDescriptorsFound=true
