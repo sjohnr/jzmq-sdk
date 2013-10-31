@@ -16,6 +16,7 @@ install:
 - cd maven-protoc-plugin
 - sudo git checkout tags/maven-protoc-plugin-0.3.2
 - sudo mvn install -e --quiet -DskipTests=true
+- sudo mvn install:install-file -DgeneratePom=true -DpomFile=pom.xml -Dfile=pom.xml -DgroupId=com.google.protobuf.tools -DartifactId=maven-protoc-plugin -Dpackaging=pom -Dversion=0.3.2
 - cd ..
 
 - sudo tar -zxvf zeromq-3.2.4.tar.gz
