@@ -26,7 +26,7 @@ install:
 - sudo make install
 - cd ..
 
-- sudo tar -zxvf jzmq-2.2.2.tar.gz
+- sudo tar -zxvf v2.2.2.tar.gz
 - cd jzmq-2.2.2
 - sudo ./autogen.sh
 - sudo ./configure
