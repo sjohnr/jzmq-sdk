@@ -27,6 +27,7 @@ import org.zeromq.TestRecorder;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.support.rpc.SpringFixture;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 @ContextConfiguration(locations = {"classpath:/org/zeromq/support/rpc/proto/caller.xml",

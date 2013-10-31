@@ -6,11 +6,18 @@
 
   <modelVersion>4.0.0</modelVersion>
 
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
+
   <groupId>org.zeromq</groupId>
   <artifactId>jzmq-sdk</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>jzmq-sdk</name>
+
   <licenses>
     <license>
       <name>LGPLv3+</name>
@@ -32,9 +39,20 @@
     <logback.version>1.0.13</logback.version>
     <jcl-over-slf4j.version>1.7.5</jcl-over-slf4j.version>
     <spring.version>3.2.2.RELEASE</spring.version>
+    <jackson.version>2.2.3</jackson.version>
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
     <dependency>
       <groupId>net.sf.jopt-simple</groupId>
       <artifactId>jopt-simple</artifactId>
@@ -137,17 +155,9 @@
         <configuration>
           <argLine>
             -ea
-            -verbose:gc
             -Xms64m
             -Xmx128m
             -XX:MaxPermSize=64m
-            -XX:+CMSScavengeBeforeRemark
-            -XX:+PrintGC
-            -XX:+PrintGCDetails
-            -XX:+PrintGCTimeStamps
-            -XX:+PrintGCApplicationStoppedTime
-            -XX:+PrintGCApplicationConcurrentTime
-            -XX:+PrintGCDateStamps
             -XX:+HeapDumpOnOutOfMemoryError
             -XX:HeapDumpPath=heapDump.hprof
           </argLine>
