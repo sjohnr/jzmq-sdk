@@ -9,34 +9,33 @@ before_install:
  - sudo apt-get install build-essential uuid-dev pkg-config libtool autoconf automake -y
  - sudo apt-get install protobuf-compiler -y
  - sudo git clone https://github.com/sergei-ivanov/maven-protoc-plugin.git
- - sudo wget http://download.zeromq.org/zeromq-3.2.4.tar.gz
- - sudo wget https://github.com/zeromq/jzmq/archive/v2.2.2.tar.gz
+# - sudo wget http://download.zeromq.org/zeromq-3.2.4.tar.gz
+# - sudo wget https://github.com/zeromq/jzmq/archive/v2.2.2.tar.gz
 
 install:
 - cd maven-protoc-plugin
 - sudo git checkout tags/maven-protoc-plugin-0.3.2
-- sudo mvn package -e --quiet -DskipTests=true
-- sudo mvn install:install-file -Dfile=target/maven-protoc-plugin-0.3.2.jar -DgroupId=com.google.protobuf.tools -DartifactId=maven-protoc-plugin -Dpackaging=jar -Dversion=0.3.2 -DgeneratePom=true
+- sudo mvn install -e --quiet -DskipTests=true
 - cd ..
 
-- sudo tar -zxvf zeromq-3.2.4.tar.gz
-- cd zeromq-3.2.4
-- sudo ./autogen.sh
-- sudo ./configure
-- sudo make
-- sudo make install
-- cd ..
-
-- sudo tar -zxvf v2.2.2.tar.gz
-- cd jzmq-2.2.2
-- sudo ./autogen.sh
-- sudo ./configure
-- sudo make
-- sudo make install
-- cd ..
+#- sudo tar -zxvf zeromq-3.2.4.tar.gz
+#- cd zeromq-3.2.4
+#- sudo ./autogen.sh
+#- sudo ./configure
+#- sudo make
+#- sudo make install
+#- cd ..
+#
+#- sudo tar -zxvf v2.2.2.tar.gz
+#- cd jzmq-2.2.2
+#- sudo ./autogen.sh
+#- sudo ./configure
+#- sudo make
+#- sudo make install
+#- cd ..
 
 before_script:
- - mvn -B -e install -DskipTests
+ - mvn -e install -DskipTests
 
 script:
- - mvn test -B -e
+ - mvn test -e
