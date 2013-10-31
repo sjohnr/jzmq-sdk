@@ -29,7 +29,7 @@ before_install:
  - cd maven-protoc-plugin
  - sudo git checkout tags/maven-protoc-plugin-0.3.2
  - mvn -version
- - sudo mvn install -e --quiet -DskipTests=true -Dmaven.plugin.skip=true -Dmaven.plugin.skipErrorNoDescriptorsFound=true
+ - sudo mvn install -e --quiet -DskipTests=true
  - cd ..
 
 install:
