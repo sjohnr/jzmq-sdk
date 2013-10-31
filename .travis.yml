@@ -34,5 +34,8 @@ install:
 - sudo make install
 - cd ..
 
+before_script:
+ - mvn -B -e install -DskipTests
+
 script:
  - mvn test -B -e
