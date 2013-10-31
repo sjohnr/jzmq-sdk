@@ -11,7 +11,10 @@ before_install:
 
  - sudo git clone https://github.com/zeromq/zeromq3-x.git
  - cd zeromq3-x
- - ./autogen.sh && ./configure && make && make install
+ - sudo ./autogen.sh
+ - sudo ./configure
+ - make
+ - make install
  - cd ..
 
  - sudo git clone https://github.com/sergei-ivanov/maven-protoc-plugin.git
