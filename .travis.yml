@@ -31,9 +31,3 @@ before_install:
  - mvn -version
  - sudo mvn install -e --quiet -DskipTests=true
  - cd ..
-
-install:
- - sudo mvn install -e --quiet -DskipTests=true
-
-script:
- - sudo mvn test -e --quiet
