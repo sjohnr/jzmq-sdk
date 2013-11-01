@@ -37,6 +37,7 @@ install:
 
 before_script:
  - sudo mvn install -e --quiet -DskipTests
+ - sudo export PATH=$PATH:/usr/local/lib
 
 script:
  - sudo mvn test -e
