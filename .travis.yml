@@ -35,7 +35,7 @@ install:
  - cd ..
 
 before_script:
- - mvn install -e --quiet -DskipTests
+ - sudo mvn install -e --quiet -DskipTests
 
 script:
- - mvn test -e
+ - sudo mvn test -e
