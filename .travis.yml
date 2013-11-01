@@ -37,8 +37,6 @@ install:
 
 before_script:
  - sudo mvn install -e --quiet -DskipTests
- - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
- - echo $LD_LIBRARY_PATH
 
 script:
- - sudo mvn test -e
+ - sudo mvn test -e -Punix

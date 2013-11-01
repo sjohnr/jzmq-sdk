@@ -26,10 +26,12 @@
   </licenses>
 
   <properties>
+    <!-- Common maven props -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.6</maven.compiler.source>
     <maven.compiler.target>1.6</maven.compiler.target>
     <jopt-simple.version>4.5</jopt-simple.version>
+    <!-- Project deps -->
     <protobuf.version>2.5.0</protobuf.version>
     <maven-protoc-plugin.version>0.3.2</maven-protoc-plugin.version>
     <guava.version>12.0</guava.version>
@@ -41,6 +43,21 @@
     <spring.version>3.2.2.RELEASE</spring.version>
     <jackson.version>2.2.3</jackson.version>
   </properties>
+
+  <profiles>
+    <profile>
+      <id>windows</id>
+      <properties>
+        <java.library.path>'${env.PATH}'</java.library.path>
+      </properties>
+    </profile>
+    <profile>
+      <id>unix</id>
+      <properties>
+        <java.library.path>/usr/local/lib</java.library.path>
+      </properties>
+    </profile>
+  </profiles>
 
   <dependencies>
     <dependency>
@@ -160,6 +177,7 @@
             -XX:MaxPermSize=64m
             -XX:+HeapDumpOnOutOfMemoryError
             -XX:HeapDumpPath=heapDump.hprof
+            -Djava.library.path=${java.library.path}
           </argLine>
           <trimStackTrace>false</trimStackTrace>
           <disableXmlReport>true</disableXmlReport>
