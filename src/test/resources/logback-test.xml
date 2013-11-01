@@ -1,14 +1,5 @@
 <configuration debug="false">
 
-  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder>
-      <pattern>##%d{HH:mm:ss.SSS} %-5level [%thread] %logger{36}: %msg%n</pattern>
-    </encoder>
-    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-      <level>INFO</level>
-    </filter>
-  </appender>
-
   <appender name="FILE" class="ch.qos.logback.classic.sift.SiftingAppender">
     <discriminator>
       <key>testInfo</key>
@@ -16,6 +7,9 @@
     </discriminator>
     <sift>
       <appender name="FILE-${testInfo}" class="ch.qos.logback.core.FileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+          <level>ALL</level>
+        </filter>
         <file>log/${testInfo}.log</file>
         <append>false</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
@@ -29,17 +23,9 @@
         <encoder>
           <pattern>##%d{HH:mm:ss.SSS} %-5level [%thread] %logger{36}: %msg%n</pattern>
         </encoder>
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-          <level>ALL</level>
-        </filter>
       </appender>
     </sift>
   </appender>
-
-  <root level="ALL">
-    <appender-ref ref="STDOUT"/>
-    <appender-ref ref="FILE"/>
-  </root>
 
   <logger name="org.zeromq" level="ALL"/>
   <logger name="org.springframework" level="ERROR"/>
