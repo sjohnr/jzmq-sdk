@@ -15,7 +15,7 @@ before_install:
 install:
  - cd maven-protoc-plugin
  - sudo git checkout tags/maven-protoc-plugin-0.3.2
- - sudo mvn install -DcreateChecksum=true -DupdateReleaseInfo=true -e --quiet -DskipTests=true
+ - sudo mvn install -e --quiet -DskipTests=true
  - cd ..
 
  - sudo tar -zxvf zeromq-3.2.4.tar.gz
@@ -32,6 +32,7 @@ install:
  - sudo ./configure
  - sudo make
  - sudo make install
+ - sudo mvn install -e --quiet -DskipTests=true
  - cd ..
 
 before_script:
