@@ -22,43 +22,44 @@ package org.zeromq.messaging.device.service;
 
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqHeaders;
-import org.zeromq.support.ZmqUtils;
 
-import java.util.Arrays;
+import java.util.Collection;
 
 public final class ServiceHeaders extends ZmqHeaders {
 
-  private static final int HEADER_ID_MSG_TYPE = "ServiceHeaders.HEADER_ID_MSG_TYPE".hashCode();
-  private static final int HEADER_ID_MSG_NUM_OF_HOPS = "ServiceHeaders.HEADER_ID_MSG_NUM_OF_HOPS".hashCode();
+  private static final String HEADER_MSG_TYPE = "Service.MsgType";
+  private static final String HEADER_MSG_NUM_OF_HOPS = "Service.MsgNumOfHops";
 
-  private static final byte[] HEADER_FRAME_PING = "PING".getBytes();
+  private static final String PING = "PING";
 
   //// METHODS
 
   public ServiceHeaders setMsgTypePing() {
-    put(HEADER_ID_MSG_TYPE, HEADER_FRAME_PING);
+    set(HEADER_MSG_TYPE, PING);
     return this;
   }
 
   public boolean isMsgTypePing() {
-    return Arrays.equals(HEADER_FRAME_PING, getHeaderOrNull(HEADER_ID_MSG_TYPE));
+    Collection<String> c = getHeaderOrNull(HEADER_MSG_TYPE);
+    return !c.isEmpty() && PING.equals(c.iterator().next());
   }
 
   public ServiceHeaders setMsgTypeNotSet() {
-    remove(HEADER_ID_MSG_TYPE);
+    remove(HEADER_MSG_TYPE);
     return this;
   }
 
   public boolean isMsgTypeNotSet() {
-    return getHeaderOrNull(HEADER_ID_MSG_TYPE) == null;
+    return getHeaderOrNull(HEADER_MSG_TYPE).isEmpty();
   }
 
   public ServiceHeaders setNumOfHops(int numOfHops) {
-    put(HEADER_ID_MSG_NUM_OF_HOPS, ZmqUtils.intAsBytes(numOfHops));
+    set(HEADER_MSG_NUM_OF_HOPS, numOfHops);
     return this;
   }
 
   public int getNumOfHops() throws ZmqException {
-    return ZmqUtils.bytesAsInt(getHeaderOrException(HEADER_ID_MSG_NUM_OF_HOPS));
+    Collection<String> c = getHeaderOrException(HEADER_MSG_NUM_OF_HOPS);
+    return Integer.valueOf(c.iterator().next());
   }
 }

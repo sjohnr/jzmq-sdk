@@ -63,6 +63,14 @@ public final class ZmqMessage {
     }
 
     /** See {@link ZmqMessage#identities}. */
+    public Builder withIdentity(byte[] identity) {
+      assert !isEmptyFrame(identity);
+      assert !isDivFrame(identity);
+      _target.identities.add(identity);
+      return this;
+    }
+
+    /** See {@link ZmqMessage#identities}. */
     public Builder withIdentities(ZmqFrames frames) {
       for (byte[] identity : frames) {
         assert !isEmptyFrame(identity);
@@ -77,16 +85,16 @@ public final class ZmqMessage {
      * Expected source -- externally constructed headers.
      */
     public Builder withHeaders(ZmqHeaders headers) {
-      _target.headers = new ZmqHeaders().copyOf(headers);
+      _target.headers = new ZmqHeaders().copy(headers);
       return this;
     }
 
     /**
      * See {@link ZmqMessage#headers}.
-     * Expected source -- header frames (which will be parsed in corresponding way).
+     * Expected source -- headers (which will be parsed in corresponding way).
      */
-    public Builder withHeaders(ZmqFrames headers) {
-      _target.headers.put(headers);
+    public Builder withHeaders(byte[] headers) {
+      _target.headers.copy(headers);
       return this;
     }
 
@@ -128,7 +136,7 @@ public final class ZmqMessage {
    * treated as something which allow certain type of devices to function.
    * <p/>
    * By default, headers initialized to empty structure.
-   * Use {@link Builder#withHeaders(ZmqFrames)} or {@link Builder#withHeaders(ZmqHeaders)}.
+   * Use {@link Builder#withHeaders(byte[])} or {@link Builder#withHeaders(ZmqHeaders)}.
    * <p/>
    * <b>
    * NOTE: end user applications should not access headers!
@@ -168,8 +176,8 @@ public final class ZmqMessage {
     return identities;
   }
 
-  public ZmqFrames headers() {
-    return headers.asFrames();
+  public byte[] headers() {
+    return headers.asBinary();
   }
 
   /**
@@ -181,7 +189,7 @@ public final class ZmqMessage {
   @SuppressWarnings("unchecked")
   public <T extends ZmqHeaders> T headersAs(Class<T> wrapperClass) throws ZmqException {
     try {
-      return (T) wrapperClass.newInstance().copyOf(headers);
+      return (T) wrapperClass.newInstance().copy(headers);
     }
     catch (Exception e) {
       throw ZmqException.wrap(e);

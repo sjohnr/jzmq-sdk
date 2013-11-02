@@ -29,21 +29,16 @@ import java.util.Iterator;
 import java.util.List;
 
 import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.zeromq.messaging.ZmqMessage.DIV_FRAME;
 import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
-import static org.zeromq.support.ZmqUtils.intAsBytes;
-import static org.zeromq.support.ZmqUtils.mergeBytes;
 
 public class InputOutputMessageAdapterTest {
 
   private static final byte[] id_0 = "i0".getBytes();
   private static final byte[] id_1 = "i1".getBytes();
   private static final byte[] id_2 = "i2".getBytes();
-
-  private static final byte[] h_0 = mergeBytes(Arrays.asList(intAsBytes(0), "h0".getBytes()));
-  private static final byte[] h_1 = mergeBytes(Arrays.asList(intAsBytes(1), "h1".getBytes()));
-  private static final byte[] h_2 = mergeBytes(Arrays.asList(intAsBytes(2), "h2".getBytes()));
 
   private static final byte[] payload = "payload".getBytes();
   private static final byte[] topic = "topic".getBytes();
@@ -56,13 +51,7 @@ public class InputOutputMessageAdapterTest {
     identities.add(id_2);
   }
 
-  private static final ZmqFrames headers = new ZmqFrames();
-
-  static {
-    headers.add(h_0);
-    headers.add(h_1);
-    headers.add(h_2);
-  }
+  private static final byte[] headers = "{\"h0\":[\"h0\"],\"h1\":[\"h1\"],\"h2\":[\"h2\"]}".getBytes();
 
   @Test
   public void t0() {
@@ -73,7 +62,6 @@ public class InputOutputMessageAdapterTest {
         "                                                                \n" +
         "[TOPIC | [HEADER] | PAYLOAD]  ==>  [FRAME, ..., FRAME]          \n" +
         "[FRAME, ..., FRAME]           ==>  [TOPIC | [HEADER] | PAYLOAD] \n" +
-        "                                                                \n" +
         "                                                                \n");
 
     ZmqMessage message = ZmqMessage.builder()
@@ -90,10 +78,7 @@ public class InputOutputMessageAdapterTest {
 
     assertNextFrame(topic, framesIter);
     assertNextFrame(DIV_FRAME, framesIter);
-    assertNextFrame(h_0, framesIter);
-    assertNextFrame(h_1, framesIter);
-    assertNextFrame(h_2, framesIter);
-    assertNextFrame(DIV_FRAME, framesIter);
+    assertNextFrame(headers, framesIter);
     assertNextFrame(payload, framesIter);
 
     assert !framesIter.hasNext();
@@ -121,25 +106,16 @@ public class InputOutputMessageAdapterTest {
                                    .withPayload(payload)
                                    .build();
 
-    OutputMessageAdapter out = OutputMessageAdapter.builder()
-                                                   .awareOfTopicFrame()
-                                                   .build();
+    OutputMessageAdapter out = OutputMessageAdapter.builder().build();
     ZmqFrames frames = out.convert(message);
     Iterator<byte[]> framesIter = frames.iterator();
 
-    assertNextFrame(EMPTY_FRAME, framesIter);
-    assertNextFrame(DIV_FRAME, framesIter);
-    assertNextFrame(h_0, framesIter);
-    assertNextFrame(h_1, framesIter);
-    assertNextFrame(h_2, framesIter);
-    assertNextFrame(DIV_FRAME, framesIter);
+    assertNextFrame(headers, framesIter);
     assertNextFrame(payload, framesIter);
 
     assert !framesIter.hasNext();
 
-    InputMessageAdapter input = InputMessageAdapter.builder()
-                                                   .awareOfTopicFrame()
-                                                   .build();
+    InputMessageAdapter input = InputMessageAdapter.builder().build();
     assertEq(message, input.convert(frames));
   }
 
@@ -174,10 +150,7 @@ public class InputOutputMessageAdapterTest {
     assertNextFrame(id_2, framesIter);
     assertNextFrame(EMPTY_FRAME, framesIter);
     assertNextFrame(DIV_FRAME, framesIter);
-    assertNextFrame(h_0, framesIter);
-    assertNextFrame(h_1, framesIter);
-    assertNextFrame(h_2, framesIter);
-    assertNextFrame(DIV_FRAME, framesIter);
+    assertNextFrame(headers, framesIter);
     assertNextFrame(payload, framesIter);
 
     assert !framesIter.hasNext();
@@ -221,10 +194,7 @@ public class InputOutputMessageAdapterTest {
     assertNextFrame(id_2, framesIter);
     assertNextFrame(EMPTY_FRAME, framesIter);
     assertNextFrame(DIV_FRAME, framesIter);
-    assertNextFrame(h_0, framesIter);
-    assertNextFrame(h_1, framesIter);
-    assertNextFrame(h_2, framesIter);
-    assertNextFrame(DIV_FRAME, framesIter);
+    assertNextFrame(headers, framesIter);
     assertNextFrame(payload, framesIter);
 
     assert !framesIter.hasNext();
@@ -270,10 +240,7 @@ public class InputOutputMessageAdapterTest {
     assertNextFrame(id_2, framesIter);
     assertNextFrame(EMPTY_FRAME, framesIter);
     assertNextFrame(DIV_FRAME, framesIter);
-    assertNextFrame(h_0, framesIter);
-    assertNextFrame(h_1, framesIter);
-    assertNextFrame(h_2, framesIter);
-    assertNextFrame(DIV_FRAME, framesIter);
+    assertNextFrame(headers, framesIter);
     assertNextFrame(payload, framesIter);
 
     assert !framesIter.hasNext();
@@ -304,11 +271,7 @@ public class InputOutputMessageAdapterTest {
     for (int i = 0; i < a_identities.size(); i++) {
       assertEq(a_identities.get(i), b_identities.get(i));
     }
-    ArrayList<byte[]> a_headers = new ArrayList<byte[]>(a.headers());
-    ArrayList<byte[]> b_headers = new ArrayList<byte[]>(b.headers());
-    assertEquals(a_headers.size(), b_headers.size());
-    for (int i = 0; i < a_headers.size(); i++) {
-      assertEq(a_headers.get(i), b_headers.get(i));
-    }
+
+    assertArrayEquals(a.headers(), b.headers());
   }
 }

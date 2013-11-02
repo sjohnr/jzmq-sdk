@@ -24,7 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.support.ObjectAdapter;
 import org.zeromq.support.ObjectBuilder;
-import org.zeromq.support.ZmqUtils;
+
+import static org.zeromq.support.ZmqUtils.isDivFrame;
+import static org.zeromq.support.ZmqUtils.isEmptyFrame;
 
 /**
  * Input message adapter. Handles transformation of incoming {@link ZmqFrames} into {@link ZmqMessage}.
@@ -92,25 +94,35 @@ class InputMessageAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
       // --- topic
 
       if (awareOfTopicFrame) {
-        ZmqFrames topic = parse(frames, true /*shouldIncludeEmptyFrame*/);
-        assert topic.size() == 1;
-        builder.withTopic(topic.poll());
+        builder.withTopic(frames.poll());
+        // consume [-] frame.
+        assert isDivFrame(frames.poll());
       }
 
       // --- identities
 
       if (expectIdentities) {
-        builder.withIdentities(parse(frames, false /*shouldIncludeEmptyFrame*/));
+        for (; ; ) {
+          byte[] frame = frames.poll();
+          if (isDivFrame(frame)) {
+            // is current frame [-] then stop.
+            break;
+          }
+          if (isEmptyFrame(frame)) {
+            // is [ ] current frame then skip.
+            continue;
+          }
+          builder.withIdentity(frame);
+        }
       }
 
       // --- headers
 
-      builder.withHeaders(parse(frames, true /*shouldIncludeEmptyFrame*/));
+      builder.withHeaders(frames.poll());
 
       // --- payload
 
-      ZmqFrames payload = parse(frames, true /*shouldIncludeEmptyFrame*/);
-      builder.withPayload(payload.poll());
+      builder.withPayload(frames.poll());
 
       return builder.build();
     }
@@ -120,20 +132,4 @@ class InputMessageAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
     }
   }
 
-  private ZmqFrames parse(ZmqFrames frames, boolean shouldIncludeEmptyFrame) {
-    ZmqFrames target = new ZmqFrames();
-    for (; ; ) {
-      byte[] frame = frames.poll();
-      // is current frame NULL OR [-] current frame ==> stop.
-      if (frame == null || ZmqUtils.isDivFrame(frame)) {
-        break;
-      }
-      // is shouldNotIncludeEmptyFrame AND [ ] current frame ==> skip.
-      if (!shouldIncludeEmptyFrame && ZmqUtils.isEmptyFrame(frame)) {
-        continue;
-      }
-      target.add(frame);
-    }
-    return target;
-  }
 }

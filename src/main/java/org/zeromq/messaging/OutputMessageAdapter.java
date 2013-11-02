@@ -125,8 +125,7 @@ class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
 
       // --- headers
 
-      target.addAll(message.headers());
-      target.add(DIV_FRAME);
+      target.add(message.headers());
 
       // --- payload
 

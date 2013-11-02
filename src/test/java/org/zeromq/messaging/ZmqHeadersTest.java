@@ -22,89 +22,96 @@ package org.zeromq.messaging;
 
 import org.junit.Test;
 
-import java.util.Arrays;
-
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.zeromq.support.ZmqUtils.intAsBytes;
-import static org.zeromq.support.ZmqUtils.mergeBytes;
+import static org.zeromq.messaging.ZmqException.ErrorCode.HEADER_IS_NOT_SET;
+import static org.zeromq.messaging.ZmqMessage.DIV_FRAME;
+import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
 
 public class ZmqHeadersTest {
 
   @Test
   public void t0() {
     ZmqHeaders headers = new ZmqHeaders();
-    assert headers.getHeaderOrNull(0) == null;
-    assert headers.remove(1) == null;
-    assertEquals(0, headers.asFrames().size());
+
+    assertArrayEquals(EMPTY_FRAME, headers.asBinary());
+
+    assert headers.remove("").isEmpty();
+    assert headers.getHeaderOrNull("").isEmpty();
   }
 
   @Test
   public void t1() {
-    ZmqHeaders headers = new ZmqHeaders();
+    ZmqHeaders headers = new ZmqHeaders().copy("{\"0\":[\"abc\"]}".getBytes());
 
-    ZmqFrames frames = new ZmqFrames();
-    frames.add(mergeBytes(Arrays.asList(intAsBytes(0), "header_content".getBytes())));
-    headers.put(frames);
-
-    headers.getHeaderOrException(0); // expecting header.
-    assert headers.getHeaderOrNull(1) == null; // not expecting header.
+    headers.getHeaderOrException("0"); // expecting header.
+    assert headers.getHeaderOrNull("1").isEmpty(); // not expecting header.
     try {
-      headers.getHeaderOrException(2); // expecting exception.
+      headers.getHeaderOrException("2"); // expecting exception.
       fail();
     }
     catch (ZmqException e) {
-      assertEquals(ZmqException.ErrorCode.HEADER_IS_NOT_SET, e.errorCode());
+      assertEquals(HEADER_IS_NOT_SET, e.errorCode());
     }
   }
 
   @Test
   public void t2() {
-    ZmqHeaders headers = new ZmqHeaders().copyOf(new ZmqHeaders())
-                                         .copyOf(new ZmqHeaders())
-                                         .copyOf(new ZmqHeaders())
-                                         .copyOf(new ZmqHeaders());
-    assertEquals(0, headers.asFrames().size());
+    ZmqHeaders headers = new ZmqHeaders().copy(new ZmqHeaders())
+                                         .copy(new ZmqHeaders())
+                                         .copy(new ZmqHeaders())
+                                         .copy(new ZmqHeaders());
+
+    assertArrayEquals(EMPTY_FRAME, headers.asBinary());
   }
 
   @Test
   public void t3() {
-    ZmqHeaders headers = new ZmqHeaders().copyOf(new ZmqHeaders().put(0, "0000".getBytes()))
-                                         .copyOf(new ZmqHeaders().put(1, "1111".getBytes()))
-                                         .copyOf(new ZmqHeaders().put(2, "2222".getBytes()))
-                                         .put(3, "a".getBytes())
-                                         .put(4, "b".getBytes())
-                                         .put(5, "c".getBytes());
-    assertEquals(6, headers.asFrames().size());
+    ZmqHeaders headers = new ZmqHeaders().copy(new ZmqHeaders().set("0", 0))
+                                         .copy(new ZmqHeaders().set("1", 1))
+                                         .copy(new ZmqHeaders().set("2", 2))
+                                         .set("3", "a")
+                                         .set("4", "b")
+                                         .set("5", "c");
 
-    ZmqFrames frames = new ZmqFrames();
-    frames.add(mergeBytes(Arrays.asList(intAsBytes(100500), "header_content".getBytes())));
-    headers.put(frames);
-    assertEquals(6 + 1, headers.asFrames().size());
-    assert Arrays.equals("0000".getBytes(), headers.getHeaderOrNull(0));
-    assert Arrays.equals("1111".getBytes(), headers.getHeaderOrNull(1));
-    assert Arrays.equals("2222".getBytes(), headers.getHeaderOrNull(2));
-    assert Arrays.equals("a".getBytes(), headers.getHeaderOrNull(3));
-    assert Arrays.equals("b".getBytes(), headers.getHeaderOrNull(4));
-    assert Arrays.equals("c".getBytes(), headers.getHeaderOrNull(5));
-    assert Arrays.equals("header_content".getBytes(), headers.getHeaderOrNull(100500));
+    assertEquals("0", headers.getHeaderOrNull("0").iterator().next());
+    assertEquals("1", headers.getHeaderOrNull("1").iterator().next());
+    assertEquals("2", headers.getHeaderOrNull("2").iterator().next());
+    assertEquals("a", headers.getHeaderOrNull("3").iterator().next());
+    assertEquals("b", headers.getHeaderOrNull("4").iterator().next());
+    assertEquals("c", headers.getHeaderOrNull("5").iterator().next());
   }
 
   @Test
   public void t4() {
+    new ZmqHeaders().copy(EMPTY_FRAME);
+
+    new ZmqHeaders().copy(new byte[0]);
+
     try {
-      ZmqFrames emptyFrame = new ZmqFrames();
-      emptyFrame.add(ZmqMessage.EMPTY_FRAME);
-      new ZmqHeaders().put(emptyFrame);
+      new ZmqHeaders().copy(DIV_FRAME);
       fail();
     }
     catch (AssertionError e) {
     }
 
     try {
-      ZmqFrames divFrame = new ZmqFrames();
-      divFrame.add(ZmqMessage.DIV_FRAME);
-      new ZmqHeaders().put(divFrame);
+      new ZmqHeaders().set("x", "  ");
+      fail();
+    }
+    catch (AssertionError e) {
+    }
+
+    try {
+      new ZmqHeaders().copy("{\"0\":[]}".getBytes());
+      fail();
+    }
+    catch (AssertionError e) {
+    }
+
+    try {
+      new ZmqHeaders().copy("{\"0\":[\"\"]}".getBytes());
       fail();
     }
     catch (AssertionError e) {
@@ -113,39 +120,10 @@ public class ZmqHeadersTest {
 
   @Test
   public void t5() {
-    ZmqHeaders headers = new ZmqHeaders().put(0, "to_be_removed".getBytes())
-                                         .put(1, "remained".getBytes());
-    assertEquals(2, headers.asFrames().size());
+    ZmqHeaders headers = new ZmqHeaders().set("a", "a")
+                                         .set("b", "b")
+                                         .set("c", "c");
 
-    headers.remove(0);
-
-    assertEquals(1, headers.asFrames().size());
-    assert Arrays.equals("remained".getBytes(), headers.getHeaderOrNull(1));
-
-    ZmqHeaders headersCopy = new ZmqHeaders().copyOf(headers);
-    headersCopy.remove(1);
-
-    assertEquals(1, headers.asFrames().size()); // original not changed.
-    assert Arrays.equals("remained".getBytes(), headers.getHeaderOrNull(1)); // original not changed.
-    assertEquals(0, headersCopy.asFrames().size()); // copy has been changed.
-  }
-
-  @Test
-  public void t6() {
-    ZmqHeaders headers = new ZmqHeaders().put(0, "x".getBytes())
-                                         .put(1, "y".getBytes())
-                                         .put(2, "z".getBytes());
-
-    assertEquals(3, headers.asFrames().size());
-    assert Arrays.equals("x".getBytes(), headers.getHeaderOrNull(0));
-    assert Arrays.equals("y".getBytes(), headers.getHeaderOrNull(1));
-    assert Arrays.equals("z".getBytes(), headers.getHeaderOrNull(2));
-
-    ZmqHeaders headersCopy = new ZmqHeaders().copyOf(headers);
-
-    assertEquals(3, headersCopy.asFrames().size());
-    assert Arrays.equals("x".getBytes(), headersCopy.getHeaderOrNull(0));
-    assert Arrays.equals("y".getBytes(), headersCopy.getHeaderOrNull(1));
-    assert Arrays.equals("z".getBytes(), headersCopy.getHeaderOrNull(2));
+    assertArrayEquals("{\"a\":[\"a\"],\"b\":[\"b\"],\"c\":[\"c\"]}".getBytes(), headers.asBinary());
   }
 }

@@ -20,76 +20,107 @@
 
 package org.zeromq.messaging;
 
-import org.zeromq.support.ZmqUtils;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.google.common.base.Strings;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
 
-import java.util.Arrays;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
-import java.util.TreeMap;
 
 import static org.zeromq.support.ZmqUtils.isDivFrame;
 import static org.zeromq.support.ZmqUtils.isEmptyFrame;
 
 public class ZmqHeaders {
 
-  /** Set to 4 as size of Integer. */
-  private static final int HEADER_ID_SIZE = 4;
   /** Internal mapping between header id and its content. */
-  private final Map<Integer, byte[]> _map = new TreeMap<Integer, byte[]>();
+  private final Multimap<String, String> _map = LinkedHashMultimap.create();
 
   //// METHODS
 
-  public final ZmqHeaders copyOf(ZmqHeaders headers) {
+  public final ZmqHeaders copy(ZmqHeaders headers) {
     _map.putAll(headers._map);
     return this;
   }
 
-  public final ZmqHeaders put(int id, byte[] content) {
-    _map.put(id, content);
-    return this;
-  }
-
-  public final ZmqHeaders put(ZmqFrames headers) {
-    for (byte[] header : headers) {
-      assert !isEmptyFrame(header);
-      assert !isDivFrame(header);
-      // parse incoming header:
-      // first 4 bytes -- header id,
-      // the rest -- header content.
-      byte[] id = new byte[HEADER_ID_SIZE];
-      System.arraycopy(header, 0, id, 0, id.length);
-      byte[] content = new byte[header.length - HEADER_ID_SIZE];
-      System.arraycopy(header, HEADER_ID_SIZE, content, 0, content.length);
-      _map.put(ZmqUtils.bytesAsInt(id), content);
+  public final ZmqHeaders copy(byte[] headers) {
+    if (isEmptyFrame(headers)) {
+      return this;
+    }
+    assert !isDivFrame(headers);
+    try {
+      JsonFactory jf = new JsonFactory();
+      JsonParser p = jf.createParser(headers);
+      JsonToken token;
+      String headerId = null;
+      Collection<String> headerContent = null;
+      do {
+        token = p.nextToken();
+        if (token != null) {
+          switch (token) {
+            case FIELD_NAME:
+              String fn = p.getText();
+              if (headerId == null) {
+                headerId = fn;
+                headerContent = new ArrayList<String>();
+              }
+              break;
+            case VALUE_STRING:
+              String text = p.getText();
+              assert !Strings.isNullOrEmpty(text);
+              headerContent.add(text);
+              break;
+            case END_ARRAY:
+              _map.putAll(headerId, headerContent);
+              headerId = null;
+              headerContent = null;
+              break;
+          }
+        }
+      }
+      while (token != null);
+    }
+    catch (IOException e) {
+      throw ZmqException.wrap(e);
     }
     return this;
   }
 
-  public final ZmqFrames asFrames() {
-    // return outgoing header data:
-    // first 4 bytes -- header id,
-    // the rest -- header content.
-    ZmqFrames target = new ZmqFrames();
-    for (Map.Entry<Integer, byte[]> entry : _map.entrySet()) {
-      byte[] id = ZmqUtils.intAsBytes(entry.getKey());
-      byte[] content = entry.getValue();
-      target.add(ZmqUtils.mergeBytes(Arrays.asList(id, content)));
-    }
-    return target;
+  public final ZmqHeaders set(String headerId, String headerContent) {
+    assert !Strings.isNullOrEmpty(headerId);
+    assert !Strings.isNullOrEmpty(headerContent);
+    remove(headerId);
+    _map.put(headerId, headerContent);
+    return this;
+  }
+
+  public final ZmqHeaders set(String headerId, Number headerContent) {
+    assert !Strings.isNullOrEmpty(headerId);
+    assert headerContent != null;
+    remove(headerId);
+    _map.put(headerId, headerContent.toString());
+    return this;
   }
 
   /**
    * @param id header id.
    * @return removed header content. <b>Null if there's not such header with given id.</b>
    */
-  public final byte[] remove(int id) {
-    return _map.remove(id);
+  public final Collection<String> remove(String id) {
+    return _map.removeAll(id);
   }
 
   /**
    * @param id header id.
    * @return header content. <b>Null if there's not such header with given id.</b>
    */
-  public final byte[] getHeaderOrNull(int id) {
+  public final Collection<String> getHeaderOrNull(String id) {
     return _map.get(id);
   }
 
@@ -98,11 +129,43 @@ public class ZmqHeaders {
    * @return header content. <b>Never null.</b>
    * @throws ZmqException in case header with given id is absent.
    */
-  public final byte[] getHeaderOrException(int id) throws ZmqException {
-    byte[] bytes = getHeaderOrNull(id);
-    if (bytes == null) {
+  public final Collection<String> getHeaderOrException(String id) throws ZmqException {
+    Collection<String> content = getHeaderOrNull(id);
+    if (content.isEmpty()) {
       throw ZmqException.headerIsNotSet();
     }
-    return bytes;
+    return content;
+  }
+
+  public final byte[] asBinary() {
+    Map<String, Collection<String>> m = _map.asMap();
+    if (m.isEmpty()) {
+      return new byte[0];
+    }
+    try {
+      JsonFactory jf = new JsonFactory();
+      StringWriter w = new StringWriter();
+      JsonGenerator g = jf.createGenerator(w);
+      g.writeStartObject();
+      {
+        for (Map.Entry<String, Collection<String>> entry : m.entrySet()) {
+          String headerId = entry.getKey();
+          Collection<String> headerContent = entry.getValue();
+          g.writeArrayFieldStart(headerId);
+          {
+            for (String c : headerContent) {
+              g.writeString(c);
+            }
+          }
+          g.writeEndArray();
+        }
+      }
+      g.writeEndObject();
+      g.close();
+      return w.toString().getBytes();
+    }
+    catch (IOException e) {
+      throw ZmqException.wrap(e);
+    }
   }
 }

@@ -22,43 +22,44 @@ package org.zeromq.messaging.device;
 
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqHeaders;
-import org.zeromq.support.ZmqUtils;
 
-import java.util.Arrays;
+import java.util.Collection;
 
 public final class CallerHeaders extends ZmqHeaders {
 
-  private static final int HEADER_ID_MSG_TYPE = "CallerHeaders.HEADER_ID_MSG_TYPE".hashCode();
-  private static final int HEADER_ID_CORRELATION_IDENTITY = "CallerHeaders.HEADER_ID_CORRELATION_IDENTITY".hashCode();
+  private static final String HEADER_MSG_TYPE = "Caller.MsgType";
+  private static final String HEADER_CORRELATION_ID = "Caller.CorrId";
 
-  private static final byte[] HEADER_FRAME_TRY_AGAIN = "TRY_AGAIN".getBytes();
+  private static final String TRYAGAIN = "TRYAGAIN";
 
   //// METHODS
 
   public CallerHeaders setMsgTypeTryAgain() {
-    put(HEADER_ID_MSG_TYPE, HEADER_FRAME_TRY_AGAIN);
+    set(HEADER_MSG_TYPE, TRYAGAIN);
     return this;
   }
 
   public boolean isMsgTypeTryAgain() {
-    return Arrays.equals(HEADER_FRAME_TRY_AGAIN, getHeaderOrNull(HEADER_ID_MSG_TYPE));
+    Collection<String> c = getHeaderOrNull(HEADER_MSG_TYPE);
+    return !c.isEmpty() && TRYAGAIN.equals(c.iterator().next());
   }
 
   public CallerHeaders setMsgTypeNotSet() {
-    remove(HEADER_ID_MSG_TYPE);
+    remove(HEADER_MSG_TYPE);
     return this;
   }
 
   public boolean isMsgTypeNotSet() {
-    return getHeaderOrNull(HEADER_ID_MSG_TYPE) == null;
+    return getHeaderOrNull(HEADER_MSG_TYPE).isEmpty();
   }
 
   public CallerHeaders setCorrId(long id) {
-    put(HEADER_ID_CORRELATION_IDENTITY, ZmqUtils.longAsBytes(id));
+    set(HEADER_CORRELATION_ID, id);
     return this;
   }
 
   public Long getCorrId() throws ZmqException {
-    return ZmqUtils.bytesAsLong(getHeaderOrException(HEADER_ID_CORRELATION_IDENTITY));
+    Collection<String> c = getHeaderOrException(HEADER_CORRELATION_ID);
+    return Long.valueOf(c.iterator().next());
   }
 }
