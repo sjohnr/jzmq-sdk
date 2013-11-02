@@ -36,7 +36,7 @@ install:
  - cd ..
 
 before_script:
- - sudo mvn install -e --quiet -DskipTests
+ - sudo mvn install -e --quiet -Ptravis-ci -DskipTests -Ptravis-ci
 
 script:
  - sudo mvn test -e -Ptravis-ci
