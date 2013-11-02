@@ -33,8 +33,8 @@ public final class UncaughtExceptionHandler implements ExceptionHandler {
   private static final Logger LOG = LoggerFactory.getLogger(UncaughtExceptionHandler.class);
 
   @Override
-  public void handleException(Throwable e) {
-    LOG.error("!!! Got uncaught exception: " + e, e);
-    throw ZmqException.wrap(e);
+  public void handleException(Throwable t) {
+    LOG.error("!!! Got uncaught exception: " + t, t);
+    throw ZmqException.wrap(t);
   }
 }

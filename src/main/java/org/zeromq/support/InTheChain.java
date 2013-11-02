@@ -20,10 +20,9 @@
 
 package org.zeromq.support;
 
-/** Marker interface denoting the fact that object implementing it has some abstract "next" component. */
 public interface InTheChain<E> {
 
-  <T> T withNext(E o);
+  Object withNext(E o);
 
-  E next();
+  Object next();
 }

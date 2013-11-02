@@ -28,20 +28,14 @@ import org.zeromq.messaging.ZmqException;
  * Simply logs exception occurence, wraps given {@link InterruptedException}
  * object into {@link org.zeromq.messaging.ZmqException} and re-throw it.
  */
-public final class InterruptedExceptionHandler extends ExceptionHandlerTemplate {
+public final class InterruptedExceptionHandler extends AbstractExceptionHandlerInTheChain {
 
   @Override
-  public void handleException(Throwable e) {
-    if (InterruptedException.class.isAssignableFrom(e.getClass())) {
+  public void handleException(Throwable t) {
+    if (InterruptedException.class.isAssignableFrom(t.getClass())) {
       Thread.interrupted();
-      throw ZmqException.wrap(e);
+      throw ZmqException.wrap(t);
     }
-    next().handleException(e);
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public InterruptedExceptionHandler withNext(ExceptionHandler nextExceptionHandler) {
-    return super.withNext(nextExceptionHandler);
+    next().handleException(t);
   }
 }

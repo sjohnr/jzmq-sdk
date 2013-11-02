@@ -24,11 +24,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.support.ObjectBuilder;
+import org.zeromq.support.exception.AbstractExceptionHandlerInTheChain;
 import org.zeromq.support.exception.ExceptionHandler;
-import org.zeromq.support.exception.ExceptionHandlerTemplate;
 import org.zeromq.support.exception.InterruptedExceptionHandler;
-import org.zeromq.support.exception.UncaughtExceptionHandler;
-import org.zeromq.support.exception.ZmqExceptionNativeLibExceptionHandler;
+import org.zeromq.support.exception.ZmqExceptionJniExceptionHandler;
 
 import java.util.concurrent.CountDownLatch;
 
@@ -60,27 +59,20 @@ public final class ZmqRunnable implements Runnable {
     }
   }
 
-  private static class InternalExceptionHandler extends ExceptionHandlerTemplate {
+  private static class InternalExceptionHandler extends AbstractExceptionHandlerInTheChain {
     @Override
-    public void handleException(Throwable e) {
-      if (ZmqException.class.isAssignableFrom(e.getClass())) {
-        ZmqException target = (ZmqException) e;
-        if (target.errorCode() == ZmqException.ErrorCode.SEE_CAUSE) {
-          handleException(target.getCause());
+    public void handleException(Throwable t) {
+      if (ZmqException.class.isAssignableFrom(t.getClass())) {
+        ZmqException e = (ZmqException) t;
+        if (e.errorCode() == ZmqException.ErrorCode.SEE_CAUSE) {
+          handleException(e.getCause());
           return;
         }
         else {
-          LOG.error("!!! Got fatal issue: " + target, target);
-          throw target;
+          throw e;
         }
       }
-      next().handleException(e);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public InternalExceptionHandler withNext(ExceptionHandler nextExceptionHandler) {
-      return super.withNext(nextExceptionHandler);
+      next().handleException(t);
     }
   }
 
@@ -92,13 +84,9 @@ public final class ZmqRunnable implements Runnable {
   private ZmqRunnableContext runnableContext;
 
   private ExceptionHandler _exceptionHandlerChain =
-      new InternalExceptionHandler().withNext(
-          new ZmqExceptionNativeLibExceptionHandler().withNext(
-              new InterruptedExceptionHandler().withNext(
-                  new UncaughtExceptionHandler()
-              )
-          )
-      );
+      new InternalExceptionHandler()
+          .withNext(new ZmqExceptionJniExceptionHandler()
+                        .withNext(new InterruptedExceptionHandler()));
 
   //// CONSTRUCTORS
 
@@ -132,7 +120,7 @@ public final class ZmqRunnable implements Runnable {
           runnableContext.exec();
         }
         catch (Exception e) {
-          // catch exception using smart mechanism of chained exception handlers.
+          // catch exception using mechanism of chained exception handlers.
           // there're two exits at this point:
           // -- something really bad happened and one of the handlers in the chain raised exception.
           // -- something exceptional happened but not catastrophic and we can loop again.
@@ -141,7 +129,7 @@ public final class ZmqRunnable implements Runnable {
       }
     }
     catch (Throwable e) {
-      LOG.error("!!! Unrecoverable issue just happened: " + e + ". Thank you. Good bye.", e);
+      LOG.error("!!! Unrecoverable issue: " + e + ". Thank you. Good bye.", e);
     }
     finally {
       // this block is aimed to support following situations:

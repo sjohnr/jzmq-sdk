@@ -22,25 +22,24 @@ package org.zeromq.support.exception;
 
 import org.zeromq.support.InTheChain;
 
-/** Template for {@link ExceptionHandler}-s. */
-public abstract class ExceptionHandlerTemplate implements ExceptionHandler, InTheChain<ExceptionHandler> {
+public abstract class AbstractExceptionHandlerInTheChain implements ExceptionHandler, InTheChain<ExceptionHandler> {
 
   /**
    * Next exception handler in the chain.
    * <p/>
-   * <b>NOTE: by default initialized to {@link UncaughtExceptionHandler}.</b>
+   * <b>NOTE: by default initialized to {@link UncaughtExceptionHandler}. This field isn't optional.</b>
    */
-  private ExceptionHandler nextExceptionHandler = new UncaughtExceptionHandler();
+  private ExceptionHandler nextHandler = new UncaughtExceptionHandler();
 
-  @SuppressWarnings("unchecked")
   @Override
-  public <T> T withNext(ExceptionHandler nextExceptionHandler) {
-    this.nextExceptionHandler = nextExceptionHandler;
-    return (T) this;
+  public final AbstractExceptionHandlerInTheChain withNext(ExceptionHandler nextHandler) {
+    assert nextHandler != null;
+    this.nextHandler = nextHandler;
+    return this;
   }
 
   @Override
-  public ExceptionHandler next() {
-    return nextExceptionHandler;
+  public final ExceptionHandler next() {
+    return nextHandler;
   }
 }

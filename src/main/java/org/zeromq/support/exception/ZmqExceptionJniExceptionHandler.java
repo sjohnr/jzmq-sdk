@@ -29,33 +29,29 @@ import org.zeromq.ZMQ;
  * <p/>
  * Parses {@link org.zeromq.ZMQException#errorCode}, logs actual exception and re-throw it.
  */
-public final class ZmqExceptionNativeLibExceptionHandler extends ExceptionHandlerTemplate {
+public final class ZmqExceptionJniExceptionHandler extends AbstractExceptionHandlerInTheChain {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ZmqExceptionNativeLibExceptionHandler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ZmqExceptionJniExceptionHandler.class);
 
   @Override
-  public void handleException(Throwable e) {
-    if (org.zeromq.ZMQException.class.isAssignableFrom(e.getClass())) {
-      org.zeromq.ZMQException nativeLibException = (org.zeromq.ZMQException) e;
+  public void handleException(Throwable t) {
+    if (org.zeromq.ZMQException.class.isAssignableFrom(t.getClass())) {
+      org.zeromq.ZMQException e = (org.zeromq.ZMQException) t;
       ZMQ.Error error = null;
-      int errorCode = nativeLibException.getErrorCode();
+      int errorCode = e.getErrorCode();
       try {
         error = ZMQ.Error.findByCode(errorCode);
       }
-      catch (Throwable t) {
-        LOG.error("!!! Got zmq_exception: error_code={} is unknown.", errorCode);
+      catch (Throwable ignore) {
       }
       if (error != null) {
-        LOG.error("!!! Got zmq_error: error_code={}.", error.getCode());
+        LOG.error("!!! Got zmq_exception: error_code={}, error={}.", errorCode, error);
       }
-      throw nativeLibException;
+      else {
+        LOG.error("!!! Got zmq_exception: error_code={}, error is unknown.", errorCode);
+      }
+      throw e;
     }
-    next().handleException(e);
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public ZmqExceptionNativeLibExceptionHandler withNext(ExceptionHandler nextExceptionHandler) {
-    return super.withNext(nextExceptionHandler);
+    next().handleException(t);
   }
 }
