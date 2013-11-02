@@ -32,7 +32,6 @@
     <maven.compiler.target>1.6</maven.compiler.target>
     <jopt-simple.version>4.5</jopt-simple.version>
     <!-- Project deps -->
-    <protobuf.version>2.5.0</protobuf.version>
     <maven-protoc-plugin.version>0.3.2</maven-protoc-plugin.version>
     <guava.version>12.0</guava.version>
     <junit.version>4.10</junit.version>
@@ -49,12 +48,14 @@
       <id>windows</id>
       <properties>
         <java.library.path>'${env.PATH}'</java.library.path>
+        <protobuf.version>2.5.0</protobuf.version>
       </properties>
     </profile>
     <profile>
-      <id>unix</id>
+      <id>travis-ci</id>
       <properties>
         <java.library.path>/usr/local/lib</java.library.path>
+        <protobuf.version>2.4.1</protobuf.version>
       </properties>
     </profile>
   </profiles>

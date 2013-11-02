@@ -14,7 +14,6 @@ before_install:
 
 install:
  - cd maven-protoc-plugin
- - protoc --version
  - sudo git checkout tags/maven-protoc-plugin-0.3.2
  - sudo mvn install -e --quiet -DskipTests=true
  - cd ..
@@ -40,4 +39,4 @@ before_script:
  - sudo mvn install -e --quiet -DskipTests
 
 script:
- - sudo mvn test -e -Punix
+ - sudo mvn test -e -Ptravis-ci
