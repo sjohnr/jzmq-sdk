@@ -7,21 +7,14 @@ jdk:
 before_install:
  - sudo apt-get update -y
  - sudo apt-get install build-essential uuid-dev pkg-config libtool autoconf automake -y
- - sudo wget https://protobuf.googlecode.com/files/protobuf-2.5.0.tar.gz
+ - sudo apt-get install protobuf-compiler -y
  - sudo git clone https://github.com/sergei-ivanov/maven-protoc-plugin.git
  - sudo wget http://download.zeromq.org/zeromq-3.2.4.tar.gz
  - sudo wget https://github.com/zeromq/jzmq/archive/v2.2.2.tar.gz
 
 install:
- - sudo tar -zxvf protobuf-2.5.0.tar.gz
- - cd protobuf-2.5.0
- - sudo ./configure
- - sudo make
- - sudo make check
- - sudo make install
- - cd ..
-
  - cd maven-protoc-plugin
+ - protoc --version
  - sudo git checkout tags/maven-protoc-plugin-0.3.2
  - sudo mvn install -e --quiet -DskipTests=true
  - cd ..
