@@ -20,7 +20,6 @@
 
 package org.zeromq.messaging.device.service;
 
-import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqHeaders;
 
 import java.util.Collection;
@@ -58,7 +57,7 @@ public final class ServiceHeaders extends ZmqHeaders {
     return this;
   }
 
-  public int getNumOfHops() throws ZmqException {
+  public int getNumOfHops() {
     Collection<String> c = getHeaderOrException(HEADER_MSG_NUM_OF_HOPS);
     return Integer.valueOf(c.iterator().next());
   }

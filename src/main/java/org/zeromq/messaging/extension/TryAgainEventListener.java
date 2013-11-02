@@ -26,7 +26,6 @@ import com.google.common.eventbus.Subscribe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.messaging.ZmqChannel;
-import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
 import org.zeromq.messaging.device.CallerHeaders;
 import org.zeromq.messaging.event.EventReceived;
@@ -54,7 +53,7 @@ public final class TryAgainEventListener {
 
   @Subscribe
   @AllowConcurrentEvents
-  public void event(EventReceived event) throws ZmqException {
+  public void event(EventReceived event) {
     ZmqMessage message = event.message();
     CallerHeaders headers = message.headersAs(CallerHeaders.class);
 

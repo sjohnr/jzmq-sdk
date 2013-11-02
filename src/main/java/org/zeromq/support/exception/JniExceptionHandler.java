@@ -21,22 +21,38 @@
 package org.zeromq.support.exception;
 
 import com.google.common.base.Throwables;
-import org.zeromq.messaging.ZmqException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.zeromq.ZMQ;
 
 /**
- * Wrapping exception handler for {@link InterruptedException}.
+ * Exception handler for {@link org.zeromq.ZMQException}-s.
  * <p/>
- * Simply logs exception occurence, wraps given {@link InterruptedException}
- * object into {@link org.zeromq.messaging.ZmqException} and re-throw it.
+ * Parses {@link org.zeromq.ZMQException#errorCode}, logs actual exception and re-throw it.
  */
-public final class InterruptedExceptionHandler extends AbstractExceptionHandlerInTheChain {
+public final class JniExceptionHandler extends AbstractExceptionHandlerInTheChain {
+
+  private static final Logger LOG = LoggerFactory.getLogger(JniExceptionHandler.class);
 
   @Override
   public void handleException(Throwable t) {
     Throwable rc = Throwables.getRootCause(t);
-    if (InterruptedException.class.isAssignableFrom(rc.getClass())) {
-      Thread.interrupted();
-      throw ZmqException.fatal();
+    if (org.zeromq.ZMQException.class.isAssignableFrom(rc.getClass())) {
+      org.zeromq.ZMQException e = (org.zeromq.ZMQException) t;
+      ZMQ.Error error = null;
+      int errorCode = e.getErrorCode();
+      try {
+        error = ZMQ.Error.findByCode(errorCode);
+      }
+      catch (Throwable ignore) {
+      }
+      if (error != null) {
+        LOG.error("!!! Got zmq_exception: error_code={}, error={}.", errorCode, error);
+      }
+      else {
+        LOG.error("!!! Got zmq_exception: error_code={}, error is unknown.", errorCode);
+      }
+      throw e;
     }
     next().handleException(t);
   }

@@ -21,6 +21,7 @@
 package org.zeromq.messaging.device.service;
 
 import org.zeromq.messaging.ZmqChannelFactory;
+import org.zeromq.messaging.ZmqException;
 import org.zeromq.support.IsPrototype;
 import org.zeromq.support.ObjectAdapter;
 
@@ -53,9 +54,13 @@ public final class WorkerAnonymEmitter extends ZmqAbstractWorker implements IsPr
     @Override
     public void checkInvariant() {
       super.checkInvariant();
-      assert !_target.connectAddresses.isEmpty();
+      if (_target.connectAddresses.isEmpty()) {
+        throw ZmqException.fatal();
+      }
       if (_target.workerIdentity != null) {
-        assert _target.workerIdentityConverter != null;
+        if (_target.workerIdentityConverter == null) {
+          throw ZmqException.fatal();
+        }
       }
     }
   }

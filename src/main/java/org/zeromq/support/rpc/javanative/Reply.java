@@ -20,6 +20,8 @@
 
 package org.zeromq.support.rpc.javanative;
 
+import com.google.common.base.Preconditions;
+
 import java.io.Serializable;
 
 class Reply implements Serializable {
@@ -38,14 +40,14 @@ class Reply implements Serializable {
   }
 
   Reply(byte[] result) {
-    assert result != null;
+    Preconditions.checkArgument(result != null);
     this.result = result;
     this.replyType = Type.NORMAL;
     this.error = null;
   }
 
   Reply(Error error) {
-    assert error != null;
+    Preconditions.checkArgument(error != null);
     this.error = error;
     this.replyType = Type.ERROR;
     this.result = null;

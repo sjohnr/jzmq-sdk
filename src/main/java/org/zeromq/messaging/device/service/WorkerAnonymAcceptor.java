@@ -21,6 +21,7 @@
 package org.zeromq.messaging.device.service;
 
 import org.zeromq.messaging.ZmqChannelFactory;
+import org.zeromq.messaging.ZmqException;
 
 /**
  * Acceptor-worker device:
@@ -39,7 +40,9 @@ public final class WorkerAnonymAcceptor extends ZmqAbstractWorker {
     @Override
     public void checkInvariant() {
       super.checkInvariant();
-      assert !_target.connectAddresses.isEmpty();
+      if (_target.connectAddresses.isEmpty()) {
+        throw ZmqException.fatal();
+      }
     }
   }
 

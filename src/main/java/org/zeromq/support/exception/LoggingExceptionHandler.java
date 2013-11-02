@@ -22,36 +22,17 @@ package org.zeromq.support.exception;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.ZMQ;
 
 /**
- * Exception handler for {@link org.zeromq.ZMQException}-s.
- * <p/>
- * Parses {@link org.zeromq.ZMQException#errorCode}, logs actual exception and re-throw it.
+ * This exception handler simply logs an exception and
+ * doesn't call {@link #nextHandler} in the chain.
  */
-public final class ZmqExceptionJniExceptionHandler extends AbstractExceptionHandlerInTheChain {
+public final class LoggingExceptionHandler extends AbstractExceptionHandlerInTheChain {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ZmqExceptionJniExceptionHandler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(LoggingExceptionHandler.class);
 
   @Override
   public void handleException(Throwable t) {
-    if (org.zeromq.ZMQException.class.isAssignableFrom(t.getClass())) {
-      org.zeromq.ZMQException e = (org.zeromq.ZMQException) t;
-      ZMQ.Error error = null;
-      int errorCode = e.getErrorCode();
-      try {
-        error = ZMQ.Error.findByCode(errorCode);
-      }
-      catch (Throwable ignore) {
-      }
-      if (error != null) {
-        LOG.error("!!! Got zmq_exception: error_code={}, error={}.", errorCode, error);
-      }
-      else {
-        LOG.error("!!! Got zmq_exception: error_code={}, error is unknown.", errorCode);
-      }
-      throw e;
-    }
-    next().handleException(t);
+    LOG.error("Got unhandled issue: " + t, t);
   }
 }

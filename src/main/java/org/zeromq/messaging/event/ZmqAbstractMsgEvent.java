@@ -20,6 +20,7 @@
 
 package org.zeromq.messaging.event;
 
+import com.google.common.base.Preconditions;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqMessage;
 
@@ -29,7 +30,7 @@ public abstract class ZmqAbstractMsgEvent extends ZmqAbstractChannelEvent {
 
   protected ZmqAbstractMsgEvent(ZmqChannel channel, ZmqMessage message) {
     super(channel);
-    assert message != null;
+    Preconditions.checkArgument(message != null);
     this.message = message;
   }
 

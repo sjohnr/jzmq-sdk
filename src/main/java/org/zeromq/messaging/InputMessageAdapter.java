@@ -87,7 +87,7 @@ class InputMessageAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
   }
 
   @Override
-  public ZmqMessage convert(ZmqFrames frames) throws ZmqException {
+  public ZmqMessage convert(ZmqFrames frames) {
     try {
       ZmqMessage.Builder builder = ZmqMessage.builder();
 
@@ -96,7 +96,9 @@ class InputMessageAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
       if (awareOfTopicFrame) {
         builder.withTopic(frames.poll());
         // consume [-] frame.
-        assert isDivFrame(frames.poll());
+        if (!isDivFrame(frames.poll())) {
+          throw ZmqException.wrongHeader();
+        }
       }
 
       // --- identities
@@ -128,7 +130,7 @@ class InputMessageAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
     }
     catch (Exception e) {
       LOG.error("!!! Failed to convert incoming ZmqFrames: " + e, e);
-      throw ZmqException.wrap(e);
+      throw ZmqException.seeCause(e);
     }
   }
 

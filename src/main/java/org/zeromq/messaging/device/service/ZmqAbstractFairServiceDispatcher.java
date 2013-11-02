@@ -20,13 +20,12 @@
 
 package org.zeromq.messaging.device.service;
 
-import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
 
 public abstract class ZmqAbstractFairServiceDispatcher extends ZmqAbstractServiceDispatcher {
 
   @Override
-  public final void exec() throws ZmqException {
+  public final void exec() {
     if (_backend.hasInput()) {
       ZmqMessage backendMessage = _backend.recv();
       _frontend.send(backendMessage);

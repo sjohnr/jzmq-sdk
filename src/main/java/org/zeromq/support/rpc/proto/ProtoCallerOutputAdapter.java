@@ -20,6 +20,7 @@
 
 package org.zeromq.support.rpc.proto;
 
+import com.google.common.base.Preconditions;
 import com.google.protobuf.GeneratedMessage;
 import org.aopalliance.intercept.MethodInvocation;
 import org.zeromq.messaging.ZmqMessage;
@@ -30,7 +31,7 @@ public final class ProtoCallerOutputAdapter implements ObjectAdapter<MethodInvoc
   @Override
   public ZmqMessage convert(MethodInvocation invocation) {
     Object[] arguments = invocation.getArguments();
-    assert arguments.length == 1;
+    Preconditions.checkArgument(arguments.length == 1);
     GeneratedMessage protoMessage = (GeneratedMessage) arguments[0];
 
     String serviceName = invocation.getMethod().getDeclaringClass().getCanonicalName();

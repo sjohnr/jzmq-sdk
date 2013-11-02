@@ -20,6 +20,8 @@
 
 package org.zeromq.support.rpc.javanative;
 
+import com.google.common.base.Preconditions;
+
 import java.io.Serializable;
 
 class Error implements Serializable {
@@ -39,7 +41,7 @@ class Error implements Serializable {
   }
 
   Error(Integer code, Throwable t) {
-    assert code != null;
+    Preconditions.checkArgument(code != null);
     this.code = code;
     if (t == null) {
       this.message = null;

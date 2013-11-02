@@ -39,12 +39,12 @@ public class ZmqEventBus extends EventBus {
   }
 
   @Override
-  protected void dispatch(Object event, EventHandler wrapper) throws ZmqException {
+  protected void dispatch(Object event, EventHandler wrapper) {
     try {
       wrapper.handleEvent(event);
     }
     catch (InvocationTargetException e) {
-      throw ZmqException.wrap(e.getCause());
+      throw ZmqException.seeCause(e.getCause());
     }
   }
 }

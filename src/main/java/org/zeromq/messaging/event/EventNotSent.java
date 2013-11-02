@@ -20,6 +20,7 @@
 
 package org.zeromq.messaging.event;
 
+import com.google.common.base.Preconditions;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqMessage;
 
@@ -34,7 +35,7 @@ public final class EventNotSent extends ZmqAbstractTimerEvent {
 
   public EventNotSent(ZmqChannel channel, ZmqMessage message, Long elapsedTime) {
     super(channel, elapsedTime);
-    assert message != null;
+    Preconditions.checkArgument(message != null);
     this.message = message;
   }
 

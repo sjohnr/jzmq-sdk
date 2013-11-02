@@ -22,6 +22,7 @@ package org.zeromq.messaging.device;
 
 import org.zeromq.ZMQ;
 import org.zeromq.messaging.ZmqContext;
+import org.zeromq.messaging.ZmqException;
 import org.zeromq.support.ObjectBuilder;
 import org.zeromq.support.thread.ZmqRunnableContext;
 
@@ -51,7 +52,9 @@ public abstract class ZmqAbstractDeviceContext implements ZmqRunnableContext {
 
     @Override
     public void checkInvariant() {
-      assert _target.zmqContext != null;
+      if (_target.zmqContext == null) {
+        throw ZmqException.fatal();
+      }
     }
 
     @Override

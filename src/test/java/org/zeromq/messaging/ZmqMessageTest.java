@@ -173,7 +173,7 @@ public class ZmqMessageTest {
                 .build();
       fail();
     }
-    catch (AssertionError e) {
+    catch (IllegalArgumentException e) {
     }
     try {
       ZmqMessage.builder()
@@ -181,7 +181,7 @@ public class ZmqMessageTest {
                 .build();
       fail();
     }
-    catch (AssertionError e) {
+    catch (IllegalArgumentException e) {
     }
     // check payload
     try {
@@ -190,7 +190,7 @@ public class ZmqMessageTest {
                 .build();
       fail();
     }
-    catch (AssertionError e) {
+    catch (IllegalArgumentException e) {
     }
     try {
       ZmqMessage.builder()
@@ -198,7 +198,7 @@ public class ZmqMessageTest {
                 .build();
       fail();
     }
-    catch (AssertionError e) {
+    catch (IllegalArgumentException e) {
     }
     // check identities
     try {
@@ -209,7 +209,7 @@ public class ZmqMessageTest {
                 .build();
       fail();
     }
-    catch (AssertionError e) {
+    catch (IllegalArgumentException e) {
     }
   }
 

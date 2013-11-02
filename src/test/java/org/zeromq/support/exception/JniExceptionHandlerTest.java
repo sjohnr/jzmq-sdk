@@ -28,11 +28,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
-public class ZmqExceptionJniExceptionHandlerTest {
+public class JniExceptionHandlerTest {
 
   @Test
   public void t0() {
-    ZmqExceptionJniExceptionHandler target = new ZmqExceptionJniExceptionHandler();
+    JniExceptionHandler target = new JniExceptionHandler();
 
     RuntimeException re = new RuntimeException();
     try {
@@ -59,7 +59,7 @@ public class ZmqExceptionJniExceptionHandlerTest {
 
   @Test
   public void t1() {
-    ZmqExceptionJniExceptionHandler target = new ZmqExceptionJniExceptionHandler();
+    JniExceptionHandler target = new JniExceptionHandler();
 
     ZMQException ze = new ZMQException("xyz", "xyz".hashCode());
     try {

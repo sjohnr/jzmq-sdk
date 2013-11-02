@@ -26,6 +26,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.zeromq.messaging.ZmqException.ErrorCode.HEADER_IS_NOT_SET;
+import static org.zeromq.messaging.ZmqException.ErrorCode.WRONG_HEADER;
 import static org.zeromq.messaging.ZmqMessage.DIV_FRAME;
 import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
 
@@ -93,28 +94,31 @@ public class ZmqHeadersTest {
       new ZmqHeaders().copy(DIV_FRAME);
       fail();
     }
-    catch (AssertionError e) {
+    catch (ZmqException e) {
+      assert e.errorCode() == WRONG_HEADER;
     }
 
     try {
-      new ZmqHeaders().set("x", "  ");
+      new ZmqHeaders().set("x", "");
       fail();
     }
-    catch (AssertionError e) {
+    catch (IllegalArgumentException e) {
     }
 
     try {
       new ZmqHeaders().copy("{\"0\":[]}".getBytes());
       fail();
     }
-    catch (AssertionError e) {
+    catch (ZmqException e) {
+      assert e.errorCode() == WRONG_HEADER;
     }
 
     try {
       new ZmqHeaders().copy("{\"0\":[\"\"]}".getBytes());
       fail();
     }
-    catch (AssertionError e) {
+    catch (ZmqException e) {
+      assert e.errorCode() == WRONG_HEADER;
     }
   }
 

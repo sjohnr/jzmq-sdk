@@ -140,7 +140,7 @@ public final class ZmqContext implements HasInit, HasDestroy {
       case ZMQ.PAIR:
         break;
       default:
-        throw new IllegalArgumentException("Wrong socket_type: " + socketType);
+        throw ZmqException.fatal();
     }
     ZMQ.Socket socket = _context.socket(socketType);
     _sockets.add(socket);

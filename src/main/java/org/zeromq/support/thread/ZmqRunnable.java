@@ -27,9 +27,12 @@ import org.zeromq.support.ObjectBuilder;
 import org.zeromq.support.exception.AbstractExceptionHandlerInTheChain;
 import org.zeromq.support.exception.ExceptionHandler;
 import org.zeromq.support.exception.InterruptedExceptionHandler;
-import org.zeromq.support.exception.ZmqExceptionJniExceptionHandler;
+import org.zeromq.support.exception.JniExceptionHandler;
+import org.zeromq.support.exception.LoggingExceptionHandler;
 
 import java.util.concurrent.CountDownLatch;
+
+import static org.zeromq.messaging.ZmqException.ErrorCode;
 
 public final class ZmqRunnable implements Runnable {
 
@@ -49,7 +52,9 @@ public final class ZmqRunnable implements Runnable {
 
     @Override
     public void checkInvariant() {
-      assert _target.runnableContext != null;
+      if (_target.runnableContext == null) {
+        throw ZmqException.fatal();
+      }
     }
 
     @Override
@@ -64,12 +69,15 @@ public final class ZmqRunnable implements Runnable {
     public void handleException(Throwable t) {
       if (ZmqException.class.isAssignableFrom(t.getClass())) {
         ZmqException e = (ZmqException) t;
-        if (e.errorCode() == ZmqException.ErrorCode.SEE_CAUSE) {
+        if (e.errorCode() == ErrorCode.SEE_CAUSE) {
           handleException(e.getCause());
           return;
         }
-        else {
+        else if (e.errorCode() == ErrorCode.FATAL) {
           throw e;
+        }
+        else {
+          LOG.error("Got unhandled issue: " + e, e);
         }
       }
       next().handleException(t);
@@ -83,10 +91,11 @@ public final class ZmqRunnable implements Runnable {
   private CountDownLatch destroyLatch;
   private ZmqRunnableContext runnableContext;
 
-  private ExceptionHandler _exceptionHandlerChain =
+  private final ExceptionHandler _exceptionHandlerChain =
       new InternalExceptionHandler()
-          .withNext(new ZmqExceptionJniExceptionHandler()
-                        .withNext(new InterruptedExceptionHandler()));
+          .withNext(new JniExceptionHandler()
+                        .withNext(new InterruptedExceptionHandler()
+                                      .withNext(new LoggingExceptionHandler())));
 
   //// CONSTRUCTORS
 
@@ -129,7 +138,7 @@ public final class ZmqRunnable implements Runnable {
       }
     }
     catch (Throwable e) {
-      LOG.error("!!! Unrecoverable issue: " + e + ". Thank you. Good bye.", e);
+      LOG.error("!!! Fatal: " + e + ". Thank you. Good bye.", e);
     }
     finally {
       // this block is aimed to support following situations:

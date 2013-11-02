@@ -23,6 +23,7 @@ package org.zeromq.support.spring;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.support.AbstractApplicationContext;
+import org.zeromq.messaging.ZmqException;
 import org.zeromq.support.HasDestroy;
 import org.zeromq.support.IsPrototype;
 import org.zeromq.support.thread.ZmqRunnable;
@@ -71,7 +72,7 @@ public final class ZmqSpringContext implements HasDestroy {
 
     if (beans.isEmpty()) {
       LOG.error("!!! Not a single runnable_context registered.");
-      throw new IllegalStateException();
+      throw ZmqException.fatal();
     }
 
     for (Map.Entry<String, ZmqRunnableContext> entry : beans.entrySet()) {
@@ -86,7 +87,7 @@ public final class ZmqSpringContext implements HasDestroy {
           ZmqRunnableContext prototype = applicationContext.getBean(key, ZmqRunnableContext.class);
           if (!prototypes.add(prototype)) {
             LOG.error("!!! Not a prototype scoped runnable_context detected: {}.", key);
-            throw new IllegalStateException();
+            throw ZmqException.fatal();
           }
           prototypes.add(prototype);
           deploy(prototype);

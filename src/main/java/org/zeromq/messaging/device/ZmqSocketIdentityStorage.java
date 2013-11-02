@@ -20,14 +20,13 @@
 
 package org.zeromq.messaging.device;
 
-import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqFrames;
 
 public interface ZmqSocketIdentityStorage {
 
   void store(ZmqFrames identities);
 
-  ZmqFrames obtain(ZmqFrames identities) throws ZmqException;
+  ZmqFrames obtain(ZmqFrames identities);
 
   int size();
 }

@@ -267,7 +267,7 @@ public final class ZmqChannelFactory {
     }
 
     @Override
-    public boolean send(ZmqMessage message) throws ZmqException {
+    public boolean send(ZmqMessage message) {
       assertSocketAlive();
       if (mode == Mode.BOTH || mode == Mode.SENDER) {
         try {
@@ -285,14 +285,14 @@ public final class ZmqChannelFactory {
         }
         catch (Exception e) {
           LOG.error("!!! Message wasn't sent! Exception occured: " + e, e);
-          throw ZmqException.wrap(e);
+          throw ZmqException.seeCause(e);
         }
       }
       throw new UnsupportedOperationException();
     }
 
     @Override
-    public ZmqMessage recv() throws ZmqException {
+    public ZmqMessage recv() {
       assertSocketAlive();
       if (mode == Mode.BOTH || mode == Mode.RECEIVER) {
         try {
@@ -311,7 +311,7 @@ public final class ZmqChannelFactory {
         }
         catch (Exception e) {
           LOG.error("!!! Message wasn't received! Exception occured: " + e, e);
-          throw ZmqException.wrap(e);
+          throw ZmqException.seeCause(e);
         }
       }
       throw new UnsupportedOperationException();
@@ -341,7 +341,9 @@ public final class ZmqChannelFactory {
     }
 
     void registerReceiver(ZMQ.Poller poller) {
-      assert !isReceiverRegistered() : "not allowed resgistering channel(r) more than once!";
+      if (isReceiverRegistered()) {
+        throw ZmqException.fatal();
+      }
       _pollerOnReceiver = poller;
       _pollableIndOnReceiver = _pollerOnReceiver.register(socket, ZMQ.Poller.POLLIN);
     }
@@ -351,7 +353,9 @@ public final class ZmqChannelFactory {
     }
 
     void registerSender() {
-      assert !isSenderRegistered() : "not allowed resgistering channel(s) more than once!";
+      if (isSenderRegistered()) {
+        throw ZmqException.fatal();
+      }
       _pollerOnSender = zmqContext.newPoller(1);
       _pollableIndOnSender = _pollerOnSender.register(socket, ZMQ.Poller.POLLOUT);
     }
@@ -377,7 +381,9 @@ public final class ZmqChannelFactory {
     }
 
     void assertSocketAlive() {
-      assert socket != null : "detected access to the destroyed channel!";
+      if (socket == null) {
+        throw ZmqException.fatal();
+      }
     }
   }
 
@@ -425,10 +431,12 @@ public final class ZmqChannelFactory {
   }
 
   private void checkInvariant() {
-    assert zmqContext != null : "context is required!";
+    if (zmqContext == null) {
+      throw ZmqException.fatal();
+    }
 
     if (bindAddresses.isEmpty() && connectAddresses.isEmpty()) {
-      throw new AssertionError("either bind_addresses or connect_addresses must be specified! (or both)");
+      throw ZmqException.fatal();
     }
 
     switch (socketType) {
@@ -440,7 +448,7 @@ public final class ZmqChannelFactory {
       case ZMQ.ROUTER:
         break;
       default:
-        throw new AssertionError("Unsupported socket_type: " + socketType);
+        throw ZmqException.fatal();
     }
   }
 
@@ -500,7 +508,7 @@ public final class ZmqChannelFactory {
       }
       catch (Exception e) {
         LOG.error("!!! Got error at .bind(" + addr + "): " + e, e);
-        throw ZmqException.wrap(e);
+        throw ZmqException.seeCause(e);
       }
     }
 
@@ -518,7 +526,7 @@ public final class ZmqChannelFactory {
             int timeout = INPROC_CONN_TIMEOUT;
             if (System.currentTimeMillis() - timer > timeout) {
               LOG.error("!!! Can't .connect(" + addr + ")." + " Gave up after " + timeout + " sec.");
-              throw ZmqException.wrap(e);
+              throw ZmqException.seeCause(e);
             }
           }
         }
@@ -529,7 +537,7 @@ public final class ZmqChannelFactory {
         }
         catch (Exception e) {
           LOG.error("!!! Got error at .connect(" + addr + "): " + e, e);
-          throw ZmqException.wrap(e);
+          throw ZmqException.seeCause(e);
         }
       }
     }
@@ -574,7 +582,7 @@ public final class ZmqChannelFactory {
         loggableSocketType = "ROUTER";
         break;
       default:
-        throw new IllegalArgumentException("Unsupported socket_type: " + socketType);
+        throw ZmqException.fatal();
     }
     return loggableSocketType;
   }

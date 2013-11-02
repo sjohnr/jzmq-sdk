@@ -52,7 +52,9 @@ public final class LruRouter extends ZmqAbstractServiceDispatcher {
     @Override
     public void checkInvariant() {
       super.checkInvariant();
-      assert _target.lruCache != null;
+      if (_target.lruCache == null) {
+        throw ZmqException.fatal();
+      }
     }
   }
 
@@ -95,7 +97,7 @@ public final class LruRouter extends ZmqAbstractServiceDispatcher {
   }
 
   @Override
-  public void exec() throws ZmqException {
+  public void exec() {
     // handle backend traffic first.
     if (_backend.hasInput()) {
       ZmqMessage backendMessage = _backend.recv();

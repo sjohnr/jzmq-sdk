@@ -24,7 +24,6 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import com.google.common.base.Strings;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 
@@ -34,6 +33,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.zeromq.support.ZmqUtils.isDivFrame;
 import static org.zeromq.support.ZmqUtils.isEmptyFrame;
 
@@ -53,7 +54,11 @@ public class ZmqHeaders {
     if (isEmptyFrame(headers)) {
       return this;
     }
-    assert !isDivFrame(headers);
+
+    if (isDivFrame(headers)) {
+      throw ZmqException.wrongHeader();
+    }
+
     try {
       JsonFactory jf = new JsonFactory();
       JsonParser p = jf.createParser(headers);
@@ -73,10 +78,15 @@ public class ZmqHeaders {
               break;
             case VALUE_STRING:
               String text = p.getText();
-              assert !Strings.isNullOrEmpty(text);
+              if (isNullOrEmpty(text)) {
+                throw ZmqException.wrongHeader();
+              }
               headerContent.add(text);
               break;
             case END_ARRAY:
+              if (headerContent.isEmpty()) {
+                throw ZmqException.wrongHeader();
+              }
               _map.putAll(headerId, headerContent);
               headerId = null;
               headerContent = null;
@@ -87,22 +97,22 @@ public class ZmqHeaders {
       while (token != null);
     }
     catch (IOException e) {
-      throw ZmqException.wrap(e);
+      throw ZmqException.seeCause(e);
     }
     return this;
   }
 
   public final ZmqHeaders set(String headerId, String headerContent) {
-    assert !Strings.isNullOrEmpty(headerId);
-    assert !Strings.isNullOrEmpty(headerContent);
+    checkArgument(!isNullOrEmpty(headerId));
+    checkArgument(!isNullOrEmpty(headerContent));
     remove(headerId);
     _map.put(headerId, headerContent);
     return this;
   }
 
   public final ZmqHeaders set(String headerId, Number headerContent) {
-    assert !Strings.isNullOrEmpty(headerId);
-    assert headerContent != null;
+    checkArgument(!isNullOrEmpty(headerId));
+    checkArgument(headerContent != null);
     remove(headerId);
     _map.put(headerId, headerContent.toString());
     return this;
@@ -127,9 +137,8 @@ public class ZmqHeaders {
   /**
    * @param id header id.
    * @return header content. <b>Never null.</b>
-   * @throws ZmqException in case header with given id is absent.
    */
-  public final Collection<String> getHeaderOrException(String id) throws ZmqException {
+  public final Collection<String> getHeaderOrException(String id) {
     Collection<String> content = getHeaderOrNull(id);
     if (content.isEmpty()) {
       throw ZmqException.headerIsNotSet();
@@ -165,7 +174,7 @@ public class ZmqHeaders {
       return w.toString().getBytes();
     }
     catch (IOException e) {
-      throw ZmqException.wrap(e);
+      throw ZmqException.seeCause(e);
     }
   }
 }

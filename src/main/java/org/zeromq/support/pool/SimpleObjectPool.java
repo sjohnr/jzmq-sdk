@@ -102,7 +102,7 @@ public final class SimpleObjectPool<T> implements ObjectPool<T> {
     }
     catch (InterruptedException e) {
       Thread.interrupted();
-      throw ZmqException.wrap(e);
+      throw ZmqException.seeCause(e);
     }
     return _lease(oid);
   }

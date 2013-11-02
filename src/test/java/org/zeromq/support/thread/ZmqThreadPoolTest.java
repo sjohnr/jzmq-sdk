@@ -22,7 +22,6 @@ package org.zeromq.support.thread;
 
 import org.junit.Test;
 import org.zeromq.TestRecorder;
-import org.zeromq.messaging.ZmqException;
 
 public class ZmqThreadPoolTest {
 
@@ -34,7 +33,7 @@ public class ZmqThreadPoolTest {
     }
 
     @Override
-    public void exec() throws ZmqException {
+    public void exec() {
       // no-op.
     }
 
@@ -142,7 +141,7 @@ public class ZmqThreadPoolTest {
     return ZmqRunnable.builder()
                       .withRunnableContext(new ZmqRunnableContextTemplate() {
                         @Override
-                        public void exec() throws ZmqException {
+                        public void exec() {
                           throw new UnsupportedOperationException();
                         }
                       })

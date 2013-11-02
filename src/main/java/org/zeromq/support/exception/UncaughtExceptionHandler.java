@@ -35,6 +35,6 @@ public final class UncaughtExceptionHandler implements ExceptionHandler {
   @Override
   public void handleException(Throwable t) {
     LOG.error("!!! Got uncaught exception: " + t, t);
-    throw ZmqException.wrap(t);
+    throw ZmqException.seeCause(t);
   }
 }

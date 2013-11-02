@@ -100,7 +100,9 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractDeviceContext {
 
     public void checkInvariant() {
       super.checkInvariant();
-      assert _target.messageProcessor != null;
+      if (_target.messageProcessor == null) {
+        throw ZmqException.fatal();
+      }
     }
   }
 
@@ -146,7 +148,7 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractDeviceContext {
   }
 
   @Override
-  public final void exec() throws ZmqException {
+  public final void exec() {
     if (!_channel.hasInput()) {
       LOG.debug("No incoming requests. Delegating to {}.", _pingStrategyForLogging);
       _pingStrategy.ping(_channel);

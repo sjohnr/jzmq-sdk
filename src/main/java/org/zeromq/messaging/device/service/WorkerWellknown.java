@@ -21,6 +21,7 @@
 package org.zeromq.messaging.device.service;
 
 import org.zeromq.messaging.ZmqChannelFactory;
+import org.zeromq.messaging.ZmqException;
 
 /**
  * Wellknown-worker device:
@@ -39,7 +40,9 @@ public final class WorkerWellknown extends ZmqAbstractWorker {
     @Override
     public void checkInvariant() {
       super.checkInvariant();
-      assert !_target.bindAddresses.isEmpty();
+      if (_target.bindAddresses.isEmpty()) {
+        throw ZmqException.fatal();
+      }
     }
   }
 

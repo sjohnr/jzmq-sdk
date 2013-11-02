@@ -20,6 +20,7 @@
 
 package org.zeromq.messaging.event;
 
+import com.google.common.base.Preconditions;
 import org.zeromq.messaging.ZmqChannel;
 
 public abstract class ZmqAbstractTimerEvent extends ZmqAbstractChannelEvent {
@@ -32,7 +33,7 @@ public abstract class ZmqAbstractTimerEvent extends ZmqAbstractChannelEvent {
 
   protected ZmqAbstractTimerEvent(ZmqChannel channel, Long elapsedTime) {
     super(channel);
-    assert elapsedTime != null;
+    Preconditions.checkArgument(elapsedTime != null);
     this.elapsedTime = elapsedTime;
   }
 

@@ -27,17 +27,15 @@ public interface ZmqChannel extends ZmqPollable {
    *
    * @param message message to send.
    * @return flag indicating success or fail for send operation.
-   * @throws ZmqException in case if message send fails due to some severe reason.
    */
-  boolean send(ZmqMessage message) throws ZmqException;
+  boolean send(ZmqMessage message);
 
   /**
    * Function which receives a message. May block if timeout on socket has been specified.
    *
    * @return a message or null.
-   * @throws ZmqException in case if message recv fails due to some severe reason.
    */
-  ZmqMessage recv() throws ZmqException;
+  ZmqMessage recv();
 
   /**
    * Subscribe function.

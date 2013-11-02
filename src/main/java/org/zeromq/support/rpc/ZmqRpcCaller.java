@@ -132,10 +132,18 @@ public final class ZmqRpcCaller implements MethodInterceptor, HasInit {
 
   @Override
   public void init() {
-    assert zmqContext != null;
-    assert !connectAddresses.isEmpty();
-    assert outputAdapter != null;
-    assert inputAdapter != null;
+    if (zmqContext == null) {
+      throw ZmqException.fatal();
+    }
+    if (connectAddresses.isEmpty()) {
+      throw ZmqException.fatal();
+    }
+    if (outputAdapter == null) {
+      throw ZmqException.fatal();
+    }
+    if (inputAdapter == null) {
+      throw ZmqException.fatal();
+    }
 
     ZmqChannelFactory.Builder builder = ZmqChannelFactory.builder();
     if (identity != null) {
@@ -155,7 +163,7 @@ public final class ZmqRpcCaller implements MethodInterceptor, HasInit {
   }
 
   @Override
-  public Object invoke(MethodInvocation invocation) throws ZmqException {
+  public Object invoke(MethodInvocation invocation) {
     Method method = invocation.getMethod();
     String serviceName = method.getDeclaringClass().getCanonicalName();
     String functionName = method.getName();
@@ -177,7 +185,7 @@ public final class ZmqRpcCaller implements MethodInterceptor, HasInit {
       request = outputAdapter.convert(invocation);
     }
     catch (Exception e) {
-      throw ZmqException.wrap(e);
+      throw ZmqException.seeCause(e);
     }
 
     if (LOG.isTraceEnabled()) {
@@ -215,7 +223,7 @@ public final class ZmqRpcCaller implements MethodInterceptor, HasInit {
       result = inputAdapter.convert(reply);
     }
     catch (Exception e) {
-      throw ZmqException.wrap(e);
+      throw ZmqException.seeCause(e);
     }
     if (LOG.isTraceEnabled()) {
       LOG.trace("Converted zmq_reply -> object ({} b). Returning.", reply.payload().length);

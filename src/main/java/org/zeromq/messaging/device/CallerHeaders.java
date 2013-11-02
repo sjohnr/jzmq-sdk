@@ -20,7 +20,6 @@
 
 package org.zeromq.messaging.device;
 
-import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqHeaders;
 
 import java.util.Collection;
@@ -58,7 +57,7 @@ public final class CallerHeaders extends ZmqHeaders {
     return this;
   }
 
-  public Long getCorrId() throws ZmqException {
+  public Long getCorrId() {
     Collection<String> c = getHeaderOrException(HEADER_CORRELATION_ID);
     return Long.valueOf(c.iterator().next());
   }

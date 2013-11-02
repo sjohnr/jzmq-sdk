@@ -20,16 +20,20 @@
 
 package org.zeromq.messaging;
 
+import com.google.common.base.Preconditions;
+
 public final class ZmqException extends RuntimeException {
 
   private static final long serialVersionUID = ZmqException.class.getCanonicalName().hashCode();
 
   public static enum ErrorCode {
     SEE_CAUSE,
-    ZMQ_CONTEXT_NOT_ACCESSIBLE,
+    FATAL,
+    CONTEXT_NOT_ACCESSIBLE,
     SOCKET_IDENTITY_STORAGE_IS_EMPTY,
     SOCKET_IDENTITY_NOT_MATCHED,
     HEADER_IS_NOT_SET,
+    WRONG_HEADER,
     WRONG_MESSAGE,
     FAILED_AT_SEND,
     FAILED_AT_RECV
@@ -45,18 +49,22 @@ public final class ZmqException extends RuntimeException {
 
   private ZmqException(Throwable e) {
     super(e);
-    assert e != null;
+    Preconditions.checkArgument(e != null);
     this.errorCode = ErrorCode.SEE_CAUSE;
   }
 
   //// METHODS
 
-  public static ZmqException wrap(Throwable e) {
+  public static ZmqException seeCause(Throwable e) {
     return new ZmqException(e);
   }
 
+  public static ZmqException fatal() {
+    return new ZmqException(ErrorCode.FATAL);
+  }
+
   public static ZmqException contextNotAccessible() {
-    return new ZmqException(ErrorCode.ZMQ_CONTEXT_NOT_ACCESSIBLE);
+    return new ZmqException(ErrorCode.CONTEXT_NOT_ACCESSIBLE);
   }
 
   public static ZmqException socketIdentityStorageIsEmpty() {
@@ -69,6 +77,10 @@ public final class ZmqException extends RuntimeException {
 
   public static ZmqException headerIsNotSet() {
     return new ZmqException(ErrorCode.HEADER_IS_NOT_SET);
+  }
+
+  public static ZmqException wrongHeader() {
+    return new ZmqException(ErrorCode.WRONG_HEADER);
   }
 
   public static ZmqException wrongMessage() {

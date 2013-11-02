@@ -98,7 +98,7 @@ public final class ZmqChannelEventWrapper implements ZmqChannel {
   }
 
   @Override
-  public boolean send(ZmqMessage message) throws ZmqException {
+  public boolean send(ZmqMessage message) {
     Throwable t = null;
     try {
       eventBus.post(new EventBeforeSend(channel, message));
@@ -121,7 +121,7 @@ public final class ZmqChannelEventWrapper implements ZmqChannel {
     }
     catch (Exception e) {
       t = e;
-      throw ZmqException.wrap(e);
+      throw ZmqException.seeCause(e);
     }
     finally {
       eventBus.post(new EventAfterSend(t));
@@ -129,7 +129,7 @@ public final class ZmqChannelEventWrapper implements ZmqChannel {
   }
 
   @Override
-  public ZmqMessage recv() throws ZmqException {
+  public ZmqMessage recv() {
     Throwable t = null;
     try {
       eventBus.post(new EventBeforeReceive(channel));
@@ -159,7 +159,7 @@ public final class ZmqChannelEventWrapper implements ZmqChannel {
     }
     catch (Exception e) {
       t = e;
-      throw ZmqException.wrap(e);
+      throw ZmqException.seeCause(e);
     }
     finally {
       eventBus.post(new EventAfterReceive(t));
@@ -180,7 +180,7 @@ public final class ZmqChannelEventWrapper implements ZmqChannel {
     }
     catch (Exception e) {
       t = e;
-      throw ZmqException.wrap(e);
+      throw ZmqException.seeCause(e);
     }
     finally {
       eventBus.post(new EventAfterSubscribe(t));
@@ -201,7 +201,7 @@ public final class ZmqChannelEventWrapper implements ZmqChannel {
     }
     catch (Throwable e) {
       t = e;
-      throw ZmqException.wrap(e);
+      throw ZmqException.seeCause(e);
     }
     finally {
       eventBus.post(new EventAfterUnsubscribe(t));

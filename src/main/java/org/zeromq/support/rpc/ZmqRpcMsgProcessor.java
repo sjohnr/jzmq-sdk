@@ -69,7 +69,7 @@ public final class ZmqRpcMsgProcessor implements ZmqMessageProcessor, Applicatio
   }
 
   @Override
-  public ZmqMessage process(ZmqMessage message) throws ZmqException {
+  public ZmqMessage process(ZmqMessage message) {
     if (LOG.isTraceEnabled()) {
       LOG.trace("Got zmq_request ({} b). Processing.", message.payload().length);
     }
@@ -128,7 +128,7 @@ public final class ZmqRpcMsgProcessor implements ZmqMessageProcessor, Applicatio
       reply = outputAdapter.convert(new Object[]{invocResult, message});
     }
     catch (Exception e) {
-      throw ZmqException.wrap(e);
+      throw ZmqException.seeCause(e);
     }
     if (LOG.isTraceEnabled()) {
       LOG.trace("Converted invoc_result -> zmq_reply ({} b). Returning.", reply.payload().length);

@@ -22,6 +22,7 @@ package org.zeromq.messaging;
 
 import org.zeromq.support.ObjectBuilder;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.zeromq.support.ZmqUtils.isDivFrame;
 import static org.zeromq.support.ZmqUtils.isEmptyFrame;
 
@@ -57,15 +58,15 @@ public final class ZmqMessage {
 
     /** See {@link ZmqMessage#topic}. */
     public Builder withTopic(byte[] topic) {
-      assert !isDivFrame(topic);
+      checkArgument(!isDivFrame(topic));
       _target.topic = topic;
       return this;
     }
 
     /** See {@link ZmqMessage#identities}. */
     public Builder withIdentity(byte[] identity) {
-      assert !isEmptyFrame(identity);
-      assert !isDivFrame(identity);
+      checkArgument(!isEmptyFrame(identity));
+      checkArgument(!isDivFrame(identity));
       _target.identities.add(identity);
       return this;
     }
@@ -73,8 +74,8 @@ public final class ZmqMessage {
     /** See {@link ZmqMessage#identities}. */
     public Builder withIdentities(ZmqFrames frames) {
       for (byte[] identity : frames) {
-        assert !isEmptyFrame(identity);
-        assert !isDivFrame(identity);
+        checkArgument(!isEmptyFrame(identity));
+        checkArgument(!isDivFrame(identity));
         _target.identities.add(identity);
       }
       return this;
@@ -100,7 +101,7 @@ public final class ZmqMessage {
 
     /** See {@link ZmqMessage#payload}. */
     public Builder withPayload(byte[] payload) {
-      assert !isDivFrame(payload);
+      checkArgument(!isDivFrame(payload));
       _target.payload = payload;
       return this;
     }
@@ -184,15 +185,14 @@ public final class ZmqMessage {
    * Function returns a <i>projection</i> of headers specified by {@code wrapperClass}.
    *
    * @param wrapperClass wrapper class or <i>headers projection</i> class.
-   * @throws ZmqException in case if something severe happens. <b>This exception should not be caught.</b>
    */
   @SuppressWarnings("unchecked")
-  public <T extends ZmqHeaders> T headersAs(Class<T> wrapperClass) throws ZmqException {
+  public <T extends ZmqHeaders> T headersAs(Class<T> wrapperClass) {
     try {
       return (T) wrapperClass.newInstance().copy(headers);
     }
     catch (Exception e) {
-      throw ZmqException.wrap(e);
+      throw ZmqException.seeCause(e);
     }
   }
 

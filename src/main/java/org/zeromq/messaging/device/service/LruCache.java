@@ -74,7 +74,7 @@ public class LruCache implements ZmqSocketIdentityStorage {
   }
 
   @Override
-  public ZmqFrames obtain(ZmqFrames frontendIdentities) throws ZmqException {
+  public ZmqFrames obtain(ZmqFrames frontendIdentities) {
     ensureInitialized();
 
     Set<Long> keys = _identityCache.asMap().keySet();

@@ -30,18 +30,20 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.zip.CRC32;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 public class ZmqUtils {
 
   private ZmqUtils() {
   }
 
   public static boolean isEmptyFrame(byte[] frame) {
-    assert frame != null;
+    checkArgument(frame != null);
     return frame.length == 0;
   }
 
   public static boolean isDivFrame(byte[] frame) {
-    assert frame != null;
+    checkArgument(frame != null);
     return Arrays.equals(ZmqMessage.DIV_FRAME, frame);
   }
 
@@ -92,7 +94,7 @@ public class ZmqUtils {
       return new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(map);
     }
     catch (JsonProcessingException e) {
-      throw ZmqException.wrap(e);
+      throw ZmqException.seeCause(e);
     }
   }
 }

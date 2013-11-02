@@ -68,10 +68,10 @@ class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
     @Override
     public void checkInvariant() {
       if (_target.awareOfTopicFrame && _target.awareOfDEALERType) {
-        throw new IllegalStateException();
+        throw ZmqException.fatal();
       }
       if (_target.awareOfDEALERType && !_target.expectIdentities) {
-        throw new IllegalStateException();
+        throw ZmqException.fatal();
       }
     }
 
@@ -98,7 +98,7 @@ class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
   }
 
   @Override
-  public ZmqFrames convert(ZmqMessage message) throws ZmqException {
+  public ZmqFrames convert(ZmqMessage message) {
     try {
       ZmqFrames target = new ZmqFrames();
 
@@ -135,7 +135,7 @@ class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
     }
     catch (Exception e) {
       LOG.error("!!! Failed to convert outgoing ZmqMessage: " + e, e);
-      throw ZmqException.wrap(e);
+      throw ZmqException.seeCause(e);
     }
   }
 }

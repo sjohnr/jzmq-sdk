@@ -20,7 +20,6 @@
 
 package org.zeromq.support.thread;
 
-import org.zeromq.messaging.ZmqException;
 import org.zeromq.support.HasDestroy;
 import org.zeromq.support.HasInit;
 
@@ -28,5 +27,5 @@ public interface ZmqRunnableContext extends HasInit, HasDestroy {
 
   void block();
 
-  void exec() throws ZmqException;
+  void exec();
 }

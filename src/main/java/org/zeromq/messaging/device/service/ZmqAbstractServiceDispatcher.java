@@ -22,6 +22,7 @@ package org.zeromq.messaging.device.service;
 
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqChannelFactory;
+import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.device.ZmqAbstractDeviceContext;
 
 import java.util.ArrayList;
@@ -74,8 +75,12 @@ public abstract class ZmqAbstractServiceDispatcher extends ZmqAbstractDeviceCont
     @Override
     public void checkInvariant() {
       super.checkInvariant();
-      assert !_target.frontendAddresses.isEmpty();
-      assert !_target.backendAddresses.isEmpty();
+      if (_target.frontendAddresses.isEmpty()) {
+        throw ZmqException.fatal();
+      }
+      if (_target.backendAddresses.isEmpty()) {
+        throw ZmqException.fatal();
+      }
     }
   }
 

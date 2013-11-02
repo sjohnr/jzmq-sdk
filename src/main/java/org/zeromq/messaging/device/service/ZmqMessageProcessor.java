@@ -20,7 +20,6 @@
 
 package org.zeromq.messaging.device.service;
 
-import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
 
 /**
@@ -40,7 +39,6 @@ public interface ZmqMessageProcessor {
    *
    * @param message incoming request_message.
    * @return reply_message or {@code null} if reply is not required.
-   * @throws ZmqException in case something severe happens.
    */
-  ZmqMessage process(ZmqMessage message) throws ZmqException;
+  ZmqMessage process(ZmqMessage message);
 }
