@@ -22,6 +22,7 @@ package org.zeromq.messaging;
 
 import org.junit.Test;
 
+import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -38,8 +39,8 @@ public class ZmqHeadersTest {
 
     assertArrayEquals(EMPTY_FRAME, headers.asBinary());
 
-    assert headers.remove("").isEmpty();
-    assert headers.getHeaderOrNot("").isEmpty();
+    assertNull(headers.remove(""));
+    assertNull(headers.getHeaderOrNull(""));
   }
 
   @Test
@@ -47,7 +48,7 @@ public class ZmqHeadersTest {
     ZmqHeaders headers = new ZmqHeaders().copy("{\"0\":[\"abc\"]}".getBytes());
 
     headers.getHeaderOrException("0"); // expecting header.
-    assert headers.getHeaderOrNot("1").isEmpty(); // not expecting header.
+    assertNull(headers.getHeaderOrNull("1")); // not expecting header.
     try {
       headers.getHeaderOrException("2"); // expecting exception.
       fail();
@@ -71,17 +72,21 @@ public class ZmqHeadersTest {
   public void t3() {
     ZmqHeaders headers = new ZmqHeaders().copy(new ZmqHeaders().set("0", 0))
                                          .copy(new ZmqHeaders().set("1", 1))
+                                         .copy(new ZmqHeaders().set("1", 1))
+                                         .copy(new ZmqHeaders().set("2", 2))
                                          .copy(new ZmqHeaders().set("2", 2))
                                          .set("3", "a")
+                                         .set("3", "a")
+                                         .set("4", "b")
                                          .set("4", "b")
                                          .set("5", "c");
 
-    assertEquals("0", headers.getHeaderOrNot("0").iterator().next());
-    assertEquals("1", headers.getHeaderOrNot("1").iterator().next());
-    assertEquals("2", headers.getHeaderOrNot("2").iterator().next());
-    assertEquals("a", headers.getHeaderOrNot("3").iterator().next());
-    assertEquals("b", headers.getHeaderOrNot("4").iterator().next());
-    assertEquals("c", headers.getHeaderOrNot("5").iterator().next());
+    assertEquals("0", headers.getHeaderOrNull("0"));
+    assertEquals("1", headers.getHeaderOrNull("1"));
+    assertEquals("2", headers.getHeaderOrNull("2"));
+    assertEquals("a", headers.getHeaderOrNull("3"));
+    assertEquals("b", headers.getHeaderOrNull("4"));
+    assertEquals("c", headers.getHeaderOrNull("5"));
   }
 
   @Test
@@ -129,5 +134,11 @@ public class ZmqHeadersTest {
                                          .set("c", "c");
 
     assertArrayEquals("{\"a\":[\"a\"],\"b\":[\"b\"],\"c\":[\"c\"]}".getBytes(), headers.asBinary());
+
+    ZmqHeaders copy = headers
+        .copy("{\"a\":[\"x\"]}".getBytes())
+        .copy(new ZmqHeaders().set("c", "y"));
+
+    assertArrayEquals("{\"a\":[\"x\"],\"b\":[\"b\"],\"c\":[\"y\"]}".getBytes(), copy.asBinary());
   }
 }

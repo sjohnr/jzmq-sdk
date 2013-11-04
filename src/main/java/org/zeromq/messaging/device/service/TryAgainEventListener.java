@@ -76,7 +76,7 @@ public final class TryAgainEventListener {
       LOG.debug("TRY_AGAIN detected. Calling.");
       timer.reset().start();
       ZmqChannel channel = event.channel();
-      boolean sent = channel.send(createTryAgainMsg(message));
+      boolean sent = channel.send(createMsg(message));
       if (!sent) {
         event.clear();
         LOG.warn("Can't TRY_AGAIN: .send() failed.");
@@ -112,9 +112,11 @@ public final class TryAgainEventListener {
     }
   }
 
-  private ZmqMessage createTryAgainMsg(ZmqMessage message) {
+  private ZmqMessage createMsg(ZmqMessage message) {
     return ZmqMessage.builder(message)
-                     .withHeaders(message.headersAs(ServiceHeaders.class).setMsgTypeNotSet())
+                     .withHeaders(new ServiceHeaders()
+                                      .copy(message.headers())
+                                      .setMsgTypeNotSet())
                      .build();
   }
 }

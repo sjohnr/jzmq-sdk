@@ -39,10 +39,10 @@ public final class ZmqMessage {
     }
 
     private Builder(ZmqMessage message) {
-      withTopic(message.topic());
-      withIdentities(message.identities());
-      withHeaders(message.headers());
-      withPayload(message.payload());
+      withTopic(message.topic);
+      withIdentities(message.identities);
+      withHeaders(message.headers);
+      withPayload(message.payload);
     }
 
     @Override
@@ -56,23 +56,14 @@ public final class ZmqMessage {
       return _target;
     }
 
-    /** See {@link ZmqMessage#topic}. */
     public Builder withTopic(byte[] topic) {
       checkArgument(!isDivFrame(topic));
       _target.topic = topic;
       return this;
     }
 
-    /** See {@link ZmqMessage#identities}. */
-    public Builder withIdentity(byte[] identity) {
-      checkArgument(!isEmptyFrame(identity));
-      checkArgument(!isDivFrame(identity));
-      _target.identities.add(identity);
-      return this;
-    }
-
-    /** See {@link ZmqMessage#identities}. */
     public Builder withIdentities(ZmqFrames frames) {
+      _target.identities = new ZmqFrames(frames.size());
       for (byte[] identity : frames) {
         checkArgument(!isEmptyFrame(identity));
         checkArgument(!isDivFrame(identity));
@@ -81,25 +72,16 @@ public final class ZmqMessage {
       return this;
     }
 
-    /**
-     * See {@link ZmqMessage#headers}.
-     * Expected source -- externally constructed headers.
-     */
     public Builder withHeaders(ZmqHeaders headers) {
       _target.headers = new ZmqHeaders().copy(headers);
       return this;
     }
 
-    /**
-     * See {@link ZmqMessage#headers}.
-     * Expected source -- headers (which will be parsed in corresponding way).
-     */
     public Builder withHeaders(byte[] headers) {
-      _target.headers.copy(headers);
+      _target.headers = new ZmqHeaders().copy(headers);
       return this;
     }
 
-    /** See {@link ZmqMessage#payload}. */
     public Builder withPayload(byte[] payload) {
       checkArgument(!isDivFrame(payload));
       _target.payload = payload;
@@ -173,27 +155,31 @@ public final class ZmqMessage {
     return topic;
   }
 
-  public ZmqFrames identities() {
-    return identities;
+  public ZmqFrames identityFrames() {
+    return new ZmqFrames(identities);
   }
 
-  public byte[] headers() {
+  public byte[] headersAsBinary() {
     return headers.asBinary();
   }
 
   /**
-   * Function returns a <i>projection</i> of headers specified by {@code wrapperClass}.
+   * Function returns a <i>view</i> of headers specified by {@code viewClass}.
    *
-   * @param wrapperClass wrapper class or <i>headers projection</i> class.
+   * @param viewClass the headers-view-class. <b>Have to have no-arg constructor.</b>
    */
   @SuppressWarnings("unchecked")
-  public <T extends ZmqHeaders> T headersAs(Class<T> wrapperClass) {
+  public <T extends ZmqHeaders> T headersAs(Class<T> viewClass) {
     try {
-      return (T) wrapperClass.newInstance().copy(headers);
+      return (T) viewClass.newInstance().copy(headers);
     }
     catch (Exception e) {
       throw ZmqException.seeCause(e);
     }
+  }
+
+  public ZmqHeaders headers() {
+    return headersAs(ZmqHeaders.class);
   }
 
   public byte[] payload() {

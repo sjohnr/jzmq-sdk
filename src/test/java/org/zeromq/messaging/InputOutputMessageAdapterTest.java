@@ -265,13 +265,13 @@ public class InputOutputMessageAdapterTest {
     assertEq(a.topic(), b.topic());
     assertEq(a.payload(), b.payload());
 
-    List<byte[]> a_identities = new ArrayList<byte[]>(a.identities());
-    List<byte[]> b_identities = new ArrayList<byte[]>(b.identities());
+    List<byte[]> a_identities = new ArrayList<byte[]>(a.identityFrames());
+    List<byte[]> b_identities = new ArrayList<byte[]>(b.identityFrames());
     assertEquals(a_identities.size(), b_identities.size());
     for (int i = 0; i < a_identities.size(); i++) {
       assertEq(a_identities.get(i), b_identities.get(i));
     }
 
-    assertArrayEquals(a.headers(), b.headers());
+    assertArrayEquals(a.headersAsBinary(), b.headersAsBinary());
   }
 }

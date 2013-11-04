@@ -116,7 +116,7 @@ class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
         if (awareOfDEALERType) {
           target.add(EMPTY_FRAME);
         }
-        for (byte[] frame : message.identities()) {
+        for (byte[] frame : message.identityFrames()) {
           target.add(frame);
           target.add(EMPTY_FRAME);
         }
@@ -125,7 +125,7 @@ class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
 
       // --- headers
 
-      target.add(message.headers());
+      target.add(message.headersAsBinary());
 
       // --- payload
 

@@ -57,8 +57,8 @@ public final class JavanativeMsgProcessorOutputAdapter implements ObjectAdapter<
 
     try {
       return ZmqMessage.builder()
+                       .withIdentities(message.identityFrames())
                        .withHeaders(message.headers())
-                       .withIdentities(message.identities())
                        .withPayload(JavanativeSerializationUtils.toBytes(reply))
                        .build();
     }

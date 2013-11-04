@@ -64,8 +64,8 @@ public class ZmqMessageTest {
                                    .build();
 
     assertEq(topic, message.topic());
-    assertEquals(0, message.identities().size());
-    assertArrayEquals(EMPTY_FRAME, message.headers());
+    assertEquals(0, message.identityFrames().size());
+    assertArrayEquals(EMPTY_FRAME, message.headersAsBinary());
     assertEq(payload, message.payload());
 
     assertEq(message, ZmqMessage.builder(message).build());
@@ -81,8 +81,8 @@ public class ZmqMessageTest {
                                    .build();
 
     assertEq(topic, message.topic());
-    assertEquals(identities.size(), message.identities().size());
-    assertArrayEquals(headers, message.headers());
+    assertEquals(identities.size(), message.identityFrames().size());
+    assertArrayEquals(headers, message.headersAsBinary());
     assertEq(payload, message.payload());
 
     assertEq(message, ZmqMessage.builder(message).build());
@@ -99,15 +99,15 @@ public class ZmqMessageTest {
 
     message = ZmqMessage.builder(message)
                         .withHeaders(new ZmqHeaders()
-                                         .copy(message.headersAs(ZmqHeaders.class))
+                                         .copy(message.headersAsBinary())
                                          .set("a", "xyz")
                                          .set("0", headerOverride0)
                                          .set("1", headerOverride1))
                         .build();
 
     assertEq(topic, message.topic());
-    assertEquals(identities.size(), message.identities().size());
-    assertArrayEquals("{\"a\":[\"xyz\"],\"0\":[\"h0\"],\"1\":[\"h1\"]}".getBytes(), message.headers());
+    assertEquals(identities.size(), message.identityFrames().size());
+    assertArrayEquals("{\"a\":[\"xyz\"],\"0\":[\"h0\"],\"1\":[\"h1\"]}".getBytes(), message.headersAsBinary());
     assertEq(payload, message.payload());
 
     assertEq(message, ZmqMessage.builder(message).build());
@@ -119,8 +119,8 @@ public class ZmqMessageTest {
 
     assertEq("".getBytes(), message.topic());
     assertEq("".getBytes(), message.payload());
-    assertEquals(0, message.identities().size());
-    assertArrayEquals(EMPTY_FRAME, message.headers());
+    assertEquals(0, message.identityFrames().size());
+    assertArrayEquals(EMPTY_FRAME, message.headersAsBinary());
   }
 
   @Test
@@ -136,8 +136,8 @@ public class ZmqMessageTest {
 
     assertEq(topic, copyMessage.topic());
     assertEq(payload, copyMessage.payload());
-    assertEquals(3, copyMessage.identities().size());
-    assertArrayEquals(headers, copyMessage.headers());
+    assertEquals(3, copyMessage.identityFrames().size());
+    assertArrayEquals(headers, copyMessage.headersAsBinary());
   }
 
   @Test
@@ -158,8 +158,8 @@ public class ZmqMessageTest {
                                    .build();
 
     assertEq(topic, message.topic());
-    assertEquals(6 * identities.size(), message.identities().size());
-    assertArrayEquals(headers, message.headers());
+    assertEquals(identities.size(), message.identityFrames().size());
+    assertArrayEquals(headers, message.headersAsBinary());
     assertEq(payload, message.payload());
   }
 
@@ -215,16 +215,64 @@ public class ZmqMessageTest {
   @Test
   public void t7_perf() {
     TestRecorder r = new TestRecorder();
-    r.log("Perf test for ZmqMessage. Test what it takes to create-and-copy million simple messages.");
-    Stopwatch timer = new Stopwatch().start();
+    r.log("Perf test for ZmqMessage.");
+
     int ITER = 10;
     int MESSAGE_NUM = 100000;
+    Stopwatch timer = new Stopwatch();
+
+    timer.reset().start();
     for (int j = 0; j < ITER; j++) {
       for (int i = 0; i < MESSAGE_NUM; i++) {
-        ZmqMessage.builder(HELLO()).withHeaders(new ZmqHeaders().set("x", "y")).build();
+        HELLO();
       }
     }
     r.logQoS((float) timer.stop().elapsedTime(MICROSECONDS) / (ITER * MESSAGE_NUM), "microsec/message.");
+
+    timer.reset().start();
+    for (int j = 0; j < ITER; j++) {
+      for (int i = 0; i < MESSAGE_NUM; i++) {
+        ZmqMessage.builder(HELLO()).build();
+      }
+    }
+    r.logQoS((float) timer.stop().elapsedTime(MICROSECONDS) / (ITER * MESSAGE_NUM), "microsec/message.");
+
+    timer.reset().start();
+    for (int j = 0; j < ITER; j++) {
+      for (int i = 0; i < MESSAGE_NUM; i++) {
+        ZmqMessage.builder(HELLO())
+                  .withHeaders(new ZmqHeaders()
+                                   .set("a", "a")
+                                   .set("b", "b")
+                                   .set("c", "c")
+                                   .set("x", "x")
+                                   .set("y", "y")
+                                   .set("z", "z"))
+                  .build();
+      }
+    }
+    r.logQoS((float) timer.stop().elapsedTime(MICROSECONDS) / (ITER * MESSAGE_NUM), "microsec/message.");
+  }
+
+  @Test
+  public void t8() {
+    ZmqMessage src = ZmqMessage.builder()
+                               .withHeaders(new ZmqHeaders().set("a", "b"))
+                               .build();
+
+    ZmqMessage copy = ZmqMessage.builder(src)
+                                .withHeaders(new ZmqHeaders().set("x", "x"))
+                                .build();
+
+    assertArrayEquals("{\"x\":[\"x\"]}".getBytes(), copy.headersAsBinary());
+
+    ZmqMessage copy2 = ZmqMessage.builder(src)
+                                 .withHeaders(new ZmqHeaders()
+                                                  .copy(src.headers())
+                                                  .set("y", "y"))
+                                 .build();
+
+    assertArrayEquals("{\"a\":[\"b\"],\"y\":[\"y\"]}".getBytes(), copy2.headersAsBinary());
   }
 
   private void assertEq(byte[] a, byte[] b) {
@@ -234,8 +282,8 @@ public class ZmqMessageTest {
   private void assertEq(ZmqMessage a, ZmqMessage b) {
     assert a != b;
     assertEq(a.topic(), b.topic());
-    assertEquals(a.identities().size(), b.identities().size());
-    assertArrayEquals(a.headers(), b.headers());
+    assertEquals(a.identityFrames().size(), b.identityFrames().size());
+    assertArrayEquals(a.headersAsBinary(), b.headersAsBinary());
     assertEq(a.payload(), b.payload());
   }
 }

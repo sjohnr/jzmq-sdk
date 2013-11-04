@@ -104,6 +104,7 @@ class InputMessageAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
       // --- identities
 
       if (expectIdentities) {
+        ZmqFrames identities = new ZmqFrames();
         for (; ; ) {
           byte[] frame = frames.poll();
           if (isDivFrame(frame)) {
@@ -114,8 +115,9 @@ class InputMessageAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
             // is [ ] current frame then skip.
             continue;
           }
-          builder.withIdentity(frame);
+          identities.add(frame);
         }
+        builder.withIdentities(identities);
       }
 
       // --- headers

@@ -22,9 +22,7 @@ package org.zeromq.messaging.device.service;
 
 import org.zeromq.messaging.ZmqHeaders;
 
-import java.util.Collection;
-
-public final class ServiceHeaders extends ZmqHeaders {
+public final class ServiceHeaders extends ZmqHeaders<ServiceHeaders> {
 
   private static final String HEADER_MSG_TYPE = "ServiceHeaders.MsgType";
   private static final String HEADER_MSG_NUM_OF_HOPS = "ServiceHeaders.MsgNumOfHops";
@@ -41,7 +39,7 @@ public final class ServiceHeaders extends ZmqHeaders {
   }
 
   public boolean isMsgTypeNotSet() {
-    return getHeaderOrNot(HEADER_MSG_TYPE).isEmpty();
+    return getHeaderOrNull(HEADER_MSG_TYPE) == null;
   }
 
   public ServiceHeaders setMsgTypePing() {
@@ -50,8 +48,7 @@ public final class ServiceHeaders extends ZmqHeaders {
   }
 
   public boolean isMsgTypePing() {
-    Collection<String> c = getHeaderOrNot(HEADER_MSG_TYPE);
-    return !c.isEmpty() && PING.equals(c.iterator().next());
+    return PING.equals(getHeaderOrNull(HEADER_MSG_TYPE));
   }
 
   public ServiceHeaders setMsgTypeTryAgain() {
@@ -60,8 +57,7 @@ public final class ServiceHeaders extends ZmqHeaders {
   }
 
   public boolean isMsgTypeTryAgain() {
-    Collection<String> c = getHeaderOrNot(HEADER_MSG_TYPE);
-    return !c.isEmpty() && TRYAGAIN.equals(c.iterator().next());
+    return TRYAGAIN.equals(getHeaderOrNull(HEADER_MSG_TYPE));
   }
 
   public ServiceHeaders setNumOfHops(int numOfHops) {
@@ -70,8 +66,7 @@ public final class ServiceHeaders extends ZmqHeaders {
   }
 
   public int getNumOfHops() {
-    Collection<String> c = getHeaderOrException(HEADER_MSG_NUM_OF_HOPS);
-    return Integer.valueOf(c.iterator().next());
+    return Integer.valueOf(getHeaderOrException(HEADER_MSG_NUM_OF_HOPS));
   }
 
   public ServiceHeaders setCorrId(long id) {
@@ -80,7 +75,6 @@ public final class ServiceHeaders extends ZmqHeaders {
   }
 
   public Long getCorrId() {
-    Collection<String> c = getHeaderOrException(HEADER_CORRELATION_ID);
-    return Long.valueOf(c.iterator().next());
+    return Long.valueOf(getHeaderOrException(HEADER_CORRELATION_ID));
   }
 }

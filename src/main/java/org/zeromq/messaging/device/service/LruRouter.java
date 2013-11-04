@@ -25,8 +25,13 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.messaging.ZmqChannelFactory;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqFrames;
+import org.zeromq.messaging.ZmqHeaders;
 import org.zeromq.messaging.ZmqMessage;
 import org.zeromq.messaging.device.ZmqSocketIdentityStorage;
+
+import static org.zeromq.messaging.ZmqException.ErrorCode.HEADER_IS_NOT_SET;
+import static org.zeromq.messaging.ZmqException.ErrorCode.SOCKET_IDENTITY_NOT_MATCHED;
+import static org.zeromq.messaging.ZmqException.ErrorCode.SOCKET_IDENTITY_STORAGE_IS_EMPTY;
 
 /**
  * LRU device:
@@ -98,76 +103,93 @@ public final class LruRouter extends ZmqAbstractServiceDispatcher {
 
   @Override
   public void exec() {
-    // handle backend traffic first.
+    // ==== handle backend traffic first ====
     if (_backend.hasInput()) {
-      ZmqMessage backendMessage = _backend.recv();
-      ServiceHeaders headers = backendMessage.headersAs(ServiceHeaders.class);
+      ZmqMessage message = _backend.recv();
+      ServiceHeaders headers = message.headersAs(ServiceHeaders.class);
+      int numOfHops;
       try {
-        ZmqFrames backendIdentities = backendMessage.identities();
-        int numOfHops = headers.getNumOfHops();
-        if (numOfHops > 0) {
-          // mutate original backend identities and get plain backend identities.
-          int plainBackendIdentitiesNum = backendIdentities.size() - numOfHops;
-          ZmqFrames plainBackendIdentities = new ZmqFrames(plainBackendIdentitiesNum);
-          for (int i = 0; i < plainBackendIdentitiesNum; i++) {
-            plainBackendIdentities.add(backendIdentities.poll());
-          }
-          backendIdentities = plainBackendIdentities;
-        }
-        // store identity for any message coming from backend.
-        socketIdentityStorage.store(backendIdentities);
-        // filter PING message.
-        if (headers.isMsgTypePing()) {
-          return;
-        }
-        // send backend message via frontend socket next down on the chain onto the original receipient.
-        _frontend.send(backendMessage);
+        numOfHops = headers.getNumOfHops();
       }
       catch (ZmqException e) {
-        if (e.errorCode() == ZmqException.ErrorCode.HEADER_IS_NOT_SET) {
-          LOG.error("LRU will ignore message on backend.");
+        if (e.errorCode() == HEADER_IS_NOT_SET) {
+          LOG.error("Ignoring message on backend: 'num_of_hops' header is missing!");
           return;
         }
         throw e;
       }
+
+      if (headers.isMsgTypePing()) {
+        // store worker' identities of every message coming from backend.
+        socketIdentityStorage.store(message.identityFrames());
+        return;
+      }
+
+      if (numOfHops < 0) {
+        LOG.error("Ignoring message on backend: 'num_of_hops' is negative!");
+        return;
+      }
+
+      ZmqFrames origIdentities = message.identityFrames();
+      // mutate original backend identities (which in tuen consist of caller-identities + worker-identities)
+      // and get worker' identities, in order to store them in the socket-identity-storage.
+      int workerIdentityNum = origIdentities.size() - numOfHops;
+      ZmqFrames workerIdentities = new ZmqFrames(workerIdentityNum);
+      for (int i = 0; i < workerIdentityNum; i++) {
+        workerIdentities.add(origIdentities.poll());
+      }
+      // store worker' identities of every message coming from backend.
+      socketIdentityStorage.store(workerIdentities);
+
+      _frontend.send(ZmqMessage.builder(message)
+                               .withIdentities(origIdentities)
+                               .build());
     }
-    // handle frontend traffic second.
+
+    // ==== handle frontend traffic second ====
     if (_frontend.hasInput()) {
       if (socketIdentityStorage.size() <= 0) {
         return;
       }
 
-      ZmqMessage frontendMessage = _frontend.recv();
-      ZmqFrames frontendIdentities = frontendMessage.identities();
-      // set number_of_hops using frontend identities total size.
+      ZmqMessage message = _frontend.recv();
+      ZmqFrames origIdentities = message.identityFrames();
+      ZmqHeaders origHeaders = message.headers();
       ZmqMessage.Builder builder = ZmqMessage.builder();
       builder
-          .withHeaders(frontendMessage.headers())
-          .withHeaders(new ServiceHeaders().setNumOfHops(frontendIdentities.size()))
-          .withPayload(frontendMessage.payload());
+          .withHeaders(new ServiceHeaders()
+                           .copy(origHeaders)
+                           .setNumOfHops(origIdentities.size()))
+          .withPayload(message.payload());
       try {
         // prepend identities of the frontend message with backend identities obtained from storage.
-        builder
-            .withIdentities(socketIdentityStorage.obtain(frontendIdentities))
-            .withIdentities(frontendIdentities);
+        ZmqFrames targetIdentities = new ZmqFrames();
+        targetIdentities.addAll(socketIdentityStorage.obtain(origIdentities));
+        targetIdentities.addAll(origIdentities);
+        builder.withIdentities(targetIdentities);
       }
       catch (ZmqException e) {
-        if (e.errorCode() == ZmqException.ErrorCode.SOCKET_IDENTITY_STORAGE_IS_EMPTY ||
-            e.errorCode() == ZmqException.ErrorCode.SOCKET_IDENTITY_NOT_MATCHED) {
-          LOG.warn("Obtaining routing_identity failed (err_code={}). Asking to TRY_AGAIN ...", e.errorCode());
-          _frontend.send(ZmqMessage.builder()
-                                   .withIdentities(frontendIdentities)
-                                   .withHeaders(frontendMessage.headers())
-                                   .withHeaders(new ServiceHeaders().setMsgTypeTryAgain())
-                                   .withPayload(frontendMessage.payload())
-                                   .build()
-          );
-          LOG.warn("Asked to TRY_AGAIN.");
+        ZmqException.ErrorCode errorCode = e.errorCode();
+        if (errorCode == SOCKET_IDENTITY_STORAGE_IS_EMPTY || errorCode == SOCKET_IDENTITY_NOT_MATCHED) {
+          LOG.info("Failed at obtaining routing_identity (err_code={}). Asking to TRY_AGAIN ...", errorCode);
+          boolean sentTryAgain = _frontend.send(ZmqMessage.builder()
+                                                          .withIdentities(origIdentities)
+                                                          .withHeaders(new ServiceHeaders()
+                                                                           .copy(origHeaders)
+                                                                           .setMsgTypeTryAgain())
+                                                          .withPayload(message.payload())
+                                                          .build());
+          if (sentTryAgain) {
+            LOG.info("Asked to TRY_AGAIN.");
+          }
+          else {
+            LOG.warn("Didn't send TRY_AGAIN.");
+          }
           return;
         }
-        // if this is not socket-identity-storage related exception -- then re-throw.
         throw e;
       }
+
       _backend.send(builder.build());
     }
   }

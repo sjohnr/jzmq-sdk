@@ -63,7 +63,7 @@ public final class ProtoMsgProcessorOutputAdapter implements ObjectAdapter<Objec
     }
 
     return ZmqMessage.builder()
-                     .withIdentities(message.identities())
+                     .withIdentities(message.identityFrames())
                      .withHeaders(message.headers())
                      .withPayload(reply.toByteArray())
                      .build();
