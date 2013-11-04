@@ -37,7 +37,7 @@ public final class JavanativeCallerInputAdapter implements ObjectAdapter<ZmqMess
       reply = JavanativeSerializationUtils.fromBytes(message.payload());
     }
     catch (Exception e) {
-      LOG.error("!!! Fatal error. Got problem during reply deserialization: " + e, e);
+      LOG.error("!!! Got problem during reply deserialization: " + e, e);
       throw Throwables.propagate(e);
     }
     switch (reply.replyType()) {
@@ -54,11 +54,11 @@ public final class JavanativeCallerInputAdapter implements ObjectAdapter<ZmqMess
           return result.length != 0 ? JavanativeSerializationUtils.fromBytes(result) : null;
         }
         catch (Exception e) {
-          LOG.error("!!! Fatal error. Got problem during result deserialization: " + e, e);
+          LOG.error("!!! Got problem during result deserialization: " + e, e);
           throw Throwables.propagate(e);
         }
       default:
-        LOG.error("!!! Fatal error. Unsupported ipc_reply_type detected: " + reply.replyType());
+        LOG.error("!!! Unsupported ipc_reply_type detected: " + reply.replyType());
         throw new IllegalStateException();
     }
   }

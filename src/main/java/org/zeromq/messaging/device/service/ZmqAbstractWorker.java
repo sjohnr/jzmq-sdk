@@ -72,26 +72,12 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractDeviceContext {
       return (B) this;
     }
 
-    public final B withConnectAddresses(String[] addresses) {
-      for (String address : addresses) {
-        withConnectAddress(address);
-      }
-      return (B) this;
-    }
-
     public final B withBindAddress(String address) {
       _target.bindAddresses.add(address);
       return (B) this;
     }
 
     public final B withBindAddresses(Iterable<String> addresses) {
-      for (String address : addresses) {
-        withBindAddress(address);
-      }
-      return (B) this;
-    }
-
-    public final B withBindAddresses(String[] addresses) {
       for (String address : addresses) {
         withBindAddress(address);
       }
@@ -154,21 +140,29 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractDeviceContext {
       _pingStrategy.ping(_channel);
       return;
     }
+
     // receive incoming traffic.
     ZmqMessage request = _channel.recv();
+    if (request == null) {
+      LOG.error(".recv() failed!");
+      return;
+    }
+
     ZmqMessage reply;
     try {
       reply = messageProcessor.process(request);
     }
     catch (Exception e) {
-      LOG.error("!!! Failed at processing request. Delegating to {} anyway.", _pingStrategyForLogging);
+      LOG.error("Failed at processing request. Delegating to {} anyway.", _pingStrategyForLogging);
       // request processing failed -- still need to ping.
       _pingStrategy.ping(_channel);
       return;
     }
     // if reply is not null -- send it / otherwise -- ping.
     if (reply != null) {
-      _channel.send(reply);
+      if (!_channel.send(reply)) {
+        LOG.warn(".send() failed!");
+      }
     }
     else {
       _pingStrategy.ping(_channel);

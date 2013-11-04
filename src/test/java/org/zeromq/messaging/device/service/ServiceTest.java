@@ -32,6 +32,7 @@ import org.zeromq.messaging.ZmqMessage;
 import org.zeromq.support.thread.ZmqRunnable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 
@@ -97,8 +98,8 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
           ZmqRunnable.builder()
                      .withRunnableContext(
                          WorkerAnonymEmitter.builder()
-                                            .withConnectAddresses(connectAddresses)
                                             .withZmqContext(zmqContext)
+                                            .withConnectAddresses(Arrays.asList(connectAddresses))
                                             .withMessageProcessor(messageProcessor)
                                             .withPollTimeout(10)
                                             .build()
@@ -115,8 +116,8 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
           ZmqRunnable.builder()
                      .withRunnableContext(
                          WorkerAnonymEmitter.builder()
-                                            .withConnectAddresses(connectAddresses)
                                             .withZmqContext(zmqContext)
+                                            .withConnectAddresses(Arrays.asList(connectAddresses))
                                             .withMessageProcessor(messageProcessor)
                                             .withWorkerIdentity(identity)
                                             .withPollTimeout(10)
@@ -133,8 +134,8 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
           ZmqRunnable.builder()
                      .withRunnableContext(
                          WorkerAnonymAcceptor.builder()
-                                             .withConnectAddresses(connectAddresses)
                                              .withZmqContext(zmqContext)
+                                             .withConnectAddresses(Arrays.asList(connectAddresses))
                                              .withMessageProcessor(messageProcessor)
                                              .build()
                      )

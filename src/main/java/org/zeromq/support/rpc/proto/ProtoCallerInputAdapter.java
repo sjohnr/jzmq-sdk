@@ -43,7 +43,7 @@ public final class ProtoCallerInputAdapter implements ObjectAdapter<ZmqMessage, 
       reply = Proto.Reply.parseFrom(message.payload());
     }
     catch (InvalidProtocolBufferException e) {
-      LOG.error("!!! Fatal error. Got problem during result deserialization: " + e, e);
+      LOG.error("!!! Got problem during result deserialization: " + e, e);
       throw Throwables.propagate(e);
     }
     switch (reply.getReplyType()) {
@@ -65,11 +65,11 @@ public final class ProtoCallerInputAdapter implements ObjectAdapter<ZmqMessage, 
           return method.invoke(null, reply.getResult());
         }
         catch (Exception e) {
-          LOG.error("!!! Fatal error. Got problem during result deserialization: " + e, e);
+          LOG.error("!!! Got problem during result deserialization: " + e, e);
           throw Throwables.propagate(e);
         }
       default:
-        LOG.error("!!! Fatal error. Unsupported ipc_reply_type detected: " + reply.getReplyType());
+        LOG.error("!!! Unsupported ipc_reply_type detected: " + reply.getReplyType());
         throw new IllegalStateException();
     }
   }

@@ -79,13 +79,13 @@ public final class TryAgainEventListener {
       boolean sent = channel.send(createMsg(message));
       if (!sent) {
         event.clear();
-        LOG.warn("Can't TRY_AGAIN: .send() failed.");
+        LOG.warn("Can't TRY_AGAIN: .send() failed!");
         return;
       }
       message = channel.recv();
       if (message == null) {
         event.clear();
-        LOG.warn("Can't TRY_AGAIN: .recv() failed.");
+        LOG.warn("Can't TRY_AGAIN: .recv() failed!");
         return;
       }
       else {

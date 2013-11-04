@@ -68,7 +68,7 @@ public final class JavanativeMsgProcessorInputAdapter
       return new CallImpl(request);
     }
     catch (Exception e) {
-      LOG.error("!!! Fatal error. Got problem during request deserialization: " + e, e);
+      LOG.error("!!! Got problem during request deserialization: " + e, e);
       throw Throwables.propagate(e);
     }
   }

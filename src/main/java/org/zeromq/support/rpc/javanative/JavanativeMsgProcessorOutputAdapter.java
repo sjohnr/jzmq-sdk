@@ -50,7 +50,7 @@ public final class JavanativeMsgProcessorOutputAdapter implements ObjectAdapter<
         reply = new Reply(JavanativeSerializationUtils.toBytes(invocResult));
       }
       catch (IOException e) {
-        LOG.error("!!! Got problem during invoc_result serialization: " + e, e);
+        LOG.error("Got problem during invoc_result serialization: " + e, e);
         reply = new Reply(new Error(-1, e));
       }
     }
@@ -63,7 +63,7 @@ public final class JavanativeMsgProcessorOutputAdapter implements ObjectAdapter<
                        .build();
     }
     catch (IOException e) {
-      LOG.error("!!! Fatal error. Got problem during reply serialization: " + e, e);
+      LOG.error("!!! Got problem during reply serialization: " + e, e);
       throw Throwables.propagate(e);
     }
   }

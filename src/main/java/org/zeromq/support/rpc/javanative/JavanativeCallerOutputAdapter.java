@@ -46,7 +46,7 @@ public final class JavanativeCallerOutputAdapter implements ObjectAdapter<Method
       return ZmqMessage.builder().withPayload(payload).build();
     }
     catch (IOException e) {
-      LOG.error("!!! Fatal error. Got problem during request serialization: " + e, e);
+      LOG.error("!!! Got problem during request serialization: " + e, e);
       throw Throwables.propagate(e);
     }
   }

@@ -39,7 +39,7 @@ class DoPing implements ZmqPingStrategy {
                                 )
                                 .build();
     if (!channel.send(ping)) {
-      LOG.warn("Failed on sending ping!");
+      LOG.warn("Failed on sending PING!");
     }
   }
 }

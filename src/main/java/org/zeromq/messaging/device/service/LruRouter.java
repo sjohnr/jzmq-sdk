@@ -106,6 +106,11 @@ public final class LruRouter extends ZmqAbstractServiceDispatcher {
     // ==== handle backend traffic first ====
     if (_backend.hasInput()) {
       ZmqMessage message = _backend.recv();
+      if (message == null) {
+        LOG.error(".recv() failed on backend!");
+        return;
+      }
+
       ServiceHeaders headers = message.headersAs(ServiceHeaders.class);
       int numOfHops;
       try {
@@ -141,9 +146,12 @@ public final class LruRouter extends ZmqAbstractServiceDispatcher {
       // store worker' identities of every message coming from backend.
       socketIdentityStorage.store(workerIdentities);
 
-      _frontend.send(ZmqMessage.builder(message)
-                               .withIdentities(origIdentities)
-                               .build());
+      boolean sent = _frontend.send(ZmqMessage.builder(message)
+                                              .withIdentities(origIdentities)
+                                              .build());
+      if (!sent) {
+        LOG.warn(".send() failed on frontend!");
+      }
     }
 
     // ==== handle frontend traffic second ====
@@ -153,6 +161,11 @@ public final class LruRouter extends ZmqAbstractServiceDispatcher {
       }
 
       ZmqMessage message = _frontend.recv();
+      if (message == null) {
+        LOG.error(".recv() failed on frontend!");
+        return;
+      }
+
       ZmqFrames origIdentities = message.identityFrames();
       ZmqHeaders origHeaders = message.headers();
       ZmqMessage.Builder builder = ZmqMessage.builder();
@@ -171,26 +184,27 @@ public final class LruRouter extends ZmqAbstractServiceDispatcher {
       catch (ZmqException e) {
         ZmqException.ErrorCode errorCode = e.errorCode();
         if (errorCode == SOCKET_IDENTITY_STORAGE_IS_EMPTY || errorCode == SOCKET_IDENTITY_NOT_MATCHED) {
-          LOG.info("Failed at obtaining routing_identity (err_code={}). Asking to TRY_AGAIN ...", errorCode);
-          boolean sentTryAgain = _frontend.send(ZmqMessage.builder()
-                                                          .withIdentities(origIdentities)
+          LOG.info("Can't obtain routing_identity (err_code={}). Asking to TRY_AGAIN ...", errorCode);
+          boolean sentTryAgain = _frontend.send(ZmqMessage.builder(message)
                                                           .withHeaders(new ServiceHeaders()
                                                                            .copy(origHeaders)
                                                                            .setMsgTypeTryAgain())
-                                                          .withPayload(message.payload())
                                                           .build());
           if (sentTryAgain) {
             LOG.info("Asked to TRY_AGAIN.");
           }
           else {
-            LOG.warn("Didn't send TRY_AGAIN.");
+            LOG.warn("Didn't send TRY_AGAIN!");
           }
           return;
         }
         throw e;
       }
 
-      _backend.send(builder.build());
+      boolean sent = _backend.send(builder.build());
+      if (!sent) {
+        LOG.warn(".send() failed on backend!");
+      }
     }
   }
 }

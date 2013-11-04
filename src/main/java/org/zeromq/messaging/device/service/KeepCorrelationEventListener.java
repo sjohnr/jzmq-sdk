@@ -104,7 +104,7 @@ public final class KeepCorrelationEventListener {
     ZmqMessage message = event.message();
     ServiceHeaders headers = message.headersAs(ServiceHeaders.class);
     Long corrId = headers.getCorrId();
-    Preconditions.checkState(_state.setReceiving(), "don't call .recv() before .send().");
+    Preconditions.checkState(_state.setReceiving(), "don't call .recv() before .send()!");
     AtomicLong l = _history.get(corrId);
     if (l == null) {
       LOG.warn("Unrecognized 'correlation_id'. Message cleared.");
