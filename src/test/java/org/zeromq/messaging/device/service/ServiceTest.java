@@ -167,7 +167,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
                      .withRunnableContext(
                          LruRouter.builder()
                                   .withZmqContext(zmqContext)
-                                  .withLruCache(lruCache)
+                                  .withSocketIdentityStorage(lruCache)
                                   .withFrontendAddress(frontendAddress)
                                   .withBackendAddress(backendAddress)
                                   .build()

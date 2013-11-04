@@ -25,9 +25,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * This exception handler simply logs an exception and
- * doesn't call {@link #nextHandler} in the chain.
+ * doesn't call {@code next_handler} in the chain.
  */
-public final class LoggingExceptionHandler extends AbstractExceptionHandlerInTheChain {
+public final class LoggingExceptionHandler implements ExceptionHandler {
 
   private static final Logger LOG = LoggerFactory.getLogger(LoggingExceptionHandler.class);
 

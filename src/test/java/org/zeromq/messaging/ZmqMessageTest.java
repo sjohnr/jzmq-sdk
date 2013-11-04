@@ -23,7 +23,6 @@ package org.zeromq.messaging;
 import com.google.common.base.Stopwatch;
 import org.junit.Test;
 import org.zeromq.TestRecorder;
-import org.zeromq.messaging.device.CallerHeaders;
 
 import java.util.Arrays;
 
@@ -222,7 +221,7 @@ public class ZmqMessageTest {
     int MESSAGE_NUM = 100000;
     for (int j = 0; j < ITER; j++) {
       for (int i = 0; i < MESSAGE_NUM; i++) {
-        ZmqMessage.builder(HELLO()).withHeaders(new CallerHeaders().setMsgTypeTryAgain()).build();
+        ZmqMessage.builder(HELLO()).withHeaders(new ZmqHeaders().set("x", "y")).build();
       }
     }
     r.logQoS((float) timer.stop().elapsedTime(MICROSECONDS) / (ITER * MESSAGE_NUM), "microsec/message.");

@@ -26,7 +26,7 @@ import org.zeromq.messaging.ZmqChannelFactory;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqFrames;
 import org.zeromq.messaging.ZmqMessage;
-import org.zeromq.messaging.device.CallerHeaders;
+import org.zeromq.messaging.device.ZmqSocketIdentityStorage;
 
 /**
  * LRU device:
@@ -44,21 +44,21 @@ public final class LruRouter extends ZmqAbstractServiceDispatcher {
       super(new LruRouter());
     }
 
-    public Builder withLruCache(LruCache lruCache) {
-      _target.setLruCache(lruCache);
+    public Builder withSocketIdentityStorage(ZmqSocketIdentityStorage socketIdentityStorage) {
+      _target.setSocketIdentityStorage(socketIdentityStorage);
       return this;
     }
 
     @Override
     public void checkInvariant() {
       super.checkInvariant();
-      if (_target.lruCache == null) {
+      if (_target.socketIdentityStorage == null) {
         throw ZmqException.fatal();
       }
     }
   }
 
-  private LruCache lruCache = new LruCache();
+  private ZmqSocketIdentityStorage socketIdentityStorage = new LruCache();
 
   //// CONSTRUCTORS
 
@@ -71,8 +71,8 @@ public final class LruRouter extends ZmqAbstractServiceDispatcher {
     return new Builder();
   }
 
-  public void setLruCache(LruCache lruCache) {
-    this.lruCache = lruCache;
+  public void setSocketIdentityStorage(ZmqSocketIdentityStorage socketIdentityStorage) {
+    this.socketIdentityStorage = socketIdentityStorage;
   }
 
   @Override
@@ -115,7 +115,7 @@ public final class LruRouter extends ZmqAbstractServiceDispatcher {
           backendIdentities = plainBackendIdentities;
         }
         // store identity for any message coming from backend.
-        lruCache.store(backendIdentities);
+        socketIdentityStorage.store(backendIdentities);
         // filter PING message.
         if (headers.isMsgTypePing()) {
           return;
@@ -133,7 +133,7 @@ public final class LruRouter extends ZmqAbstractServiceDispatcher {
     }
     // handle frontend traffic second.
     if (_frontend.hasInput()) {
-      if (lruCache.size() <= 0) {
+      if (socketIdentityStorage.size() <= 0) {
         return;
       }
 
@@ -148,7 +148,7 @@ public final class LruRouter extends ZmqAbstractServiceDispatcher {
       try {
         // prepend identities of the frontend message with backend identities obtained from storage.
         builder
-            .withIdentities(lruCache.obtain(frontendIdentities))
+            .withIdentities(socketIdentityStorage.obtain(frontendIdentities))
             .withIdentities(frontendIdentities);
       }
       catch (ZmqException e) {
@@ -158,7 +158,7 @@ public final class LruRouter extends ZmqAbstractServiceDispatcher {
           _frontend.send(ZmqMessage.builder()
                                    .withIdentities(frontendIdentities)
                                    .withHeaders(frontendMessage.headers())
-                                   .withHeaders(new CallerHeaders().setMsgTypeTryAgain())
+                                   .withHeaders(new ServiceHeaders().setMsgTypeTryAgain())
                                    .withPayload(frontendMessage.payload())
                                    .build()
           );

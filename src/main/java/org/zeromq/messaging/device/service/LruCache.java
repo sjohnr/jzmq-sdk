@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-public class LruCache implements ZmqSocketIdentityStorage {
+public final class LruCache implements ZmqSocketIdentityStorage {
 
   private static final Logger LOG = LoggerFactory.getLogger(LruCache.class);
 

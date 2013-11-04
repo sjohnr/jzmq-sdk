@@ -23,7 +23,6 @@ package org.zeromq.messaging;
 import com.google.common.base.Stopwatch;
 import org.junit.Test;
 import org.zeromq.TestRecorder;
-import org.zeromq.messaging.device.CallerHeaders;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.zeromq.messaging.ZmqAbstractTest.Fixture.HELLO;
@@ -116,7 +115,7 @@ public class ZmqChannelFactoryTest extends ZmqAbstractTest {
     int MESSAGE_NUM = 1000;
     ZmqMessage message = ZmqMessage.builder(src)
                                    .withIdentities(identities)
-                                   .withHeaders(new CallerHeaders().setCorrId(123456789l))
+                                   .withHeaders(new ZmqHeaders().set("x", "y"))
                                    .build();
     Stopwatch timer = new Stopwatch().start();
     for (int j = 0; j < ITER; j++) {

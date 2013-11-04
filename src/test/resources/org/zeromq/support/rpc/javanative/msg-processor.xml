@@ -8,7 +8,7 @@
     <property name="zmqContext" ref="org.zeromq.messaging.ZmqContext"/>
     <property name="frontendAddresses" value="tcp://*:833"/>
     <property name="backendAddresses" value="tcp://*:733"/>
-    <property name="lruCache">
+    <property name="socketIdentityStorage">
       <bean class="org.zeromq.messaging.device.service.LruCache"/>
     </property>
   </bean>

@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.zeromq.messaging.extension;
+package org.zeromq.messaging.device.service;
 
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.AllowConcurrentEvents;
@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
-import org.zeromq.messaging.device.CallerHeaders;
 import org.zeromq.messaging.event.EventReceived;
 import org.zeromq.messaging.event.EventSent;
 
@@ -82,7 +81,7 @@ public final class KeepCorrelationEventListener {
   @AllowConcurrentEvents
   public void even0(EventSent event) {
     ZmqMessage message = event.message();
-    CallerHeaders headers = message.headersAs(CallerHeaders.class);
+    ServiceHeaders headers = message.headersAs(ServiceHeaders.class);
     Long corrId = headers.getCorrId();
     boolean reset = _state.setSending();
     if (reset) {
@@ -103,7 +102,7 @@ public final class KeepCorrelationEventListener {
   @AllowConcurrentEvents
   public void event1(EventReceived event) {
     ZmqMessage message = event.message();
-    CallerHeaders headers = message.headersAs(CallerHeaders.class);
+    ServiceHeaders headers = message.headersAs(ServiceHeaders.class);
     Long corrId = headers.getCorrId();
     Preconditions.checkState(_state.setReceiving(), "don't call .recv() before .send().");
     AtomicLong l = _history.get(corrId);

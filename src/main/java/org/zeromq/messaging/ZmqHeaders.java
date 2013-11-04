@@ -120,7 +120,7 @@ public class ZmqHeaders {
 
   /**
    * @param id header id.
-   * @return removed header content. <b>Null if there's not such header with given id.</b>
+   * @return removed header content. <b>Empty collection if there's not header by given id.</b>
    */
   public final Collection<String> remove(String id) {
     return _map.removeAll(id);
@@ -128,22 +128,22 @@ public class ZmqHeaders {
 
   /**
    * @param id header id.
-   * @return header content. <b>Null if there's not such header with given id.</b>
+   * @return header content. <b>Empty collection if there's not header by given id.</b>
    */
-  public final Collection<String> getHeaderOrNull(String id) {
+  public final Collection<String> getHeaderOrNot(String id) {
     return _map.get(id);
   }
 
   /**
    * @param id header id.
-   * @return header content. <b>Never null.</b>
+   * @return header content. <b>Never null or empty collection.</b>
    */
   public final Collection<String> getHeaderOrException(String id) {
-    Collection<String> content = getHeaderOrNull(id);
-    if (content.isEmpty()) {
+    Collection<String> c = getHeaderOrNot(id);
+    if (c.isEmpty()) {
       throw ZmqException.headerIsNotSet();
     }
-    return content;
+    return c;
   }
 
   public final byte[] asBinary() {

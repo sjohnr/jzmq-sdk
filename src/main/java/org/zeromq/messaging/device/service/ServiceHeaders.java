@@ -26,22 +26,14 @@ import java.util.Collection;
 
 public final class ServiceHeaders extends ZmqHeaders {
 
-  private static final String HEADER_MSG_TYPE = "Service.MsgType";
-  private static final String HEADER_MSG_NUM_OF_HOPS = "Service.MsgNumOfHops";
+  private static final String HEADER_MSG_TYPE = "ServiceHeaders.MsgType";
+  private static final String HEADER_MSG_NUM_OF_HOPS = "ServiceHeaders.MsgNumOfHops";
+  private static final String HEADER_CORRELATION_ID = "ServiceHeaders.MsgCorrId";
 
   private static final String PING = "PING";
+  private static final String TRYAGAIN = "TRYAGAIN";
 
   //// METHODS
-
-  public ServiceHeaders setMsgTypePing() {
-    set(HEADER_MSG_TYPE, PING);
-    return this;
-  }
-
-  public boolean isMsgTypePing() {
-    Collection<String> c = getHeaderOrNull(HEADER_MSG_TYPE);
-    return !c.isEmpty() && PING.equals(c.iterator().next());
-  }
 
   public ServiceHeaders setMsgTypeNotSet() {
     remove(HEADER_MSG_TYPE);
@@ -49,7 +41,27 @@ public final class ServiceHeaders extends ZmqHeaders {
   }
 
   public boolean isMsgTypeNotSet() {
-    return getHeaderOrNull(HEADER_MSG_TYPE).isEmpty();
+    return getHeaderOrNot(HEADER_MSG_TYPE).isEmpty();
+  }
+
+  public ServiceHeaders setMsgTypePing() {
+    set(HEADER_MSG_TYPE, PING);
+    return this;
+  }
+
+  public boolean isMsgTypePing() {
+    Collection<String> c = getHeaderOrNot(HEADER_MSG_TYPE);
+    return !c.isEmpty() && PING.equals(c.iterator().next());
+  }
+
+  public ServiceHeaders setMsgTypeTryAgain() {
+    set(HEADER_MSG_TYPE, TRYAGAIN);
+    return this;
+  }
+
+  public boolean isMsgTypeTryAgain() {
+    Collection<String> c = getHeaderOrNot(HEADER_MSG_TYPE);
+    return !c.isEmpty() && TRYAGAIN.equals(c.iterator().next());
   }
 
   public ServiceHeaders setNumOfHops(int numOfHops) {
@@ -60,5 +72,15 @@ public final class ServiceHeaders extends ZmqHeaders {
   public int getNumOfHops() {
     Collection<String> c = getHeaderOrException(HEADER_MSG_NUM_OF_HOPS);
     return Integer.valueOf(c.iterator().next());
+  }
+
+  public ServiceHeaders setCorrId(long id) {
+    set(HEADER_CORRELATION_ID, id);
+    return this;
+  }
+
+  public Long getCorrId() {
+    Collection<String> c = getHeaderOrException(HEADER_CORRELATION_ID);
+    return Long.valueOf(c.iterator().next());
   }
 }

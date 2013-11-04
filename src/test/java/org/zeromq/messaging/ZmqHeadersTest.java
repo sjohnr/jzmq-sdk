@@ -39,7 +39,7 @@ public class ZmqHeadersTest {
     assertArrayEquals(EMPTY_FRAME, headers.asBinary());
 
     assert headers.remove("").isEmpty();
-    assert headers.getHeaderOrNull("").isEmpty();
+    assert headers.getHeaderOrNot("").isEmpty();
   }
 
   @Test
@@ -47,7 +47,7 @@ public class ZmqHeadersTest {
     ZmqHeaders headers = new ZmqHeaders().copy("{\"0\":[\"abc\"]}".getBytes());
 
     headers.getHeaderOrException("0"); // expecting header.
-    assert headers.getHeaderOrNull("1").isEmpty(); // not expecting header.
+    assert headers.getHeaderOrNot("1").isEmpty(); // not expecting header.
     try {
       headers.getHeaderOrException("2"); // expecting exception.
       fail();
@@ -76,12 +76,12 @@ public class ZmqHeadersTest {
                                          .set("4", "b")
                                          .set("5", "c");
 
-    assertEquals("0", headers.getHeaderOrNull("0").iterator().next());
-    assertEquals("1", headers.getHeaderOrNull("1").iterator().next());
-    assertEquals("2", headers.getHeaderOrNull("2").iterator().next());
-    assertEquals("a", headers.getHeaderOrNull("3").iterator().next());
-    assertEquals("b", headers.getHeaderOrNull("4").iterator().next());
-    assertEquals("c", headers.getHeaderOrNull("5").iterator().next());
+    assertEquals("0", headers.getHeaderOrNot("0").iterator().next());
+    assertEquals("1", headers.getHeaderOrNot("1").iterator().next());
+    assertEquals("2", headers.getHeaderOrNot("2").iterator().next());
+    assertEquals("a", headers.getHeaderOrNot("3").iterator().next());
+    assertEquals("b", headers.getHeaderOrNot("4").iterator().next());
+    assertEquals("c", headers.getHeaderOrNot("5").iterator().next());
   }
 
   @Test

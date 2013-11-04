@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.zeromq.messaging.extension;
+package org.zeromq.messaging.device.service;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.eventbus.AllowConcurrentEvents;
@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqMessage;
-import org.zeromq.messaging.device.CallerHeaders;
 import org.zeromq.messaging.event.EventReceived;
 
 public final class TryAgainEventListener {
@@ -55,7 +54,7 @@ public final class TryAgainEventListener {
   @AllowConcurrentEvents
   public void event(EventReceived event) {
     ZmqMessage message = event.message();
-    CallerHeaders headers = message.headersAs(CallerHeaders.class);
+    ServiceHeaders headers = message.headersAs(ServiceHeaders.class);
 
     if (headers.isMsgTypeNotSet()) {
       return; // this is regular reply.
@@ -90,7 +89,7 @@ public final class TryAgainEventListener {
         return;
       }
       else {
-        headers = message.headersAs(CallerHeaders.class);
+        headers = message.headersAs(ServiceHeaders.class);
         if (headers.isMsgTypeNotSet()) {
           event.replace(message);
           LOG.debug("Got reply after calling TRY_AGAIN {} times.", i);
@@ -115,7 +114,7 @@ public final class TryAgainEventListener {
 
   private ZmqMessage createTryAgainMsg(ZmqMessage message) {
     return ZmqMessage.builder(message)
-                     .withHeaders(message.headersAs(CallerHeaders.class).setMsgTypeNotSet())
+                     .withHeaders(message.headersAs(ServiceHeaders.class).setMsgTypeNotSet())
                      .build();
   }
 }

@@ -20,7 +20,7 @@
 
 package org.zeromq.messaging;
 
-import org.zeromq.messaging.extension.TryAgainEventListener;
+import org.zeromq.messaging.device.service.TryAgainEventListener;
 import org.zeromq.support.HasDestroy;
 import org.zeromq.support.HasInit;
 import org.zeromq.support.thread.ZmqThreadPool;
