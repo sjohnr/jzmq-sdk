@@ -28,6 +28,7 @@ import org.zeromq.messaging.ZmqAbstractArchitectureTest;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqChannelFactory;
 import org.zeromq.messaging.ZmqContext;
+import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
 import org.zeromq.support.thread.ZmqRunnable;
 
@@ -38,6 +39,8 @@ import java.util.Comparator;
 
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNull;
+import static org.junit.Assert.fail;
 import static org.zeromq.messaging.ZmqAbstractTest.Fixture.CARP;
 import static org.zeromq.messaging.ZmqAbstractTest.Fixture.HELLO;
 import static org.zeromq.messaging.ZmqAbstractTest.Fixture.SHIRT;
@@ -1411,6 +1414,77 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         }
       }
       assertEquals(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM_FOR_SEND, replies.size());
+    }
+    finally {
+      f.destroy();
+    }
+  }
+
+  @Test
+  public void t18() {
+    TestRecorder r = new TestRecorder().start();
+    r.log(
+        "\n" +
+        "******************************************************* \n" +
+        "                                                        \n" +
+        "Test DEALER (with 'correlation_id') <--> [ROUTER].      \n" +
+        "                                                        \n" +
+        "                                       ---------------  \n" +
+        "                                       |             |  \n" +
+        "------------   ____hello>>__<<world____| ROUTER(333) |  \n" +
+        "|          |  /                        |             |  \n" +
+        "|          | /                         ---------------  \n" +
+        "|  DEALER  |/                                           \n" +
+        "|          |\\                          --------------- \n" +
+        "|          | \\                         |             | \n" +
+        "------------  \\____hello>>__<<world____| ROUTER(334) | \n" +
+        "                                       |             |  \n" +
+        "                                       ---------------  \n" +
+        "                                                        \n" +
+        "******************************************************* \n");
+
+    Fixture f = new Fixture();
+
+    f.deployWorkerWellknown(zmqContext(), "tcp://*:" + 333, new Answering(WORLD()));
+    f.deployWorkerWellknown(zmqContext(), "tcp://*:" + 334, new Answering(WORLD()));
+
+    f.init();
+
+    ZmqChannel client = ZmqChannelFactory.builder()
+                                         .withZmqContext(zmqContext())
+                                         .ofDEALERType()
+                                         .withConnectAddress("tcp://localhost:" + 333)
+                                         .withConnectAddress("tcp://localhost:" + 334)
+                                         .withEventListener(new KeepCorrelationEventListener())
+                                         .build()
+                                         .newChannel();
+    int correlationId = 1;
+    ZmqMessage hello = HELLO();
+    try {
+      // check nomal interaction.
+      Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
+      for (int i = 0; i < MESSAGE_NUM; i++) {
+        ZmqMessage helloCopy = ZmqMessage.builder(hello)
+                                         .withHeaders(new ServiceHeaders()
+                                                          .copy(hello.headers())
+                                                          .setCorrId(correlationId))
+                                         .build();
+        assert client.send(helloCopy);
+        ZmqMessage reply = client.recv();
+        assertPayload("world", reply);
+        replies.add(reply);
+      }
+      assertEquals(MESSAGE_NUM, replies.size());
+
+      // check exceptional cases: no 'correlation_id' header in the message.
+      try {
+        client.send(HELLO());
+        fail();
+      }
+      catch (ZmqException e) {
+      }
+      // calling .recv() before .send().
+      assertNull(client.recv());
     }
     finally {
       f.destroy();

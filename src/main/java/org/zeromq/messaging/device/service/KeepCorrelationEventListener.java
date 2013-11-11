@@ -27,8 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
+import org.zeromq.messaging.event.EventBeforeSend;
 import org.zeromq.messaging.event.EventReceived;
-import org.zeromq.messaging.event.EventSent;
 
 import java.util.BitSet;
 import java.util.HashMap;
@@ -41,53 +41,60 @@ public final class KeepCorrelationEventListener {
 
   private static class State {
 
+    static final int BIT_SENDING = 0;
+    static final int BIT_RECEIVING = 1;
+
     final BitSet _op = new BitSet(2);
 
+    /**
+     * Sets current state to <i>sending</i>.
+     *
+     * @return true if prev state was <i>receiving</i>.
+     */
     boolean setSending() {
-      _op.set(0);
+      _op.set(BIT_SENDING);
       return clearReceiving();
     }
 
+    /**
+     * Sets current state to <i>receiving</i>.
+     *
+     * @return true if prev state was <i>sending</i>.
+     */
     boolean setReceiving() {
-      _op.set(1);
+      _op.set(BIT_RECEIVING);
       return clearSending();
     }
 
     boolean clearSending() {
-      boolean wasSending = isSending();
-      _op.clear(0);
-      return wasSending;
+      boolean isSending = _op.get(BIT_SENDING);
+      _op.clear(BIT_SENDING);
+      return isSending;
     }
 
     boolean clearReceiving() {
-      boolean wasReceiving = isReceiving();
-      _op.clear(1);
-      return wasReceiving;
+      boolean isReceiving = _op.get(BIT_RECEIVING);
+      _op.clear(BIT_RECEIVING);
+      return isReceiving;
     }
 
-    boolean isSending() {
-      return _op.get(0);
-    }
-
-    boolean isReceiving() {
-      return _op.get(1);
-    }
   }
 
-  private final State _state = new State();
+  private final State _s = new State();
   private final Map<Long, AtomicLong> _history = new HashMap<Long, AtomicLong>(1);
 
   @Subscribe
   @AllowConcurrentEvents
-  public void even0(EventSent event) {
+  public void event0(EventBeforeSend event) {
+    if (_s.setSending()) {
+      _history.clear();
+    }
+
     ZmqMessage message = event.message();
     ServiceHeaders headers = message.headersAs(ServiceHeaders.class);
     Long corrId = headers.getCorrId();
-    boolean reset = _state.setSending();
-    if (reset) {
-      _history.clear();
-    }
     AtomicLong l = _history.get(corrId);
+
     if (l == null) {
       _history.put(corrId, l = new AtomicLong());
       if (_history.size() > 1) {
@@ -101,11 +108,13 @@ public final class KeepCorrelationEventListener {
   @Subscribe
   @AllowConcurrentEvents
   public void event1(EventReceived event) {
+    Preconditions.checkState(_s.setReceiving(), "don't call .recv() before .send()!");
+
     ZmqMessage message = event.message();
     ServiceHeaders headers = message.headersAs(ServiceHeaders.class);
     Long corrId = headers.getCorrId();
-    Preconditions.checkState(_state.setReceiving(), "don't call .recv() before .send()!");
     AtomicLong l = _history.get(corrId);
+
     if (l == null) {
       LOG.warn("Unrecognized 'correlation_id'. Message cleared.");
       event.clear();

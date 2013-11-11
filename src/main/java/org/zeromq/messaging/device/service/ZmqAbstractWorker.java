@@ -95,7 +95,7 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractDeviceContext {
   protected ZmqMessageProcessor messageProcessor;
   protected List<String> connectAddresses = new ArrayList<String>();
   protected List<String> bindAddresses = new ArrayList<String>();
-  protected List<Object> eventListeners = new ArrayList<Object>();
+  protected List eventListeners = new ArrayList();
 
   protected ZmqChannelFactory _channelFactory;
   protected ZmqChannel _channel;
@@ -109,7 +109,7 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractDeviceContext {
 
   //// METHODS
 
-  public final void setEventListeners(List<Object> eventListeners) {
+  public final void setEventListeners(List eventListeners) {
     this.eventListeners = eventListeners;
   }
 

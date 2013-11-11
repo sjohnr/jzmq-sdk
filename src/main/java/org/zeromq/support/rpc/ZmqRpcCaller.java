@@ -80,7 +80,7 @@ public final class ZmqRpcCaller implements MethodInterceptor, HasInit {
       return src.getBytes();
     }
   };
-  protected List<Object> eventListeners = new ArrayList<Object>();
+  protected List eventListeners = new ArrayList();
   protected int numOfCallers = DEFAULT_NUM_OF_CALLERS;
   protected long callerLeaseTimeout = DEFAULT_CALLER_LEASE_TIMEOUT;
   protected ObjectAdapter<MethodInvocation, ZmqMessage> outputAdapter;
@@ -106,7 +106,7 @@ public final class ZmqRpcCaller implements MethodInterceptor, HasInit {
     this.identityConverter = identityConverter;
   }
 
-  public void setEventListeners(List<Object> eventListeners) {
+  public void setEventListeners(List eventListeners) {
     this.eventListeners = eventListeners;
   }
 
