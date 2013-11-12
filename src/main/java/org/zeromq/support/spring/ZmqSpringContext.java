@@ -76,25 +76,24 @@ public final class ZmqSpringContext implements HasDestroy {
     }
 
     for (Map.Entry<String, ZmqRunnableContext> entry : beans.entrySet()) {
-      ZmqRunnableContext runnableContext = entry.getValue();
-      Class<? extends ZmqRunnableContext> clazz = runnableContext.getClass();
-
+      ZmqRunnableContext rc = entry.getValue();
+      Class<? extends ZmqRunnableContext> clazz = rc.getClass();
+      // check -- is this a prototype runnable_context?
       if (IsPrototype.class.isAssignableFrom(clazz)) {
-        int numOfCopies = ((IsPrototype) runnableContext).numOfCopies();
+        int numOfCopies = ((IsPrototype) rc).numOfCopies();
         Set<ZmqRunnableContext> prototypes = new HashSet<ZmqRunnableContext>();
         for (int i = 0; i < numOfCopies; i++) {
           String key = entry.getKey();
-          ZmqRunnableContext prototype = applicationContext.getBean(key, ZmqRunnableContext.class);
-          if (!prototypes.add(prototype)) {
+          ZmqRunnableContext rc_p = applicationContext.getBean(key, ZmqRunnableContext.class);
+          if (!prototypes.add(rc_p)) {
             LOG.error("!!! Not a prototype scoped runnable_context detected: {}.", key);
             throw ZmqException.fatal();
           }
-          prototypes.add(prototype);
-          deploy(prototype);
+          deploy(rc_p);
         }
       }
       else {
-        deploy(runnableContext);
+        deploy(rc);
       }
     }
 
