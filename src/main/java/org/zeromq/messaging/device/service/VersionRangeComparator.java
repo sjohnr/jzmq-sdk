@@ -22,7 +22,7 @@ package org.zeromq.messaging.device.service;
 
 import java.util.Comparator;
 
-public class VersionRangeComparator implements Comparator<byte[]> {
+public final class VersionRangeComparator implements Comparator<byte[]> {
 
   @Override
   public int compare(byte[] version, byte[] range) {

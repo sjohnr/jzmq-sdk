@@ -26,7 +26,7 @@ import org.zeromq.support.ObjectAdapter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class VersionConverter implements ObjectAdapter<String, byte[]> {
+public final class VersionConverter implements ObjectAdapter<String, byte[]> {
 
   private static final Pattern PATTERN_VERSION =
       Pattern.compile("(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})");

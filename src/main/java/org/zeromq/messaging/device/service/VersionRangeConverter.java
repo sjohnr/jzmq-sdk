@@ -28,7 +28,7 @@ import org.zeromq.support.ZmqUtils;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class VersionRangeConverter implements ObjectAdapter<String, byte[]> {
+public final class VersionRangeConverter implements ObjectAdapter<String, byte[]> {
 
   private static final Pattern PATTERN_VERSION_RANGE =
       Pattern.compile("\\[(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})\\-(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})\\]");
