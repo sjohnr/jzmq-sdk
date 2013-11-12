@@ -23,6 +23,9 @@
     <property name="inputAdapter">
       <bean class="org.zeromq.support.rpc.javanative.JavanativeCallerInputAdapter"/>
     </property>
+    <property name="eventListeners">
+      <bean class="org.zeromq.messaging.device.service.KeepCorrelationEventListener"/>
+    </property>
   </bean>
 
   <bean class="org.zeromq.messaging.device.service.FairEmitter">

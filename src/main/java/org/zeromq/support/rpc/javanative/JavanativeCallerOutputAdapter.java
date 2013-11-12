@@ -25,10 +25,12 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.messaging.ZmqMessage;
+import org.zeromq.messaging.device.service.ServiceHeaders;
 import org.zeromq.support.ObjectAdapter;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.UUID;
 
 public final class JavanativeCallerOutputAdapter implements ObjectAdapter<MethodInvocation, ZmqMessage> {
 
@@ -37,17 +39,25 @@ public final class JavanativeCallerOutputAdapter implements ObjectAdapter<Method
   @Override
   public ZmqMessage convert(MethodInvocation invocation) {
     Method method = invocation.getMethod();
+
     String serviceName = method.getDeclaringClass().getCanonicalName();
     String functionName = method.getName();
     Class<?>[] argClasses = method.getParameterTypes();
     Object[] args = invocation.getArguments();
+
+    byte[] payload;
     try {
-      byte[] payload = JavanativeSerializationUtils.toBytes(new Request(serviceName, functionName, args, argClasses));
-      return ZmqMessage.builder().withPayload(payload).build();
+      payload = JavanativeSerializationUtils.toBytes(new Request(serviceName, functionName, args, argClasses));
     }
     catch (IOException e) {
       LOG.error("!!! Got problem during request serialization: " + e, e);
       throw Throwables.propagate(e);
     }
+
+    long corrId = UUID.randomUUID().getMostSignificantBits();
+    return ZmqMessage.builder()
+                     .withHeaders(new ServiceHeaders().setCorrId(corrId))
+                     .withPayload(payload)
+                     .build();
   }
 }

@@ -24,7 +24,10 @@ import com.google.common.base.Preconditions;
 import com.google.protobuf.GeneratedMessage;
 import org.aopalliance.intercept.MethodInvocation;
 import org.zeromq.messaging.ZmqMessage;
+import org.zeromq.messaging.device.service.ServiceHeaders;
 import org.zeromq.support.ObjectAdapter;
+
+import java.util.UUID;
 
 public final class ProtoCallerOutputAdapter implements ObjectAdapter<MethodInvocation, ZmqMessage> {
 
@@ -44,6 +47,10 @@ public final class ProtoCallerOutputAdapter implements ObjectAdapter<MethodInvoc
                           .build()
                           .toByteArray();
 
-    return ZmqMessage.builder().withPayload(payload).build();
+    long corrId = UUID.randomUUID().getMostSignificantBits();
+    return ZmqMessage.builder()
+                     .withHeaders(new ServiceHeaders().setCorrId(corrId))
+                     .withPayload(payload)
+                     .build();
   }
 }
