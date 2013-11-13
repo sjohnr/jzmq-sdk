@@ -50,16 +50,16 @@ public final class FairPassiveAcceptor extends ZmqAbstractFairServiceDispatcher 
   @Override
   public void init() {
     _frontendFactory = ZmqChannelFactory.builder()
+                                        .ofROUTERType()
                                         .withZmqContext(zmqContext)
                                         .withEventListeners(frontendEventListeners)
                                         .withConnectAddresses(frontendAddresses)
-                                        .ofROUTERType()
                                         .build();
     _backendFactory = ZmqChannelFactory.builder()
+                                       .ofDEALERType()
                                        .withZmqContext(zmqContext)
                                        .withEventListeners(backendEventListeners)
                                        .withBindAddresses(backendAddresses)
-                                       .ofDEALERType()
                                        .build();
 
     _frontend = _frontendFactory.newChannel();

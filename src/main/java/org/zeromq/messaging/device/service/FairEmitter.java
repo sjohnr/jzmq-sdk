@@ -50,16 +50,16 @@ public final class FairEmitter extends ZmqAbstractFairServiceDispatcher {
   @Override
   public void init() {
     _frontendFactory = ZmqChannelFactory.builder()
+                                        .ofROUTERType()
                                         .withZmqContext(zmqContext)
                                         .withEventListeners(frontendEventListeners)
                                         .withBindAddresses(frontendAddresses)
-                                        .ofROUTERType()
                                         .build();
     _backendFactory = ZmqChannelFactory.builder()
+                                       .ofDEALERType()
                                        .withZmqContext(zmqContext)
                                        .withEventListeners(backendEventListeners)
                                        .withConnectAddresses(backendAddresses)
-                                       .ofDEALERType()
                                        .build();
 
     _frontend = _frontendFactory.newChannel();
