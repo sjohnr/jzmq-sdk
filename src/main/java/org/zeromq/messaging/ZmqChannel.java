@@ -352,7 +352,7 @@ public class ZmqChannel implements HasDestroy {
      */
     void setupSocketIdentity(ZMQ.Socket socket) {
       if (_target.socketIdentityPrefix != null) {
-        byte[] uuid = longAsBytes(UUID.randomUUID().getLeastSignificantBits());
+        byte[] uuid = longAsBytes(UUID.randomUUID().getMostSignificantBits());
         byte[] socketIdentity = mergeBytes(ImmutableList.of(_target.socketIdentityPrefix, uuid));
         socket.setIdentity(socketIdentity);
       }

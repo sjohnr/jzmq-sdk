@@ -43,7 +43,7 @@ class JavanativeSerializationUtils {
       bytes = baos.toByteArray();
     }
     finally {
-      _closeQuietly(oos);
+      closeQuietly(oos);
     }
     return bytes;
   }
@@ -58,12 +58,12 @@ class JavanativeSerializationUtils {
       t = (T) ois.readObject();
     }
     finally {
-      _closeQuietly(ois);
+      closeQuietly(ois);
     }
     return t;
   }
 
-  private static void _closeQuietly(Closeable closeable) {
+  private static void closeQuietly(Closeable closeable) {
     if (closeable != null) {
       try {
         closeable.close();
