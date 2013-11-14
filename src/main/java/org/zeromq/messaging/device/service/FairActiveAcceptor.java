@@ -20,7 +20,7 @@
 
 package org.zeromq.messaging.device.service;
 
-import org.zeromq.messaging.ZmqChannelFactory;
+import org.zeromq.messaging.ZmqChannel;
 
 /**
  * Fair device:
@@ -49,21 +49,18 @@ public final class FairActiveAcceptor extends ZmqAbstractFairServiceDispatcher {
 
   @Override
   public void init() {
-    _frontendFactory = ZmqChannelFactory.builder()
-                                        .ofDEALERType()
-                                        .withZmqContext(zmqContext)
-                                        .withEventListeners(frontendEventListeners)
-                                        .withConnectAddresses(frontendAddresses)
-                                        .build();
-    _backendFactory = ZmqChannelFactory.builder()
-                                       .ofROUTERType()
-                                       .withZmqContext(zmqContext)
-                                       .withEventListeners(backendEventListeners)
-                                       .withBindAddresses(backendAddresses)
-                                       .build();
-
-    _frontend = _frontendFactory.newChannel();
-    _backend = _backendFactory.newChannel();
+    _frontend = ZmqChannel.builder()
+                          .ofDEALERType()
+                          .withZmqContext(zmqContext)
+                          .withEventListeners(frontendEventListeners)
+                          .withConnectAddresses(frontendAddresses)
+                          .build();
+    _backend = ZmqChannel.builder()
+                         .ofROUTERType()
+                         .withZmqContext(zmqContext)
+                         .withEventListeners(backendEventListeners)
+                         .withBindAddresses(backendAddresses)
+                         .build();
 
     super.init();
   }

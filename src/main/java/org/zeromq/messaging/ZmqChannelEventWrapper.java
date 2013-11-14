@@ -18,14 +18,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.zeromq.messaging.event;
+package org.zeromq.messaging;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.eventbus.ZmqEventBus;
 import org.zeromq.ZMQ;
-import org.zeromq.messaging.ZmqChannel;
-import org.zeromq.messaging.ZmqException;
-import org.zeromq.messaging.ZmqMessage;
+import org.zeromq.messaging.event.EventAfterReceive;
+import org.zeromq.messaging.event.EventAfterSend;
+import org.zeromq.messaging.event.EventAfterSubscribe;
+import org.zeromq.messaging.event.EventAfterUnsubscribe;
+import org.zeromq.messaging.event.EventBeforeReceive;
+import org.zeromq.messaging.event.EventBeforeSend;
+import org.zeromq.messaging.event.EventBeforeSubscribe;
+import org.zeromq.messaging.event.EventBeforeUnsubscribe;
+import org.zeromq.messaging.event.EventNotReceived;
+import org.zeromq.messaging.event.EventNotSent;
+import org.zeromq.messaging.event.EventReceived;
+import org.zeromq.messaging.event.EventSent;
+import org.zeromq.messaging.event.EventSubscribed;
+import org.zeromq.messaging.event.EventUnsubscribed;
 import org.zeromq.support.event.NoOpEventListener;
 
 /**
@@ -55,14 +66,14 @@ import org.zeromq.support.event.NoOpEventListener;
  * <li>{@link EventUnsubscribed}</li>
  * </ul>
  */
-public final class ZmqChannelEventWrapper implements ZmqChannel {
+class ZmqChannelEventWrapper extends ZmqChannel {
 
-  private final ZmqChannel channel;
-  private final ZmqEventBus eventBus = new ZmqEventBus();
+  final ZmqChannel channel;
+  final ZmqEventBus eventBus = new ZmqEventBus();
 
   //// CONSTRUCTORS
 
-  public ZmqChannelEventWrapper(ZmqChannel channel, Iterable eventListeners) {
+  ZmqChannelEventWrapper(ZmqChannel channel, Iterable eventListeners) {
     this.channel = channel;
     eventBus.register(new NoOpEventListener());
     for (Object el : eventListeners) {

@@ -52,38 +52,35 @@ public abstract class ZmqAbstractArchitectureTest extends ZmqAbstractTest {
     }
 
     public ZmqChannel newBindingClient(ZmqContext zmqContext, String bindAddress) {
-      ZmqChannel target = ZmqChannelFactory.builder()
-                                           .withZmqContext(zmqContext)
-                                           .ofDEALERType()
-                                           .withBindAddress(bindAddress)
-                                           .build()
-                                           .newChannel();
+      ZmqChannel target = ZmqChannel.builder()
+                                    .withZmqContext(zmqContext)
+                                    .ofDEALERType()
+                                    .withBindAddress(bindAddress)
+                                    .build();
 
       _destroyables.add(target);
       return target;
     }
 
     public ZmqChannel newConnClient(ZmqContext zmqContext, String... connAddresses) {
-      ZmqChannel target = ZmqChannelFactory.builder()
-                                           .withZmqContext(zmqContext)
-                                           .ofDEALERType()
-                                           .withConnectAddresses(Arrays.asList(connAddresses))
-                                           .withEventListener(new TryAgainEventListener())
-                                           .build()
-                                           .newChannel();
+      ZmqChannel target = ZmqChannel.builder()
+                                    .withZmqContext(zmqContext)
+                                    .ofDEALERType()
+                                    .withConnectAddresses(Arrays.asList(connAddresses))
+                                    .withEventListener(new TryAgainEventListener())
+                                    .build();
       _destroyables.add(target);
       return target;
     }
 
     public ZmqChannel newConnClientWithIdentity(ZmqContext zmqContext, String identityPrefix, String... connAddresses) {
-      ZmqChannel target = ZmqChannelFactory.builder()
-                                           .withZmqContext(zmqContext)
-                                           .ofDEALERType()
-                                           .withConnectAddresses(Arrays.asList(connAddresses))
-                                           .withSocketIdentityPrefix(identityPrefix.getBytes())
-                                           .withEventListener(new TryAgainEventListener())
-                                           .build()
-                                           .newChannel();
+      ZmqChannel target = ZmqChannel.builder()
+                                    .withZmqContext(zmqContext)
+                                    .ofDEALERType()
+                                    .withConnectAddresses(Arrays.asList(connAddresses))
+                                    .withSocketIdentityPrefix(identityPrefix.getBytes())
+                                    .withEventListener(new TryAgainEventListener())
+                                    .build();
       _destroyables.add(target);
       return target;
     }

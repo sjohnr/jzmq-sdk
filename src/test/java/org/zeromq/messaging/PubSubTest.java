@@ -38,21 +38,19 @@ public class PubSubTest extends ZmqAbstractTest {
     }
 
     ZmqChannel newPublisher() {
-      return ZmqChannelFactory.builder()
-                              .withZmqContext(zmqContext)
-                              .ofPUBType()
-                              .withBindAddress("inproc://p")
-                              .build()
-                              .newChannel();
+      return ZmqChannel.builder()
+                       .withZmqContext(zmqContext)
+                       .ofPUBType()
+                       .withBindAddress("inproc://p")
+                       .build();
     }
 
     ZmqChannel newSubscriber() {
-      return ZmqChannelFactory.builder()
-                              .withZmqContext(zmqContext)
-                              .ofSUBType()
-                              .withConnectAddress("inproc://p")
-                              .build()
-                              .newChannel();
+      return ZmqChannel.builder()
+                       .withZmqContext(zmqContext)
+                       .ofSUBType()
+                       .withConnectAddress("inproc://p")
+                       .build();
     }
   }
 

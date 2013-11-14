@@ -23,7 +23,6 @@ package org.zeromq.messaging.device.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.messaging.ZmqChannel;
-import org.zeromq.messaging.ZmqChannelFactory;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
 import org.zeromq.messaging.device.ZmqAbstractDeviceContext;
@@ -97,7 +96,6 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractDeviceContext {
   protected List<String> bindAddresses = new ArrayList<String>();
   protected List eventListeners = new ArrayList();
 
-  protected ZmqChannelFactory _channelFactory;
   protected ZmqChannel _channel;
   protected ZmqPingStrategy _pingStrategy;
   protected String _pingStrategyForLogging;
@@ -127,8 +125,10 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractDeviceContext {
 
   @Override
   public void init() {
+    if (_channel == null) {
+      throw ZmqException.fatal();
+    }
     _poller = zmqContext.newPoller(1);
-    _channel = _channelFactory.newChannel();
     _channel.register(_poller);
     _pingStrategyForLogging = _pingStrategy.getClass().getSimpleName();
   }

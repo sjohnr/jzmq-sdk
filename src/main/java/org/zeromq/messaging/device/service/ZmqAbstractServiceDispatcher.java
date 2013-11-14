@@ -21,7 +21,6 @@
 package org.zeromq.messaging.device.service;
 
 import org.zeromq.messaging.ZmqChannel;
-import org.zeromq.messaging.ZmqChannelFactory;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.device.ZmqAbstractDeviceContext;
 
@@ -89,8 +88,6 @@ public abstract class ZmqAbstractServiceDispatcher extends ZmqAbstractDeviceCont
   protected List frontendEventListeners = new ArrayList();
   protected List backendEventListeners = new ArrayList();
 
-  protected ZmqChannelFactory _frontendFactory;
-  protected ZmqChannelFactory _backendFactory;
   protected ZmqChannel _frontend;
   protected ZmqChannel _backend;
 
@@ -119,6 +116,12 @@ public abstract class ZmqAbstractServiceDispatcher extends ZmqAbstractDeviceCont
 
   @Override
   public void init() {
+    if (_frontend == null) {
+      throw ZmqException.fatal();
+    }
+    if (_backend == null) {
+      throw ZmqException.fatal();
+    }
     _poller = zmqContext.newPoller(2);
     _frontend.register(_poller);
     _backend.register(_poller);

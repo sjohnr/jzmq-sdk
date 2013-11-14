@@ -20,7 +20,7 @@
 
 package org.zeromq.messaging.device.service;
 
-import org.zeromq.messaging.ZmqChannelFactory;
+import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
 
 /**
@@ -61,12 +61,12 @@ public final class WorkerWellknown extends ZmqAbstractWorker {
   public void init() {
     _pingStrategy = new DontPing();
 
-    _channelFactory = ZmqChannelFactory.builder()
-                                       .withZmqContext(zmqContext)
-                                       .withEventListeners(eventListeners)
-                                       .withBindAddresses(bindAddresses)
-                                       .ofROUTERType()
-                                       .build();
+    _channel = ZmqChannel.builder()
+                         .ofROUTERType()
+                         .withZmqContext(zmqContext)
+                         .withEventListeners(eventListeners)
+                         .withBindAddresses(bindAddresses)
+                         .build();
 
     super.init();
   }

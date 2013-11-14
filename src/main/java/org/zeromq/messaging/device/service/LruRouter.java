@@ -22,7 +22,7 @@ package org.zeromq.messaging.device.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.messaging.ZmqChannelFactory;
+import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqFrames;
 import org.zeromq.messaging.ZmqHeaders;
@@ -82,21 +82,18 @@ public final class LruRouter extends ZmqAbstractServiceDispatcher {
 
   @Override
   public void init() {
-    _frontendFactory = ZmqChannelFactory.builder()
-                                        .ofROUTERType()
-                                        .withZmqContext(zmqContext)
-                                        .withEventListeners(frontendEventListeners)
-                                        .withBindAddresses(frontendAddresses)
-                                        .build();
-    _backendFactory = ZmqChannelFactory.builder()
-                                       .ofROUTERType()
-                                       .withZmqContext(zmqContext)
-                                       .withEventListeners(backendEventListeners)
-                                       .withBindAddresses(backendAddresses)
-                                       .build();
-
-    _frontend = _frontendFactory.newChannel();
-    _backend = _backendFactory.newChannel();
+    _frontend = ZmqChannel.builder()
+                          .ofROUTERType()
+                          .withZmqContext(zmqContext)
+                          .withEventListeners(frontendEventListeners)
+                          .withBindAddresses(frontendAddresses)
+                          .build();
+    _backend = ZmqChannel.builder()
+                         .ofROUTERType()
+                         .withZmqContext(zmqContext)
+                         .withEventListeners(backendEventListeners)
+                         .withBindAddresses(backendAddresses)
+                         .build();
 
     super.init();
   }

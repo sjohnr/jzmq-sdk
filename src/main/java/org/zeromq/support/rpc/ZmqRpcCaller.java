@@ -27,7 +27,6 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.messaging.ZmqChannel;
-import org.zeromq.messaging.ZmqChannelFactory;
 import org.zeromq.messaging.ZmqContext;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
@@ -51,25 +50,6 @@ public final class ZmqRpcCaller implements MethodInterceptor, HasInit {
   private static final long DEFAULT_CALLER_LEASE_TIMEOUT = 1000;
 
   private static final Logger LOG = LoggerFactory.getLogger(ZmqRpcCaller.class);
-
-  private static class DelegatingObjectBuilder implements ObjectBuilder<ZmqChannel> {
-
-    final ZmqChannelFactory factory;
-
-    DelegatingObjectBuilder(ZmqChannelFactory factory) {
-      this.factory = factory;
-    }
-
-    @Override
-    public void checkInvariant() {
-      // no-op.
-    }
-
-    @Override
-    public ZmqChannel build() {
-      return factory.newChannel();
-    }
-  }
 
   protected ZmqContext zmqContext;
   protected List<String> connectAddresses = new ArrayList<String>();
@@ -144,22 +124,35 @@ public final class ZmqRpcCaller implements MethodInterceptor, HasInit {
     if (inputAdapter == null) {
       throw ZmqException.fatal();
     }
-
-    ZmqChannelFactory.Builder builder = ZmqChannelFactory.builder();
     if (identity != null) {
-      builder.withSocketIdentityPrefix(identityConverter.convert(identity));
+      if (identityConverter == null) {
+        throw ZmqException.fatal();
+      }
     }
-    ZmqChannelFactory callerFactory = builder.withZmqContext(zmqContext)
-                                             .ofDEALERType()
-                                             .withConnectAddresses(connectAddresses)
-                                             .withEventListeners(eventListeners)
-                                             .build();
 
-    DelegatingObjectBuilder dob = new DelegatingObjectBuilder(callerFactory);
+    ObjectBuilder<ZmqChannel> channelBuilder = new ObjectBuilder<ZmqChannel>() {
+      @Override
+      public void checkInvariant() {
+        // no-op.
+      }
+
+      @Override
+      public ZmqChannel build() {
+        ZmqChannel.Builder builder = ZmqChannel.builder();
+        if (identity != null) {
+          builder.withSocketIdentityPrefix(identityConverter.convert(identity));
+        }
+        return builder.withZmqContext(zmqContext)
+                      .ofDEALERType()
+                      .withConnectAddresses(connectAddresses)
+                      .withEventListeners(eventListeners)
+                      .build();
+      }
+    };
 
     _channelPool = numOfCallers > 0 ?
-                   new SimpleObjectPool<ZmqChannel>(numOfCallers, dob) :
-                   new SimpleObjectPool<ZmqChannel>(dob);
+                   new SimpleObjectPool<ZmqChannel>(numOfCallers, channelBuilder) :
+                   new SimpleObjectPool<ZmqChannel>(channelBuilder);
   }
 
   @Override

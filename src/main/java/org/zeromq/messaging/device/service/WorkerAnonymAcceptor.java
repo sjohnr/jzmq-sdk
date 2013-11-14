@@ -20,7 +20,7 @@
 
 package org.zeromq.messaging.device.service;
 
-import org.zeromq.messaging.ZmqChannelFactory;
+import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
 
 /**
@@ -61,12 +61,12 @@ public final class WorkerAnonymAcceptor extends ZmqAbstractWorker {
   public void init() {
     _pingStrategy = new DontPing();
 
-    _channelFactory = ZmqChannelFactory.builder()
-                                       .withZmqContext(zmqContext)
-                                       .withEventListeners(eventListeners)
-                                       .withConnectAddresses(connectAddresses)
-                                       .ofROUTERType()
-                                       .build();
+    _channel = ZmqChannel.builder()
+                         .withZmqContext(zmqContext)
+                         .withEventListeners(eventListeners)
+                         .withConnectAddresses(connectAddresses)
+                         .ofROUTERType()
+                         .build();
 
     super.init();
   }

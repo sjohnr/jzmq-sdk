@@ -20,7 +20,7 @@
 
 package org.zeromq.messaging.device.service;
 
-import org.zeromq.messaging.ZmqChannelFactory;
+import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.support.IsPrototype;
 import org.zeromq.support.ObjectAdapter;
@@ -41,13 +41,13 @@ public final class WorkerAnonymEmitter extends ZmqAbstractWorker implements IsPr
       super(new WorkerAnonymEmitter());
     }
 
-    public Builder withWorkerIdentity(String workerIdentity) {
-      _target.setWorkerIdentity(workerIdentity);
+    public Builder withIdentity(String identity) {
+      _target.setIdentity(identity);
       return this;
     }
 
-    public Builder withWorkerIdentityConverter(ObjectAdapter<String, byte[]> workerIdentityConverter) {
-      _target.setWorkerIdentityConverter(workerIdentityConverter);
+    public Builder withIdentityConverter(ObjectAdapter<String, byte[]> identityConverter) {
+      _target.setIdentityConverter(identityConverter);
       return this;
     }
 
@@ -57,8 +57,8 @@ public final class WorkerAnonymEmitter extends ZmqAbstractWorker implements IsPr
       if (_target.connectAddresses.isEmpty()) {
         throw ZmqException.fatal();
       }
-      if (_target.workerIdentity != null) {
-        if (_target.workerIdentityConverter == null) {
+      if (_target.identity != null) {
+        if (_target.identityConverter == null) {
           throw ZmqException.fatal();
         }
       }
@@ -66,8 +66,8 @@ public final class WorkerAnonymEmitter extends ZmqAbstractWorker implements IsPr
   }
 
   private int numOfCopies = DEFAULT_NUM_OF_COPIES;
-  private String workerIdentity;
-  private ObjectAdapter<String, byte[]> workerIdentityConverter = new ObjectAdapter<String, byte[]>() {
+  private String identity;
+  private ObjectAdapter<String, byte[]> identityConverter = new ObjectAdapter<String, byte[]>() {
     @Override
     public byte[] convert(String src) {
       return src.getBytes();
@@ -85,12 +85,12 @@ public final class WorkerAnonymEmitter extends ZmqAbstractWorker implements IsPr
     return new Builder();
   }
 
-  public void setWorkerIdentity(String workerIdentity) {
-    this.workerIdentity = workerIdentity;
+  public void setIdentity(String identity) {
+    this.identity = identity;
   }
 
-  public void setWorkerIdentityConverter(ObjectAdapter<String, byte[]> workerIdentityConverter) {
-    this.workerIdentityConverter = workerIdentityConverter;
+  public void setIdentityConverter(ObjectAdapter<String, byte[]> identityConverter) {
+    this.identityConverter = identityConverter;
   }
 
   public void setNumOfCopies(int numOfCopies) {
@@ -108,16 +108,15 @@ public final class WorkerAnonymEmitter extends ZmqAbstractWorker implements IsPr
   public void init() {
     _pingStrategy = new DoPing();
 
-    ZmqChannelFactory.Builder builder = ZmqChannelFactory.builder();
-    if (workerIdentity != null) {
-      builder.withSocketIdentityPrefix(workerIdentityConverter.convert(workerIdentity));
+    ZmqChannel.Builder builder = ZmqChannel.builder();
+    if (identity != null) {
+      builder.withSocketIdentityPrefix(identityConverter.convert(identity));
     }
-    _channelFactory = builder
-        .withZmqContext(zmqContext)
-        .withEventListeners(eventListeners)
-        .withConnectAddresses(connectAddresses)
-        .ofDEALERType()
-        .build();
+    _channel = builder.withZmqContext(zmqContext)
+                      .withEventListeners(eventListeners)
+                      .withConnectAddresses(connectAddresses)
+                      .ofDEALERType()
+                      .build();
 
     super.init();
   }

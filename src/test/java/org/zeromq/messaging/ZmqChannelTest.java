@@ -27,26 +27,24 @@ import org.zeromq.TestRecorder;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.zeromq.messaging.ZmqAbstractTest.Fixture.HELLO;
 
-public class ZmqChannelFactoryTest extends ZmqAbstractTest {
+public class ZmqChannelTest extends ZmqAbstractTest {
 
   @Test(expected = ZmqException.class)
   public void t0() {
     TestRecorder r = new TestRecorder().start();
     r.log("Test inproc:// connection behavior: connect first and bind second => exception.");
 
-    ZmqChannelFactory.builder()
-                     .withZmqContext(zmqContext())
-                     .ofDEALERType()
-                     .withConnectAddress("inproc://service")
-                     .build()
-                     .newChannel();
+    ZmqChannel.builder()
+              .withZmqContext(zmqContext())
+              .ofDEALERType()
+              .withConnectAddress("inproc://service")
+              .build();
 
-    ZmqChannelFactory.builder()
-                     .withZmqContext(zmqContext())
-                     .ofDEALERType()
-                     .withBindAddress("inproc://service")
-                     .build()
-                     .newChannel();
+    ZmqChannel.builder()
+              .withZmqContext(zmqContext())
+              .ofDEALERType()
+              .withBindAddress("inproc://service")
+              .build();
   }
 
   @Test
@@ -54,19 +52,17 @@ public class ZmqChannelFactoryTest extends ZmqAbstractTest {
     TestRecorder r = new TestRecorder().start();
     r.log("Test inproc:// connection behavior: bind first and connect second => good.");
 
-    ZmqChannelFactory.builder()
-                     .withZmqContext(zmqContext())
-                     .ofDEALERType()
-                     .withBindAddress("inproc://service")
-                     .build()
-                     .newChannel();
+    ZmqChannel.builder()
+              .withZmqContext(zmqContext())
+              .ofDEALERType()
+              .withBindAddress("inproc://service")
+              .build();
 
-    ZmqChannelFactory.builder()
-                     .withZmqContext(zmqContext())
-                     .ofDEALERType()
-                     .withConnectAddress("inproc://service")
-                     .build()
-                     .newChannel();
+    ZmqChannel.builder()
+              .withZmqContext(zmqContext())
+              .ofDEALERType()
+              .withConnectAddress("inproc://service")
+              .build();
   }
 
   @Test(expected = ZmqException.class)
@@ -74,20 +70,18 @@ public class ZmqChannelFactoryTest extends ZmqAbstractTest {
     TestRecorder r = new TestRecorder().start();
     r.log("Test inproc:// connection behavior: bind first and then connect several times.");
 
-    ZmqChannelFactory.builder()
-                     .withZmqContext(zmqContext())
-                     .ofDEALERType()
-                     .withBindAddress("inproc://service")
-                     .build()
-                     .newChannel();
+    ZmqChannel.builder()
+              .withZmqContext(zmqContext())
+              .ofDEALERType()
+              .withBindAddress("inproc://service")
+              .build();
 
-    ZmqChannelFactory.builder()
-                     .withZmqContext(zmqContext())
-                     .ofDEALERType()
-                     .withConnectAddress("inproc://service")
-                     .withConnectAddress("inproc://service-huervice")
-                     .build()
-                     .newChannel();
+    ZmqChannel.builder()
+              .withZmqContext(zmqContext())
+              .ofDEALERType()
+              .withConnectAddress("inproc://service")
+              .withConnectAddress("inproc://service-huervice")
+              .build();
   }
 
   @Test
@@ -96,14 +90,13 @@ public class ZmqChannelFactoryTest extends ZmqAbstractTest {
     r.log("Perf test for simple message .send() via DEALER to not-available peer. Just .send() and measure.");
 
     int HWM = 1000000;
-    ZmqChannel channel = ZmqChannelFactory.builder()
-                                          .ofDEALERType()
-                                          .withZmqContext(zmqContext())
-                                          .withConnectAddress("tcp://localhost:8833")
-                                          .withHwmForSend(HWM)
-                                          .withHwmForSend(HWM)
-                                          .build()
-                                          .newChannel();
+    ZmqChannel channel = ZmqChannel.builder()
+                                   .ofDEALERType()
+                                   .withZmqContext(zmqContext())
+                                   .withConnectAddress("tcp://localhost:8833")
+                                   .withHwmForSend(HWM)
+                                   .withHwmForSend(HWM)
+                                   .build();
     ZmqMessage src = HELLO();
 
     ZmqFrames identities = new ZmqFrames();

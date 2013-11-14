@@ -26,7 +26,6 @@ import org.zeromq.Checker;
 import org.zeromq.TestRecorder;
 import org.zeromq.messaging.ZmqAbstractArchitectureTest;
 import org.zeromq.messaging.ZmqChannel;
-import org.zeromq.messaging.ZmqChannelFactory;
 import org.zeromq.messaging.ZmqContext;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
@@ -122,7 +121,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
                                             .withZmqContext(zmqContext)
                                             .withConnectAddresses(Arrays.asList(connectAddresses))
                                             .withMessageProcessor(messageProcessor)
-                                            .withWorkerIdentity(identity)
+                                            .withIdentity(identity)
                                             .withPollTimeout(10)
                                             .build()
                      )
@@ -1094,17 +1093,16 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     int HWM_FOR_SEND = 10;
     int NUM_OF_NOTAVAIL = 2;
-    ZmqChannel client = ZmqChannelFactory.builder()
-                                         .withZmqContext(zmqContext())
-                                         .ofDEALERType()
-                                         .withWaitOnSend(100)
-                                         .withWaitOnRecv(100)
-                                         .withHwmForSend(HWM_FOR_SEND)
-                                         .withConnectAddress("tcp://localhost:" + 556)
-                                         .withConnectAddress("tcp://localhost:" + 555)
-                                         .withConnectAddress("tcp://localhost:" + 559)
-                                         .build()
-                                         .newChannel();
+    ZmqChannel client = ZmqChannel.builder()
+                                  .withZmqContext(zmqContext())
+                                  .ofDEALERType()
+                                  .withWaitOnSend(100)
+                                  .withWaitOnRecv(100)
+                                  .withHwmForSend(HWM_FOR_SEND)
+                                  .withConnectAddress("tcp://localhost:" + 556)
+                                  .withConnectAddress("tcp://localhost:" + 555)
+                                  .withConnectAddress("tcp://localhost:" + 559)
+                                  .build();
 
     int MESSAGE_NUM = 10 * HWM_FOR_SEND; // number of messages -- several times bigger than HWM.
     try {
@@ -1390,17 +1388,16 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     int HWM_FOR_SEND = 10;
     int NUM_OF_NOTAVAIL = 2;
-    ZmqChannel client = ZmqChannelFactory.builder()
-                                         .withZmqContext(zmqContext())
-                                         .ofDEALERType()
-                                         .withWaitOnSend(100)
-                                         .withWaitOnRecv(100)
-                                         .withHwmForSend(HWM_FOR_SEND)
-                                         .withConnectAddress("tcp://localhost:" + 777)
-                                         .withConnectAddress("tcp://localhost:" + livePort)
-                                         .withConnectAddress("tcp://localhost:" + 780)
-                                         .build()
-                                         .newChannel();
+    ZmqChannel client = ZmqChannel.builder()
+                                  .withZmqContext(zmqContext())
+                                  .ofDEALERType()
+                                  .withWaitOnSend(100)
+                                  .withWaitOnRecv(100)
+                                  .withHwmForSend(HWM_FOR_SEND)
+                                  .withConnectAddress("tcp://localhost:" + 777)
+                                  .withConnectAddress("tcp://localhost:" + livePort)
+                                  .withConnectAddress("tcp://localhost:" + 780)
+                                  .build();
 
     int MESSAGE_NUM = 10 * HWM_FOR_SEND; // number of messages -- several times bigger than HWM.
     try {
@@ -1450,14 +1447,13 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     f.init();
 
-    ZmqChannel client = ZmqChannelFactory.builder()
-                                         .withZmqContext(zmqContext())
-                                         .ofDEALERType()
-                                         .withConnectAddress("tcp://localhost:" + 333)
-                                         .withConnectAddress("tcp://localhost:" + 334)
-                                         .withEventListener(new KeepCorrelationEventListener())
-                                         .build()
-                                         .newChannel();
+    ZmqChannel client = ZmqChannel.builder()
+                                  .withZmqContext(zmqContext())
+                                  .ofDEALERType()
+                                  .withConnectAddress("tcp://localhost:" + 333)
+                                  .withConnectAddress("tcp://localhost:" + 334)
+                                  .withEventListener(new KeepCorrelationEventListener())
+                                  .build();
     int correlationId = 1;
     ZmqMessage hello = HELLO();
     try {
