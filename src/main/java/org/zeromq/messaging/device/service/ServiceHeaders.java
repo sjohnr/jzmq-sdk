@@ -22,6 +22,14 @@ package org.zeromq.messaging.device.service;
 
 import org.zeromq.messaging.ZmqHeaders;
 
+/**
+ * Service class headers. Acts as a mutable container for <i>service protocol</i> properties:
+ * <pre>
+ *   ServiceHeaders.MsgType -- PING/TRYAGAIN.
+ *   ServiceHeaders.MsgNumOfHops -- the number of hops for the message.
+ *   ServiceHeaders.MsgCorrId -- correlation id for the call.
+ * </pre>
+ */
 public final class ServiceHeaders extends ZmqHeaders<ServiceHeaders> {
 
   private static final String HEADER_MSG_TYPE = "ServiceHeaders.MsgType";
