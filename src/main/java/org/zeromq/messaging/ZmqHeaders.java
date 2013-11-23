@@ -37,13 +37,13 @@ import static org.zeromq.support.ZmqUtils.isDivFrame;
 import static org.zeromq.support.ZmqUtils.isEmptyFrame;
 
 /**
- * Map data structure aimed to provide generic <i>headers</i>:
+ * Map data structure aimed to provide <i>generic headers</i>:
  * <pre>
  *   header_id_0  [header_value_0]
  *   ...
  *   header_id_m  [header_value_m]
  * </pre>
- * Where header -Id/-Value are strings. Wire format is JSON.
+ * Where header -id/-value are strings. Wire format is JSON.
  */
 @SuppressWarnings("unchecked")
 public class ZmqHeaders<T extends ZmqHeaders> {
@@ -145,11 +145,11 @@ public class ZmqHeaders<T extends ZmqHeaders> {
    * @return header content. <b>Never null.</b>
    */
   public final String getHeaderOrException(String id) {
-    String c = getHeaderOrNull(id);
-    if (c == null) {
+    String h = getHeaderOrNull(id);
+    if (h == null) {
       throw ZmqException.headerIsNotSet();
     }
-    return c;
+    return h;
   }
 
   /**
@@ -159,7 +159,7 @@ public class ZmqHeaders<T extends ZmqHeaders> {
    */
   public final byte[] asBinary() {
     if (_map.isEmpty()) {
-      return new byte[0];
+      return ZmqMessage.EMPTY_FRAME;
     }
     try {
       JsonFactory jf = new JsonFactory();
@@ -171,9 +171,7 @@ public class ZmqHeaders<T extends ZmqHeaders> {
           String headerId = entry.getKey();
           String headerContent = entry.getValue();
           g.writeArrayFieldStart(headerId);
-          {
-            g.writeString(headerContent);
-          }
+          g.writeString(headerContent);
           g.writeEndArray();
         }
       }
