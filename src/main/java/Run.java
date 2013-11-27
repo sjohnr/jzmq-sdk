@@ -22,7 +22,6 @@ import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqContext;
 import org.zeromq.messaging.ZmqMessage;
 
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 
@@ -33,7 +32,7 @@ public class Run {
     ctx.setThreadNum(1);
     ctx.init();
 
-    final String address = "epgm://" + InetAddress.getLocalHost().getHostAddress() + ";224.0.0.1:45577";
+    final String address = "epgm://" + args[0] + ";224.0.0.1:45577";
     final byte[] topic = "xyz".getBytes();
 
     try {
