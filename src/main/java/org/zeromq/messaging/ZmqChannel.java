@@ -39,7 +39,7 @@ import static org.zeromq.support.ZmqUtils.makeHash;
 import static org.zeromq.support.ZmqUtils.mapAsJson;
 import static org.zeromq.support.ZmqUtils.mergeBytes;
 
-public class ZmqChannel implements HasDestroy {
+public final class ZmqChannel implements HasDestroy {
 
   private static final int INPROC_CONN_TIMEOUT = 1000; // inproc protocol conn timeout, best guess.
 
@@ -64,19 +64,6 @@ public class ZmqChannel implements HasDestroy {
     private final ZmqChannel _target = new ZmqChannel();
 
     private Builder() {
-    }
-
-    @SuppressWarnings("unchecked")
-    public Builder withEventListener(Object el) {
-      _target.eventListeners.add(el);
-      return this;
-    }
-
-    public Builder withEventListeners(Iterable eventListeners) {
-      for (Object el : eventListeners) {
-        withEventListener(el);
-      }
-      return this;
     }
 
     public Builder withZmqContext(ZmqContext zmqContext) {
@@ -256,9 +243,7 @@ public class ZmqChannel implements HasDestroy {
 
       _target._socket = newSocket();
 
-      return _target.eventListeners.isEmpty() ?
-             _target : // if got no event_listeners -- return 'simple channel'
-             new ZmqChannelEventWrapper(_target, _target.eventListeners); // otherwise -- channel 'with events'.
+      return _target;
     }
 
     /** @return connected and/or bound {@link ZMQ.Socket} object. */
@@ -396,7 +381,6 @@ public class ZmqChannel implements HasDestroy {
   private long linger = DEFAULT_LINGER;
   private int timeoutSend = DEFAULT_WAIT_ON_SEND;
   private int timeoutRecv = DEFAULT_WAIT_ON_RECV;
-  private List eventListeners = new ArrayList();
 
   private ZMQ.Socket _socket;
   private Mode _mode;

@@ -60,7 +60,6 @@ public final class ZmqRpcCaller implements MethodInterceptor, HasInit {
       return src.getBytes();
     }
   };
-  protected List eventListeners = new ArrayList();
   protected int numOfCallers = DEFAULT_NUM_OF_CALLERS;
   protected long callerLeaseTimeout = DEFAULT_CALLER_LEASE_TIMEOUT;
   protected ObjectAdapter<MethodInvocation, ZmqMessage> outputAdapter;
@@ -84,10 +83,6 @@ public final class ZmqRpcCaller implements MethodInterceptor, HasInit {
 
   public void setIdentityConverter(ObjectAdapter<String, byte[]> identityConverter) {
     this.identityConverter = identityConverter;
-  }
-
-  public void setEventListeners(List eventListeners) {
-    this.eventListeners = eventListeners;
   }
 
   public void setNumOfCallers(int numOfCallers) {
@@ -130,7 +125,7 @@ public final class ZmqRpcCaller implements MethodInterceptor, HasInit {
       }
     }
 
-    ObjectBuilder<ZmqChannel> channelBuilder = new ObjectBuilder<ZmqChannel>() {
+    ObjectBuilder<ZmqChannel> clientBuilder = new ObjectBuilder<ZmqChannel>() {
       @Override
       public void checkInvariant() {
         // no-op.
@@ -145,14 +140,13 @@ public final class ZmqRpcCaller implements MethodInterceptor, HasInit {
         return builder.withZmqContext(zmqContext)
                       .ofDEALERType()
                       .withConnectAddresses(connectAddresses)
-                      .withEventListeners(eventListeners)
                       .build();
       }
     };
 
     _channelPool = numOfCallers > 0 ?
-                   new SimpleObjectPool<ZmqChannel>(numOfCallers, channelBuilder) :
-                   new SimpleObjectPool<ZmqChannel>(channelBuilder);
+                   new SimpleObjectPool<ZmqChannel>(numOfCallers, clientBuilder) :
+                   new SimpleObjectPool<ZmqChannel>(clientBuilder);
   }
 
   @Override
