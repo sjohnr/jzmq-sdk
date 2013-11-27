@@ -36,7 +36,7 @@
     <guava.version>12.0</guava.version>
     <junit.version>4.10</junit.version>
     <mockito-all.version>1.9.0</mockito-all.version>
-    <jzmq.version>2.2.2</jzmq.version>
+    <jzmq.version>3.0.0</jzmq.version>
     <logback.version>1.0.13</logback.version>
     <jcl-over-slf4j.version>1.7.5</jcl-over-slf4j.version>
     <spring.version>3.2.2.RELEASE</spring.version>
@@ -56,6 +56,13 @@
       <properties>
         <java.library.path>/usr/local/lib</java.library.path>
         <protobuf.version>2.4.1</protobuf.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>cent_os_x64</id>
+      <properties>
+        <java.library.path>/usr/lib64/</java.library.path>
+        <protobuf.version>2.3.0</protobuf.version>
       </properties>
     </profile>
   </profiles>
