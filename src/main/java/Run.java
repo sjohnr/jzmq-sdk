@@ -23,6 +23,9 @@ import org.zeromq.messaging.ZmqContext;
 import org.zeromq.messaging.ZmqMessage;
 
 import java.net.UnknownHostException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class Run {
@@ -32,75 +35,62 @@ public class Run {
     ctx.setThreadNum(1);
     ctx.init();
 
-    final String address = "epgm://" + args[0] + ";224.0.0.1:45577";
+    String nic = args[0];
+    final String prefix = args[1];
+    final long pubRate = Long.valueOf(args[2]);
+    final long subRate = Long.valueOf(args[3]);
+    final String address = "epgm://" + nic + ";224.0.0.1:45577";
     final byte[] topic = "xyz".getBytes();
 
-    try {
+    ExecutorService exec = Executors.newCachedThreadPool();
 
-      Thread t0 = new Thread() {
-        @Override
-        public void run() {
-          ZmqChannel channel = ZmqChannel.builder()
-                                         .withZmqContext(ctx)
-                                         .ofPUBType()
-                                         .withBindAddress(address)
-                                         .build();
-
-          while (true) {
-            ZmqMessage hello = ZmqMessage.builder()
-                                         .withTopic(topic)
-                                         .withPayload(("hello" + args[1] + System.nanoTime()).getBytes())
-                                         .build();
-            boolean send = channel.send(hello);
-            if (!send) {
-              System.out.println("Can't send message via PUB! Exiting JVM.");
-              System.exit(-1);
-            }
-            try {
-              TimeUnit.MILLISECONDS.sleep(500);
-            }
-            catch (InterruptedException e) {
-              throw new RuntimeException(e);
-            }
+    // publisher
+    exec.submit(new Callable<Void>() {
+      @Override
+      public Void call() throws Exception {
+        ZmqChannel channel = ZmqChannel.builder()
+                                       .withZmqContext(ctx)
+                                       .ofPUBType()
+                                       .withBindAddress(address)
+                                       .build();
+        while (true) {
+          ZmqMessage hello = ZmqMessage.builder()
+                                       .withTopic(topic)
+                                       .withPayload(("hello" + prefix + System.nanoTime()).getBytes())
+                                       .build();
+          boolean send = channel.send(hello);
+          if (!send) {
+            System.out.println("Can't send message via PUB! Thank you. Good bye.");
+            System.exit(-1);
           }
+          TimeUnit.MILLISECONDS.sleep(pubRate);
         }
-      };
-      t0.setName("publisher");
-      t0.start();
+      }
+    });
 
-      Thread t1 = new Thread() {
-        @Override
-        public void run() {
-          ZmqChannel channel = ZmqChannel.builder()
-                                         .withZmqContext(ctx)
-                                         .ofSUBType()
-                                         .withConnectAddress(address)
-                                         .build();
+    // subscriber
+    exec.submit(new Callable<Object>() {
+      @Override
+      public Object call() throws Exception {
+        ZmqChannel channel = ZmqChannel.builder()
+                                       .withZmqContext(ctx)
+                                       .ofSUBType()
+                                       .withConnectAddress(address)
+                                       .build();
 
-          channel.subscribe(topic);
+        channel.subscribe(topic);
 
-          while (true) {
-            ZmqMessage recv = channel.recv();
-            if (recv != null) {
-              System.out.println(">> got message: " + new String(recv.payload()));
-            }
-            try {
-              TimeUnit.MILLISECONDS.sleep(250);
-            }
-            catch (InterruptedException e) {
-              throw new RuntimeException(e);
-            }
+        while (true) {
+          ZmqMessage recv = channel.recv();
+          if (recv != null) {
+            System.out.println(">> got message: " + new String(recv.payload()));
           }
+          TimeUnit.MILLISECONDS.sleep(subRate);
         }
-      };
-      t1.setName("subscriber");
-      t1.start();
+      }
+    });
 
-      t0.join();
-      t1.join();
-    }
-    finally {
-      ctx.destroy();
-    }
+    // block forever
+    exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
   }
 }
