@@ -42,18 +42,6 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractDeviceContext {
       super(_target);
     }
 
-    public final B withEventListener(Object el) {
-      _target.eventListeners.add(el);
-      return (B) this;
-    }
-
-    public final B withEventListeners(Iterable eventListeners) {
-      for (Object el : eventListeners) {
-        withEventListener(el);
-      }
-      return (B) this;
-    }
-
     public final B withMessageProcessor(ZmqMessageProcessor messageProcessor) {
       _target.setMessageProcessor(messageProcessor);
       return (B) this;
@@ -94,7 +82,6 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractDeviceContext {
   protected ZmqMessageProcessor messageProcessor;
   protected List<String> connectAddresses = new ArrayList<String>();
   protected List<String> bindAddresses = new ArrayList<String>();
-  protected List eventListeners = new ArrayList();
 
   protected ZmqChannel _channel;
   protected ZmqPingStrategy _pingStrategy;
@@ -106,10 +93,6 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractDeviceContext {
   }
 
   //// METHODS
-
-  public final void setEventListeners(List eventListeners) {
-    this.eventListeners = eventListeners;
-  }
 
   public final void setMessageProcessor(ZmqMessageProcessor messageProcessor) {
     this.messageProcessor = messageProcessor;

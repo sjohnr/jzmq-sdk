@@ -37,30 +37,6 @@ public abstract class ZmqAbstractServiceDispatcher extends ZmqAbstractDeviceCont
       super(_target);
     }
 
-    public final B withFrontendEventListener(Object fel) {
-      _target.frontendEventListeners.add(fel);
-      return (B) this;
-    }
-
-    public final B withFrontendEventListeners(Iterable frontendEventListeners) {
-      for (Object fel : frontendEventListeners) {
-        withFrontendEventListener(fel);
-      }
-      return (B) this;
-    }
-
-    public final B withBackendEventListener(Object bel) {
-      _target.backendEventListeners.add(bel);
-      return (B) this;
-    }
-
-    public final B withBackendEventListeners(Iterable backendEventListeners) {
-      for (Object bel : backendEventListeners) {
-        withBackendEventListener(bel);
-      }
-      return (B) this;
-    }
-
     public final B withFrontendAddress(String address) {
       _target.frontendAddresses.add(address);
       return (B) this;
@@ -85,8 +61,6 @@ public abstract class ZmqAbstractServiceDispatcher extends ZmqAbstractDeviceCont
 
   protected List<String> frontendAddresses = new ArrayList<String>();
   protected List<String> backendAddresses = new ArrayList<String>();
-  protected List frontendEventListeners = new ArrayList();
-  protected List backendEventListeners = new ArrayList();
 
   protected ZmqChannel _frontend;
   protected ZmqChannel _backend;
@@ -97,14 +71,6 @@ public abstract class ZmqAbstractServiceDispatcher extends ZmqAbstractDeviceCont
   }
 
   //// METHODS
-
-  public final void setFrontendEventListeners(List frontendEventListeners) {
-    this.frontendEventListeners = frontendEventListeners;
-  }
-
-  public final void setBackendEventListeners(List backendEventListeners) {
-    this.backendEventListeners = backendEventListeners;
-  }
 
   public final void setFrontendAddresses(List<String> frontendAddresses) {
     this.frontendAddresses = frontendAddresses;

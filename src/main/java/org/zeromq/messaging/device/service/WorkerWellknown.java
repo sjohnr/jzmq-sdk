@@ -64,7 +64,6 @@ public final class WorkerWellknown extends ZmqAbstractWorker {
     _channel = ZmqChannel.builder()
                          .ofROUTERType()
                          .withZmqContext(zmqContext)
-                         .withEventListeners(eventListeners)
                          .withBindAddresses(bindAddresses)
                          .build();
 

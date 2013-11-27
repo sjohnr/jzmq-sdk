@@ -113,7 +113,6 @@ public final class WorkerAnonymEmitter extends ZmqAbstractWorker implements IsPr
       builder.withSocketIdentityPrefix(identityConverter.convert(identity));
     }
     _channel = builder.withZmqContext(zmqContext)
-                      .withEventListeners(eventListeners)
                       .withConnectAddresses(connectAddresses)
                       .ofDEALERType()
                       .build();

@@ -63,7 +63,6 @@ public final class WorkerAnonymAcceptor extends ZmqAbstractWorker {
 
     _channel = ZmqChannel.builder()
                          .withZmqContext(zmqContext)
-                         .withEventListeners(eventListeners)
                          .withConnectAddresses(connectAddresses)
                          .ofROUTERType()
                          .build();

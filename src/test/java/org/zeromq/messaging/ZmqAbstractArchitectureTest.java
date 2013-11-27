@@ -20,7 +20,7 @@
 
 package org.zeromq.messaging;
 
-import org.zeromq.messaging.device.service.TryAgainEventListener;
+import org.zeromq.messaging.device.service.Client;
 import org.zeromq.support.HasDestroy;
 import org.zeromq.support.HasInit;
 import org.zeromq.support.thread.ZmqThreadPool;
@@ -51,36 +51,39 @@ public abstract class ZmqAbstractArchitectureTest extends ZmqAbstractTest {
       }
     }
 
-    public ZmqChannel newBindingClient(ZmqContext zmqContext, String bindAddress) {
-      ZmqChannel target = ZmqChannel.builder()
-                                    .withZmqContext(zmqContext)
-                                    .ofDEALERType()
-                                    .withBindAddress(bindAddress)
-                                    .build();
+    public Client newBindingClient(ZmqContext zmqContext, String bindAddress) {
+      Client target = Client.builder()
+                            .withChannelBuilder(
+                                ZmqChannel.builder()
+                                          .withZmqContext(zmqContext)
+                                          .ofDEALERType()
+                                          .withBindAddress(bindAddress))
+                            .build();
 
       _destroyables.add(target);
       return target;
     }
 
-    public ZmqChannel newConnClient(ZmqContext zmqContext, String... connAddresses) {
-      ZmqChannel target = ZmqChannel.builder()
-                                    .withZmqContext(zmqContext)
-                                    .ofDEALERType()
-                                    .withConnectAddresses(Arrays.asList(connAddresses))
-                                    .withEventListener(new TryAgainEventListener())
-                                    .build();
+    public Client newConnClient(ZmqContext zmqContext, String... connAddresses) {
+      Client target = Client.builder()
+                            .withChannelBuilder(ZmqChannel.builder()
+                                                          .withZmqContext(zmqContext)
+                                                          .ofDEALERType()
+                                                          .withConnectAddresses(Arrays.asList(connAddresses)))
+                            .build();
       _destroyables.add(target);
       return target;
     }
 
-    public ZmqChannel newConnClientWithIdentity(ZmqContext zmqContext, String identityPrefix, String... connAddresses) {
-      ZmqChannel target = ZmqChannel.builder()
-                                    .withZmqContext(zmqContext)
-                                    .ofDEALERType()
-                                    .withConnectAddresses(Arrays.asList(connAddresses))
-                                    .withSocketIdentityPrefix(identityPrefix.getBytes())
-                                    .withEventListener(new TryAgainEventListener())
-                                    .build();
+    public Client newConnClientWithIdentity(ZmqContext zmqContext, String identityPrefix, String... connAddresses) {
+      Client target = Client.builder()
+                            .withChannelBuilder(
+                                ZmqChannel.builder()
+                                          .withZmqContext(zmqContext)
+                                          .ofDEALERType()
+                                          .withConnectAddresses(Arrays.asList(connAddresses))
+                                          .withSocketIdentityPrefix(identityPrefix.getBytes()))
+                            .build();
       _destroyables.add(target);
       return target;
     }

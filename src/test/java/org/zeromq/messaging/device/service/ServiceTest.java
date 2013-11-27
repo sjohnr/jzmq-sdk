@@ -270,7 +270,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     f.init();
 
-    ZmqChannel client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
     int MESSAGE_NUM = 10;
     try {
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -309,7 +309,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     f.init();
 
-    ZmqChannel client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -351,7 +351,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     f.init();
 
-    ZmqChannel client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
     int ITER = 100;
     int MESSAGE_NUM = 100;
     try {
@@ -396,7 +396,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     f.init();
 
-    ZmqChannel client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -439,7 +439,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     f.init();
 
-    ZmqChannel client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
     try {
       for (int i = 0; i < MESSAGE_NUM; i++) {
         assert client.send(HELLO());
@@ -480,7 +480,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     f.init();
 
-    ZmqChannel client = f.newConnClient(zmqContext(), "inproc://gateway");
+    Client client = f.newConnClient(zmqContext(), "inproc://gateway");
     int MESSAGE_NUM = 10;
     try {
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -527,7 +527,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     Runnable client = new Runnable() {
       public void run() {
-        ZmqChannel client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+        Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
         Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
         for (int i = 0; i < MESSAGE_NUM; i++) {
           assert client.send(HELLO());
@@ -601,7 +601,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     Runnable client = new Runnable() {
       public void run() {
-        ZmqChannel client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+        Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
         int ITER = 100;
         int MESSAGE_NUM = 100;
         Stopwatch timer = new Stopwatch().start();
@@ -672,7 +672,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     f.init();
 
-    ZmqChannel client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
     try {
       for (int i = 0; i < MESSAGE_NUM; i++) {
         assert client.send(HELLO());
@@ -719,7 +719,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     f.init();
 
-    ZmqChannel client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
     int ITER = 100;
     int MESSAGE_NUM = 100;
     try {
@@ -771,7 +771,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         new Runnable() {
           @Override
           public void run() {
-            ZmqChannel c = f.newConnClientWithIdentity(zmqContext(), "X", "tcp://localhost:" + 333);
+            Client c = f.newConnClientWithIdentity(zmqContext(), "X", "tcp://localhost:" + 333);
             Collection<ZmqMessage> rr = new ArrayList<ZmqMessage>();
             for (int i = 0; i < MESSAGE_NUM; i++) {
               assert c.send(HELLO());
@@ -791,7 +791,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         new Runnable() {
           @Override
           public void run() {
-            ZmqChannel c = f.newConnClientWithIdentity(zmqContext(), "Y", "tcp://localhost:" + 333);
+            Client c = f.newConnClientWithIdentity(zmqContext(), "Y", "tcp://localhost:" + 333);
             Collection<ZmqMessage> rr = new ArrayList<ZmqMessage>();
             for (int i = 0; i < MESSAGE_NUM; i++) {
               assert c.send(HELLO());
@@ -851,7 +851,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         new Runnable() {
           @Override
           public void run() {
-            ZmqChannel c = f.newConnClientWithIdentity(zmqContext(), "X", "tcp://localhost:" + 333);
+            Client c = f.newConnClientWithIdentity(zmqContext(), "X", "tcp://localhost:" + 333);
             int ITER = 100;
             int MESSAGE_NUM = 100;
             Stopwatch timer = new Stopwatch().start();
@@ -873,7 +873,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         new Runnable() {
           @Override
           public void run() {
-            ZmqChannel c = f.newConnClientWithIdentity(zmqContext(), "Y", "tcp://localhost:" + 333);
+            Client c = f.newConnClientWithIdentity(zmqContext(), "Y", "tcp://localhost:" + 333);
             int ITER = 100;
             int MESSAGE_NUM = 100;
             Stopwatch timer = new Stopwatch().start();
@@ -933,7 +933,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     f.init();
 
-    ZmqChannel client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -983,7 +983,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     f.init();
 
-    ZmqChannel client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -1034,9 +1034,9 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     f.init();
 
-    ZmqChannel client = f.newConnClient(zmqContext(),
-                                        "tcp://localhost:" + 555,
-                                        "tcp://localhost:" + 556);
+    Client client = f.newConnClient(zmqContext(),
+                                    "tcp://localhost:" + 555,
+                                    "tcp://localhost:" + 556);
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -1093,16 +1093,18 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     int HWM_FOR_SEND = 10;
     int NUM_OF_NOTAVAIL = 2;
-    ZmqChannel client = ZmqChannel.builder()
-                                  .withZmqContext(zmqContext())
-                                  .ofDEALERType()
-                                  .withWaitOnSend(100)
-                                  .withWaitOnRecv(100)
-                                  .withHwmForSend(HWM_FOR_SEND)
-                                  .withConnectAddress("tcp://localhost:" + 556)
-                                  .withConnectAddress("tcp://localhost:" + 555)
-                                  .withConnectAddress("tcp://localhost:" + 559)
-                                  .build();
+    Client client = Client.builder()
+                          .withChannelBuilder(
+                              ZmqChannel.builder()
+                                        .withZmqContext(zmqContext())
+                                        .ofDEALERType()
+                                        .withWaitOnSend(100)
+                                        .withWaitOnRecv(100)
+                                        .withHwmForSend(HWM_FOR_SEND)
+                                        .withConnectAddress("tcp://localhost:" + 556)
+                                        .withConnectAddress("tcp://localhost:" + 555)
+                                        .withConnectAddress("tcp://localhost:" + 559))
+                          .build();
 
     int MESSAGE_NUM = 10 * HWM_FOR_SEND; // number of messages -- several times bigger than HWM.
     try {
@@ -1156,7 +1158,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     f.init();
 
-    ZmqChannel client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -1202,9 +1204,9 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     f.init();
 
-    ZmqChannel client = f.newConnClient(zmqContext(),
-                                        "tcp://localhost:" + 333,
-                                        "tcp://localhost:" + 334);
+    Client client = f.newConnClient(zmqContext(),
+                                    "tcp://localhost:" + 333,
+                                    "tcp://localhost:" + 334);
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -1248,7 +1250,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     f.init();
 
-    ZmqChannel client = f.newBindingClient(zmqContext(), "tcp://*:" + 222);
+    Client client = f.newBindingClient(zmqContext(), "tcp://*:" + 222);
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -1292,9 +1294,9 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     f.init();
 
-    ZmqChannel client = f.newConnClient(zmqContext(),
-                                        "tcp://localhost:" + 333,
-                                        "tcp://localhost:" + 334);
+    Client client = f.newConnClient(zmqContext(),
+                                    "tcp://localhost:" + 333,
+                                    "tcp://localhost:" + 334);
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -1338,11 +1340,11 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
     // NOTE: this test case relies on HWM defaults settings which come along with every socket.
     // test will send 8 message, hopefully, 8 - is not greater or equal to default HWM settings.
 
-    ZmqChannel client = f.newConnClient(zmqContext(),
-                                        "tcp://localhost:" + 333,  // NOT_AVAIL
-                                        "tcp://localhost:" + 334,  // NOT_AVAIL
-                                        "tcp://localhost:" + 335,  // NOT_AVAIL
-                                        "tcp://localhost:" + 336); // NOT_AVAIL
+    Client client = f.newConnClient(zmqContext(),
+                                    "tcp://localhost:" + 333,  // NOT_AVAIL
+                                    "tcp://localhost:" + 334,  // NOT_AVAIL
+                                    "tcp://localhost:" + 335,  // NOT_AVAIL
+                                    "tcp://localhost:" + 336); // NOT_AVAIL
     try {
       int MESSAGE_NUM = 10; // message num being sent is significantly less than default HWM.
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -1388,16 +1390,18 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     int HWM_FOR_SEND = 10;
     int NUM_OF_NOTAVAIL = 2;
-    ZmqChannel client = ZmqChannel.builder()
-                                  .withZmqContext(zmqContext())
-                                  .ofDEALERType()
-                                  .withWaitOnSend(100)
-                                  .withWaitOnRecv(100)
-                                  .withHwmForSend(HWM_FOR_SEND)
-                                  .withConnectAddress("tcp://localhost:" + 777)
-                                  .withConnectAddress("tcp://localhost:" + livePort)
-                                  .withConnectAddress("tcp://localhost:" + 780)
-                                  .build();
+    Client client = Client.builder()
+                          .withChannelBuilder(
+                              ZmqChannel.builder()
+                                        .withZmqContext(zmqContext())
+                                        .ofDEALERType()
+                                        .withWaitOnSend(100)
+                                        .withWaitOnRecv(100)
+                                        .withHwmForSend(HWM_FOR_SEND)
+                                        .withConnectAddress("tcp://localhost:" + 777)
+                                        .withConnectAddress("tcp://localhost:" + livePort)
+                                        .withConnectAddress("tcp://localhost:" + 780))
+                          .build();
 
     int MESSAGE_NUM = 10 * HWM_FOR_SEND; // number of messages -- several times bigger than HWM.
     try {
@@ -1447,13 +1451,14 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
     f.init();
 
-    ZmqChannel client = ZmqChannel.builder()
-                                  .withZmqContext(zmqContext())
-                                  .ofDEALERType()
-                                  .withConnectAddress("tcp://localhost:" + 333)
-                                  .withConnectAddress("tcp://localhost:" + 334)
-                                  .withEventListener(new KeepCorrelationEventListener())
-                                  .build();
+    Client client = Client.builder()
+                          .withChannelBuilder(
+                              ZmqChannel.builder()
+                                        .withZmqContext(zmqContext())
+                                        .ofDEALERType()
+                                        .withConnectAddress("tcp://localhost:" + 333)
+                                        .withConnectAddress("tcp://localhost:" + 334))
+                          .build();
     int correlationId = 1;
     ZmqMessage hello = HELLO();
     try {

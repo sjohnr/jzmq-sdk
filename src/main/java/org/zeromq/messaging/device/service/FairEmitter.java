@@ -52,13 +52,11 @@ public final class FairEmitter extends ZmqAbstractFairServiceDispatcher {
     _frontend = ZmqChannel.builder()
                           .ofROUTERType()
                           .withZmqContext(zmqContext)
-                          .withEventListeners(frontendEventListeners)
                           .withBindAddresses(frontendAddresses)
                           .build();
     _backend = ZmqChannel.builder()
                          .ofDEALERType()
                          .withZmqContext(zmqContext)
-                         .withEventListeners(backendEventListeners)
                          .withConnectAddresses(backendAddresses)
                          .build();
 

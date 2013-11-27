@@ -85,13 +85,11 @@ public final class LruRouter extends ZmqAbstractServiceDispatcher {
     _frontend = ZmqChannel.builder()
                           .ofROUTERType()
                           .withZmqContext(zmqContext)
-                          .withEventListeners(frontendEventListeners)
                           .withBindAddresses(frontendAddresses)
                           .build();
     _backend = ZmqChannel.builder()
                          .ofROUTERType()
                          .withZmqContext(zmqContext)
-                         .withEventListeners(backendEventListeners)
                          .withBindAddresses(backendAddresses)
                          .build();
 
