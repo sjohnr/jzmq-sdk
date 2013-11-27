@@ -27,14 +27,13 @@ import java.util.concurrent.TimeUnit;
 
 public class Run {
 
-  public static void main(String[] args) throws InterruptedException, UnknownHostException {
+  public static void main(final String[] args) throws InterruptedException, UnknownHostException {
     final ZmqContext ctx = new ZmqContext();
     ctx.setThreadNum(1);
     ctx.init();
 
     final String address = "epgm://" + args[0] + ";224.0.0.1:45577";
     final byte[] topic = "xyz".getBytes();
-    final byte[] payload = ("hello" + args[1]).getBytes();
 
     try {
 
@@ -50,7 +49,7 @@ public class Run {
           while (true) {
             ZmqMessage hello = ZmqMessage.builder()
                                          .withTopic(topic)
-                                         .withPayload(payload)
+                                         .withPayload(("hello" + args[1] + System.nanoTime()).getBytes())
                                          .build();
             boolean send = channel.send(hello);
             if (!send) {
