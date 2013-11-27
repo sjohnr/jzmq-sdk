@@ -34,6 +34,7 @@ public class Run {
 
     final String address = "epgm://" + args[0] + ";224.0.0.1:45577";
     final byte[] topic = "xyz".getBytes();
+    final byte[] payload = ("hello" + args[1]).getBytes();
 
     try {
 
@@ -49,11 +50,11 @@ public class Run {
           while (true) {
             ZmqMessage hello = ZmqMessage.builder()
                                          .withTopic(topic)
-                                         .withPayload("hello".getBytes())
+                                         .withPayload(payload)
                                          .build();
             boolean send = channel.send(hello);
             if (!send) {
-              System.out.println("Can't send via PUB! Exiting JVM.");
+              System.out.println("Can't send message via PUB! Exiting JVM.");
               System.exit(-1);
             }
             try {
@@ -65,6 +66,7 @@ public class Run {
           }
         }
       };
+      t0.setName("publisher");
       t0.start();
 
       Thread t1 = new Thread() {
@@ -81,7 +83,7 @@ public class Run {
           while (true) {
             ZmqMessage recv = channel.recv();
             if (recv != null) {
-              System.out.println(">> get HELLO!");
+              System.out.println(">> got message: " + new String(recv.payload()));
             }
             try {
               TimeUnit.MILLISECONDS.sleep(250);
@@ -92,6 +94,7 @@ public class Run {
           }
         }
       };
+      t1.setName("subscriber");
       t1.start();
 
       t0.join();
