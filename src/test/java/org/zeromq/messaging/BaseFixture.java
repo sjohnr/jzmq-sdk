@@ -20,40 +20,37 @@
 
 package org.zeromq.messaging;
 
-import org.junit.Test;
-import org.zeromq.ZMQ;
+import org.zeromq.support.HasDestroy;
+import org.zeromq.support.HasInit;
+import org.zeromq.support.thread.ZmqRunnable;
+import org.zeromq.support.thread.ZmqThreadPool;
 
-public class ZmqContextTest {
+import java.util.ArrayList;
+import java.util.List;
 
-  @Test
-  public void t0() {
-    ZmqContext target = new ZmqContext();
-    try {
-      target.setThreadNum(2);
-      target.init();
-    }
-    finally {
-      target.destroy();
+public class BaseFixture implements HasInit, HasDestroy {
+
+  private final List<HasDestroy> _d = new ArrayList<HasDestroy>();
+  private final ZmqThreadPool _t = ZmqThreadPool.newCachedDaemonThreadPool();
+
+  @Override
+  public final void init() {
+    _t.init();
+  }
+
+  @Override
+  public final void destroy() {
+    _t.destroy();
+    for (HasDestroy i : _d) {
+      i.destroy();
     }
   }
 
-  @Test
-  public void t1() {
-    ZmqContext target = new ZmqContext();
-    try {
-      target.init();
+  public final void with(HasDestroy d) {
+    _d.add(d);
+  }
 
-      assert target.newSocket(ZMQ.ROUTER).getType() == ZMQ.ROUTER;
-      assert target.newSocket(ZMQ.DEALER).getType() == ZMQ.DEALER;
-      assert target.newSocket(ZMQ.PUB).getType() == ZMQ.PUB;
-      assert target.newSocket(ZMQ.SUB).getType() == ZMQ.SUB;
-      assert target.newSocket(ZMQ.PUSH).getType() == ZMQ.PUSH;
-      assert target.newSocket(ZMQ.PULL).getType() == ZMQ.PULL;
-
-      assert target.newPoller(1) != null;
-    }
-    finally {
-      target.destroy();
-    }
+  public final void with(ZmqRunnable r) {
+    _t.withRunnable(r);
   }
 }

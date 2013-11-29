@@ -20,234 +20,30 @@
 
 package org.zeromq.messaging.device.service;
 
-import com.google.common.base.Stopwatch;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zeromq.Checker;
-import org.zeromq.TestRecorder;
-import org.zeromq.messaging.ZmqAbstractArchitectureTest;
+import org.zeromq.messaging.ZmqAbstractTest;
 import org.zeromq.messaging.ZmqChannel;
-import org.zeromq.messaging.ZmqContext;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
-import org.zeromq.support.thread.ZmqRunnable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 
-import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.fail;
-import static org.zeromq.messaging.ZmqAbstractTest.Fixture.CARP;
-import static org.zeromq.messaging.ZmqAbstractTest.Fixture.HELLO;
-import static org.zeromq.messaging.ZmqAbstractTest.Fixture.SHIRT;
-import static org.zeromq.messaging.ZmqAbstractTest.Fixture.WORLD;
+import static org.zeromq.messaging.device.service.ServiceFixture.Answering;
 
-public class ServiceTest extends ZmqAbstractArchitectureTest {
+public class ServiceTest extends ZmqAbstractTest {
 
-  static class Answering implements ZmqMessageProcessor {
-
-    private final ZmqMessage ANSWER;
-
-    public Answering(ZmqMessage ANSWER) {
-      this.ANSWER = ANSWER;
-    }
-
-    @Override
-    public ZmqMessage process(ZmqMessage MSG) {
-      return ZmqMessage.builder(MSG)
-                       .withPayload(ANSWER.payload())
-                       .build();
-    }
-  }
-
-  static class Fixture extends ZmqAbstractArchitectureTest.Fixture {
-
-    LruCache defaultLruCache() {
-      return new LruCache(100);
-    }
-
-    LruCache volatileLruCache() {
-      return new LruCache(1);
-    }
-
-    LruCache notMatchingLruCache() {
-      return new LruCache(100,
-                          new Comparator<byte[]>() {
-                            @Override
-                            public int compare(byte[] a, byte[] b) {
-                              return -1;
-                            }
-                          });
-    }
-
-    LruCache matchingLRUCache() {
-      return new LruCache(100,
-                          new Comparator<byte[]>() {
-                            @Override
-                            public int compare(byte[] front, byte[] back) {
-                              return front[0] == back[0] ? 0 : -1;
-                            }
-                          });
-    }
-
-    void deployWorkerEmitter(ZmqContext zmqContext,
-                             ZmqMessageProcessor messageProcessor,
-                             String... connectAddresses) {
-      _threadPool.withRunnable(
-          ZmqRunnable.builder()
-                     .withRunnableContext(
-                         WorkerAnonymEmitter.builder()
-                                            .withZmqContext(zmqContext)
-                                            .withConnectAddresses(Arrays.asList(connectAddresses))
-                                            .withMessageProcessor(messageProcessor)
-                                            .withPollTimeout(10)
-                                            .build()
-                     )
-                     .build()
-      );
-    }
-
-    void deployWorkerEmitterWithIdentity(ZmqContext zmqContext,
-                                         String identity,
-                                         ZmqMessageProcessor messageProcessor,
-                                         String... connectAddresses) {
-      _threadPool.withRunnable(
-          ZmqRunnable.builder()
-                     .withRunnableContext(
-                         WorkerAnonymEmitter.builder()
-                                            .withZmqContext(zmqContext)
-                                            .withConnectAddresses(Arrays.asList(connectAddresses))
-                                            .withMessageProcessor(messageProcessor)
-                                            .withIdentity(identity)
-                                            .withPollTimeout(10)
-                                            .build()
-                     )
-                     .build()
-      );
-    }
-
-    void deployWorkerAcceptor(ZmqContext zmqContext,
-                              ZmqMessageProcessor messageProcessor,
-                              String... connectAddresses) {
-      _threadPool.withRunnable(
-          ZmqRunnable.builder()
-                     .withRunnableContext(
-                         WorkerAnonymAcceptor.builder()
-                                             .withZmqContext(zmqContext)
-                                             .withConnectAddresses(Arrays.asList(connectAddresses))
-                                             .withMessageProcessor(messageProcessor)
-                                             .build()
-                     )
-                     .build()
-      );
-    }
-
-    void deployWorkerWellknown(ZmqContext zmqContext,
-                               String bindAddress,
-                               ZmqMessageProcessor messageProcessor) {
-      _threadPool.withRunnable(
-          ZmqRunnable.builder()
-                     .withRunnableContext(
-                         WorkerWellknown.builder()
-                                        .withZmqContext(zmqContext)
-                                        .withBindAddress(bindAddress)
-                                        .withMessageProcessor(messageProcessor)
-                                        .build()
-                     )
-                     .build()
-      );
-    }
-
-    void deployLruRouter(ZmqContext zmqContext,
-                         String frontendAddress,
-                         String backendAddress,
-                         LruCache lruCache) {
-      _threadPool.withRunnable(
-          ZmqRunnable.builder()
-                     .withRunnableContext(
-                         LruRouter.builder()
-                                  .withZmqContext(zmqContext)
-                                  .withSocketIdentityStorage(lruCache)
-                                  .withFrontendAddress(frontendAddress)
-                                  .withBackendAddress(backendAddress)
-                                  .build()
-                     )
-                     .build()
-      );
-    }
-
-    void deployFairRouter(ZmqContext zmqContext,
-                          String frontendAddress,
-                          String backendAddress) {
-      _threadPool.withRunnable(
-          ZmqRunnable.builder()
-                     .withRunnableContext(
-                         FairRouter.builder()
-                                   .withZmqContext(zmqContext)
-                                   .withFrontendAddress(frontendAddress)
-                                   .withBackendAddress(backendAddress)
-                                   .build()
-                     )
-                     .build()
-      );
-    }
-
-    void deployFairActiveAcceptor(ZmqContext zmqContext,
-                                  String frontendAddress,
-                                  String backendAddress) {
-      _threadPool.withRunnable(
-          ZmqRunnable.builder()
-                     .withRunnableContext(
-                         FairActiveAcceptor.builder()
-                                           .withZmqContext(zmqContext)
-                                           .withFrontendAddress(frontendAddress)
-                                           .withBackendAddress(backendAddress)
-                                           .build()
-                     )
-                     .build()
-      );
-    }
-
-    void deployFairPassiveAcceptor(ZmqContext zmqContext,
-                                   String frontendAddress,
-                                   String backendAddress) {
-      _threadPool.withRunnable(
-          ZmqRunnable.builder()
-                     .withRunnableContext(
-                         FairPassiveAcceptor.builder()
-                                            .withZmqContext(zmqContext)
-                                            .withFrontendAddress(frontendAddress)
-                                            .withBackendAddress(backendAddress)
-                                            .build()
-                     )
-                     .build()
-      );
-    }
-
-    void deployFairEmitter(ZmqContext zmqContext,
-                           String frontendAddress,
-                           String backendAddress) {
-      _threadPool.withRunnable(
-          ZmqRunnable.builder()
-                     .withRunnableContext(
-                         FairEmitter.builder()
-                                    .withZmqContext(zmqContext)
-                                    .withFrontendAddress(frontendAddress)
-                                    .withBackendAddress(backendAddress)
-                                    .build()
-                     )
-                     .build()
-      );
-    }
-  }
+  static final Logger LOG = LoggerFactory.getLogger(ServiceTest.class);
 
   @Test
   public void t0() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "********************************************************** \n" +
         "                                                           \n" +
@@ -262,12 +58,11 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         "                                                           \n" +
         "********************************************************** \n");
 
-    Fixture f = new Fixture();
-
-    f.deployLruRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444, f.defaultLruCache());
-
-    f.deployWorkerAcceptor(zmqContext(), new Answering(SHIRT()), "tcp://localhost:" + 444);
-
+    ServiceFixture f = new ServiceFixture();
+    {
+      f.lruRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444, f.defaultLruCache());
+      f.workerAcceptor(zmqContext(), new Answering(SHIRT()), "tcp://localhost:" + 444);
+    }
     f.init();
 
     Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
@@ -285,8 +80,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
   @Test
   public void t1() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "******************************************************** \n" +
         "                                                         \n" +
@@ -301,12 +95,11 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         "                                                         \n" +
         "******************************************************** \n");
 
-    Fixture f = new Fixture();
-
-    f.deployLruRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444, f.defaultLruCache());
-
-    f.deployWorkerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
-
+    ServiceFixture f = new ServiceFixture();
+    {
+      f.lruRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444, f.defaultLruCache());
+      f.workerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
+    }
     f.init();
 
     Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
@@ -326,53 +119,9 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
   }
 
   @Test
-  public void t1_perf() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
-        "\n" +
-        "******************************************************** \n" +
-        "                                                         \n" +
-        "Test DEALER <--> ROUTER-ROUTER <--> DEALER.              \n" +
-        "                                                         \n" +
-        "                          LRU                            \n" +
-        "----------         -----------------         ----------  \n" +
-        "|        | ------> |               | ------> |        |  \n" +
-        "| DEALER |         | R(333)-R(444) |         | DEALER |  \n" +
-        "|        | <------ |               | <------ |        |  \n" +
-        "----------         -----------------         ----------  \n" +
-        "                                                         \n" +
-        "******************************************************** \n");
-
-    Fixture f = new Fixture();
-
-    f.deployLruRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444, f.defaultLruCache());
-
-    f.deployWorkerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
-
-    f.init();
-
-    Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
-    int ITER = 100;
-    int MESSAGE_NUM = 100;
-    try {
-      Stopwatch timer = new Stopwatch().start();
-      for (int j = 0; j < ITER; j++) {
-        for (int i = 0; i < MESSAGE_NUM; i++) {
-          assert client.send(HELLO());
-          assert client.recv() != null;
-        }
-      }
-      r.logQoS(timer.stop().elapsedTime(MICROSECONDS) / (ITER * MESSAGE_NUM), "microsec/req-rep.");
-    }
-    finally {
-      f.destroy();
-    }
-  }
-
-  @Test
   public void t2() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+
+    LOG.info(
         "\n" +
         "******************************************************** \n" +
         "                                                         \n" +
@@ -388,12 +137,11 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         "                                                         \n" +
         "******************************************************** \n");
 
-    Fixture f = new Fixture();
-
-    f.deployLruRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444, f.volatileLruCache());
-
-    f.deployWorkerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
-
+    ServiceFixture f = new ServiceFixture();
+    {
+      f.lruRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444, f.volatileLruCache());
+      f.workerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
+    }
     f.init();
 
     Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
@@ -414,8 +162,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
   @Test
   public void t3() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "*************************************************************** \n" +
         "                                                                \n" +
@@ -431,12 +178,11 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         "                                                                \n" +
         "*************************************************************** \n");
 
-    Fixture f = new Fixture();
-
-    f.deployLruRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444, f.notMatchingLruCache());
-
-    f.deployWorkerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
-
+    ServiceFixture f = new ServiceFixture();
+    {
+      f.lruRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444, f.notMatchingLruCache());
+      f.workerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
+    }
     f.init();
 
     Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
@@ -453,8 +199,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
   @Test
   public void t4() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "******************************************************************************************* \n" +
         "                                                                                            \n" +
@@ -470,14 +215,12 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         "                                                                                            \n" +
         "******************************************************************************************* \n");
 
-    Fixture f = new Fixture();
-
-    f.deployFairEmitter(zmqContext(), "inproc://gateway", "tcp://localhost:" + 333);
-
-    f.deployLruRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444, f.notMatchingLruCache());
-
-    f.deployWorkerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
-
+    ServiceFixture f = new ServiceFixture();
+    {
+      f.fairEmitter(zmqContext(), "inproc://gateway", "tcp://localhost:" + 333);
+      f.lruRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444, f.notMatchingLruCache());
+      f.workerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
+    }
     f.init();
 
     Client client = f.newConnClient(zmqContext(), "inproc://gateway");
@@ -495,8 +238,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
   @Test
   public void t5() throws InterruptedException {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "*********************************************************** \n" +
         "                                                            \n" +
@@ -515,14 +257,13 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         "                                                            \n" +
         "*********************************************************** \n");
 
-    final Fixture f = new Fixture();
-
-    f.deployLruRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444, f.defaultLruCache());
-
-    f.deployWorkerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
-    f.deployWorkerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
-    f.deployWorkerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
-
+    final ServiceFixture f = new ServiceFixture();
+    {
+      f.lruRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444, f.defaultLruCache());
+      f.workerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
+      f.workerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
+      f.workerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
+    }
     f.init();
 
     Runnable client = new Runnable() {
@@ -568,85 +309,8 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
   }
 
   @Test
-  public void t5_perf() throws InterruptedException {
-    final TestRecorder r = new TestRecorder().start();
-    r.log(
-        "\n" +
-        "*********************************************************** \n" +
-        "                                                            \n" +
-        "Test DEALER <--> ROUTER-ROUTER <--> [DEALER].               \n" +
-        "                                                            \n" +
-        "                          LRU                               \n" +
-        "----------         -----------------         ----------     \n" +
-        "|        | ------> |               | ------> |        |     \n" +
-        "| DEALER |         | R(333)-R(444) |         | DEALER |--   \n" +
-        "|        | <------ |               | <------ |        | |   \n" +
-        "----------         -----------------         ---------- |-- \n" +
-        "                                               |        | | \n" +
-        "                                               ---------- | \n" +
-        "                                                 |        | \n" +
-        "                                                 ---------- \n" +
-        "                                                            \n" +
-        "*********************************************************** \n");
-
-    final Fixture f = new Fixture();
-
-    f.deployLruRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444, f.defaultLruCache());
-
-    f.deployWorkerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
-    f.deployWorkerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
-    f.deployWorkerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
-
-    f.init();
-
-    Runnable client = new Runnable() {
-      public void run() {
-        Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
-        int ITER = 100;
-        int MESSAGE_NUM = 100;
-        Stopwatch timer = new Stopwatch().start();
-        for (int j = 0; j < ITER; j++) {
-          for (int i = 0; i < MESSAGE_NUM; i++) {
-            assert client.send(HELLO());
-            assert client.recv() != null;
-          }
-        }
-        r.logQoS(timer.stop().elapsedTime(MICROSECONDS) / (ITER * MESSAGE_NUM), "microsec/req-rep.");
-      }
-    };
-
-    Checker checker = new Checker();
-
-    Thread t0 = new Thread(client);
-    t0.setUncaughtExceptionHandler(checker);
-    t0.setDaemon(true);
-    t0.start();
-
-    Thread t1 = new Thread(client);
-    t1.setUncaughtExceptionHandler(checker);
-    t1.setDaemon(true);
-    t1.start();
-
-    Thread t2 = new Thread(client);
-    t2.setUncaughtExceptionHandler(checker);
-    t2.setDaemon(true);
-    t2.start();
-
-    try {
-      t0.join();
-      t1.join();
-      t2.join();
-      assert checker.passed();
-    }
-    finally {
-      f.destroy();
-    }
-  }
-
-  @Test
   public void t6() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "********************************************************************************************** \n" +
         "                                                                                               \n" +
@@ -661,15 +325,13 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         "                                                                                               \n" +
         "********************************************************************************************** \n");
 
-    Fixture f = new Fixture();
-
-    f.deployLruRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444, f.defaultLruCache());
-
-    f.deployFairActiveAcceptor(zmqContext(), "tcp://localhost:" + 444, "tcp://*:" + 555);
-    f.deployFairActiveAcceptor(zmqContext(), "tcp://localhost:" + 555, "tcp://*:" + 666);
-
-    f.deployWorkerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 666);
-
+    ServiceFixture f = new ServiceFixture();
+    {
+      f.lruRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444, f.defaultLruCache());
+      f.fairActiveAcceptor(zmqContext(), "tcp://localhost:" + 444, "tcp://*:" + 555);
+      f.fairActiveAcceptor(zmqContext(), "tcp://localhost:" + 555, "tcp://*:" + 666);
+      f.workerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 666);
+    }
     f.init();
 
     Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
@@ -691,56 +353,8 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
   }
 
   @Test
-  public void t6_perf() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
-        "\n" +
-        "********************************************************************************************** \n" +
-        "                                                                                               \n" +
-        "Test DEALER <--> ROUTER-ROUTER <--> DEALER-ROUTER <--> [...] <--> [DEALER].                    \n" +
-        "                                                                                               \n" +
-        "                      LRU               Dispatcher i-th        Dispatcher i-th                 \n" +
-        "----------      -----------------      ----------------       ----------------      ---------- \n" +
-        "|        | ---> |               | ---> |               | ---> |              | ---> |        | \n" +
-        "| DEALER |      | R(333)-R(444) |      | D(...)-R(...) |      |     ...      |      | DEALER | \n" +
-        "|        | <--- |               | <--- |               | <--- |              | <--- |        | \n" +
-        "----------      -----------------      -----------------      ----------------      ---------- \n" +
-        "                                                                                               \n" +
-        "********************************************************************************************** \n");
-
-    Fixture f = new Fixture();
-
-    f.deployLruRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444, f.defaultLruCache());
-
-    f.deployFairActiveAcceptor(zmqContext(), "tcp://localhost:" + 444, "tcp://*:" + 555);
-    f.deployFairActiveAcceptor(zmqContext(), "tcp://localhost:" + 555, "tcp://*:" + 666);
-
-    f.deployWorkerEmitter(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 666);
-
-    f.init();
-
-    Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
-    int ITER = 100;
-    int MESSAGE_NUM = 100;
-    try {
-      Stopwatch timer = new Stopwatch().start();
-      for (int j = 0; j < ITER; j++) {
-        for (int i = 0; i < MESSAGE_NUM; i++) {
-          assert client.send(HELLO());
-          assert client.recv() != null;
-        }
-      }
-      r.logQoS(timer.stop().elapsedTime(MICROSECONDS) / (ITER * MESSAGE_NUM), "microsec/req-rep.");
-    }
-    finally {
-      f.destroy();
-    }
-  }
-
-  @Test
   public void t7() throws InterruptedException {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "******************************************************** \n" +
         "                                                         \n" +
@@ -756,13 +370,18 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         "                                                         \n" +
         "******************************************************** \n");
 
-    final Fixture f = new Fixture();
-
-    f.deployLruRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444, f.matchingLRUCache());
-
-    f.deployWorkerEmitterWithIdentity(zmqContext(), "X", new Answering(SHIRT()), "tcp://localhost:" + 444);
-    f.deployWorkerEmitterWithIdentity(zmqContext(), "Y", new Answering(CARP()), "tcp://localhost:" + 444);
-
+    final ServiceFixture f = new ServiceFixture();
+    {
+      f.lruRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444, f.matchingLRUCache());
+      f.workerEmitterWithIdentity(zmqContext(),
+                                  "X",
+                                  new Answering(SHIRT()),
+                                  "tcp://localhost:" + 444);
+      f.workerEmitterWithIdentity(zmqContext(),
+                                  "Y",
+                                  new Answering(CARP()),
+                                  "tcp://localhost:" + 444);
+    }
     f.init();
 
     Checker checker = new Checker();
@@ -818,93 +437,8 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
   }
 
   @Test
-  public void t7_perf() throws InterruptedException {
-    final TestRecorder r = new TestRecorder().start();
-    r.log(
-        "\n" +
-        "******************************************************** \n" +
-        "                                                         \n" +
-        "Test DEALER <--> ROUTER-ROUTER <--> DEALER.              \n" +
-        "                                                         \n" +
-        "                          LRU                            \n" +
-        "----------         -----------------         ----------  \n" +
-        "|        | ------> |               | ------> |        |  \n" +
-        "| DEALER |         | R(333)-R(444) |         | DEALER |  \n" +
-        "|        | <------ |               | <------ |        |  \n" +
-        "----------         -----------------         ----------  \n" +
-        "                  with custom routing                    \n" +
-        "                                                         \n" +
-        "******************************************************** \n");
-
-    final Fixture f = new Fixture();
-
-    f.deployLruRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444, f.matchingLRUCache());
-
-    f.deployWorkerEmitterWithIdentity(zmqContext(), "X", new Answering(SHIRT()), "tcp://localhost:" + 444);
-    f.deployWorkerEmitterWithIdentity(zmqContext(), "Y", new Answering(SHIRT()), "tcp://localhost:" + 444);
-
-    f.init();
-
-    Checker checker = new Checker();
-
-    Thread t0 = new Thread(
-        new Runnable() {
-          @Override
-          public void run() {
-            Client c = f.newConnClientWithIdentity(zmqContext(), "X", "tcp://localhost:" + 333);
-            int ITER = 100;
-            int MESSAGE_NUM = 100;
-            Stopwatch timer = new Stopwatch().start();
-            for (int j = 0; j < ITER; j++) {
-              for (int i = 0; i < MESSAGE_NUM; i++) {
-                assert c.send(HELLO());
-                assert c.recv() != null;
-              }
-            }
-            r.logQoS(timer.stop().elapsedTime(MICROSECONDS) / (ITER * MESSAGE_NUM), "microsec/req-rep.");
-          }
-        }
-    );
-    t0.setUncaughtExceptionHandler(checker);
-    t0.setDaemon(true);
-    t0.start();
-
-    Thread t1 = new Thread(
-        new Runnable() {
-          @Override
-          public void run() {
-            Client c = f.newConnClientWithIdentity(zmqContext(), "Y", "tcp://localhost:" + 333);
-            int ITER = 100;
-            int MESSAGE_NUM = 100;
-            Stopwatch timer = new Stopwatch().start();
-            for (int j = 0; j < ITER; j++) {
-              for (int i = 0; i < MESSAGE_NUM; i++) {
-                assert c.send(HELLO());
-                assert c.recv() != null;
-              }
-            }
-            r.logQoS(timer.stop().elapsedTime(MICROSECONDS) / (ITER * MESSAGE_NUM), "microsec/req-rep.");
-          }
-        }
-    );
-    t1.setUncaughtExceptionHandler(checker);
-    t1.setDaemon(true);
-    t1.start();
-
-    try {
-      t0.join();
-      t1.join();
-      assert checker.passed();
-    }
-    finally {
-      f.destroy();
-    }
-  }
-
-  @Test
   public void t8() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "************************************************************ \n" +
         "                                                             \n" +
@@ -924,13 +458,12 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         "                                                             \n" +
         "************************************************************ \n");
 
-    Fixture f = new Fixture();
-
-    f.deployFairRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444);
-
-    f.deployWorkerAcceptor(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
-    f.deployWorkerAcceptor(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
-
+    ServiceFixture f = new ServiceFixture();
+    {
+      f.fairRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444);
+      f.workerAcceptor(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
+      f.workerAcceptor(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 444);
+    }
     f.init();
 
     Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
@@ -951,8 +484,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
   @Test
   public void t9() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "********************************************************************************************** \n" +
         "                                                                                               \n" +
@@ -972,15 +504,13 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         "                                                                                               \n" +
         "********************************************************************************************** \n");
 
-    Fixture f = new Fixture();
-
-    f.deployFairRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444);
-
-    f.deployFairPassiveAcceptor(zmqContext(), "tcp://localhost:" + 444, "tcp://*:" + 555);
-
-    f.deployWorkerAcceptor(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 555);
-    f.deployWorkerAcceptor(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 555);
-
+    ServiceFixture f = new ServiceFixture();
+    {
+      f.fairRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444);
+      f.fairPassiveAcceptor(zmqContext(), "tcp://localhost:" + 444, "tcp://*:" + 555);
+      f.workerAcceptor(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 555);
+      f.workerAcceptor(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 555);
+    }
     f.init();
 
     Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
@@ -1001,8 +531,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
   @Test
   public void t10() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "****************************************************** \n" +
         "                                                       \n" +
@@ -1022,16 +551,15 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         "                                                       \n" +
         "****************************************************** \n");
 
-    Fixture f = new Fixture();
-
-    f.deployFairRouter(zmqContext(), "tcp://*:" + 555, "tcp://*:" + 666);
-    f.deployFairRouter(zmqContext(), "tcp://*:" + 556, "tcp://*:" + 667);
-
-    f.deployWorkerAcceptor(zmqContext(),
-                           new Answering(WORLD()),
-                           "tcp://localhost:" + 666,
-                           "tcp://localhost:" + 667);
-
+    ServiceFixture f = new ServiceFixture();
+    {
+      f.fairRouter(zmqContext(), "tcp://*:" + 555, "tcp://*:" + 666);
+      f.fairRouter(zmqContext(), "tcp://*:" + 556, "tcp://*:" + 667);
+      f.workerAcceptor(zmqContext(),
+                       new Answering(WORLD()),
+                       "tcp://localhost:" + 666,
+                       "tcp://localhost:" + 667);
+    }
     f.init();
 
     Client client = f.newConnClient(zmqContext(),
@@ -1054,8 +582,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
   @Test
   public void t11() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "****************************************************** \n" +
         "                                                       \n" +
@@ -1076,19 +603,17 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         "                                                       \n" +
         "****************************************************** \n");
 
-    Fixture f = new Fixture();
-
-    f.deployFairRouter(zmqContext(), "tcp://*:" + 555, "tcp://*:" + 666);
-
-    // Create worker connected at all HUBs' backends.
-    // NOT: there will be only one LIVE HUB.
-
-    f.deployWorkerAcceptor(zmqContext(),
-                           new Answering(WORLD()),
-                           "tcp://localhost:" + 667,  // NOT_AVAIL
-                           "tcp://localhost:" + 666,  // !!!!! LIVE HUB !!!!!
-                           "tcp://localhost:" + 670); // NOT_AVAIL
-
+    ServiceFixture f = new ServiceFixture();
+    {
+      f.fairRouter(zmqContext(), "tcp://*:" + 555, "tcp://*:" + 666);
+      // Create worker connected at all HUBs' backends.
+      // NOT: there will be only one LIVE HUB.
+      f.workerAcceptor(zmqContext(),
+                       new Answering(WORLD()),
+                       "tcp://localhost:" + 667,  // NOT_AVAIL
+                       "tcp://localhost:" + 666,  // !!!!! LIVE HUB !!!!!
+                       "tcp://localhost:" + 670); // NOT_AVAIL
+    }
     f.init();
 
     int HWM_FOR_SEND = 10;
@@ -1126,8 +651,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
   @Test
   public void t12() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "****************************************************************************** \n" +
         "                                                                               \n" +
@@ -1146,16 +670,14 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         "                                                                               \n" +
         "****************************************************************************** \n");
 
-    Fixture f = new Fixture();
-
-    f.deployFairRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444);
-
-    f.deployFairPassiveAcceptor(zmqContext(), "tcp://localhost:" + 444, "tcp://*:" + 555);
-    f.deployFairPassiveAcceptor(zmqContext(), "tcp://localhost:" + 555, "tcp://*:" + 666);
-    f.deployFairPassiveAcceptor(zmqContext(), "tcp://localhost:" + 666, "tcp://*:" + 777);
-
-    f.deployWorkerAcceptor(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 777);
-
+    ServiceFixture f = new ServiceFixture();
+    {
+      f.fairRouter(zmqContext(), "tcp://*:" + 333, "tcp://*:" + 444);
+      f.fairPassiveAcceptor(zmqContext(), "tcp://localhost:" + 444, "tcp://*:" + 555);
+      f.fairPassiveAcceptor(zmqContext(), "tcp://localhost:" + 555, "tcp://*:" + 666);
+      f.fairPassiveAcceptor(zmqContext(), "tcp://localhost:" + 666, "tcp://*:" + 777);
+      f.workerAcceptor(zmqContext(), new Answering(WORLD()), "tcp://localhost:" + 777);
+    }
     f.init();
 
     Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
@@ -1176,8 +698,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
   @Test
   public void t13() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "**************************************************** \n" +
         "                                                     \n" +
@@ -1197,11 +718,11 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         "                                                     \n" +
         "**************************************************** \n");
 
-    Fixture f = new Fixture();
-
-    f.deployWorkerWellknown(zmqContext(), "tcp://*:" + 333, new Answering(CARP()));
-    f.deployWorkerWellknown(zmqContext(), "tcp://*:" + 334, new Answering(SHIRT()));
-
+    ServiceFixture f = new ServiceFixture();
+    {
+      f.workerWellknown(zmqContext(), "tcp://*:" + 333, new Answering(CARP()));
+      f.workerWellknown(zmqContext(), "tcp://*:" + 334, new Answering(SHIRT()));
+    }
     f.init();
 
     Client client = f.newConnClient(zmqContext(),
@@ -1222,8 +743,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
   @Test
   public void t14() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "**************************************************** \n" +
         "                                                     \n" +
@@ -1243,11 +763,11 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         "                                                     \n" +
         "**************************************************** \n");
 
-    Fixture f = new Fixture();
-
-    f.deployWorkerAcceptor(zmqContext(), new Answering(CARP()), "tcp://localhost:" + 222);
-    f.deployWorkerAcceptor(zmqContext(), new Answering(SHIRT()), "tcp://localhost:" + 222);
-
+    ServiceFixture f = new ServiceFixture();
+    {
+      f.workerAcceptor(zmqContext(), new Answering(CARP()), "tcp://localhost:" + 222);
+      f.workerAcceptor(zmqContext(), new Answering(SHIRT()), "tcp://localhost:" + 222);
+    }
     f.init();
 
     Client client = f.newBindingClient(zmqContext(), "tcp://*:" + 222);
@@ -1266,8 +786,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
   @Test
   public void t15() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "******************************************************* \n" +
         "                                                        \n" +
@@ -1287,11 +806,11 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         "                                                        \n" +
         "******************************************************* \n");
 
-    Fixture f = new Fixture();
-
-    f.deployWorkerWellknown(zmqContext(), "tcp://*:" + 333, new Answering(WORLD()));
-    f.deployWorkerWellknown(zmqContext(), "tcp://*:" + 334, new Answering(WORLD()));
-
+    ServiceFixture f = new ServiceFixture();
+    {
+      f.workerWellknown(zmqContext(), "tcp://*:" + 333, new Answering(WORLD()));
+      f.workerWellknown(zmqContext(), "tcp://*:" + 334, new Answering(WORLD()));
+    }
     f.init();
 
     Client client = f.newConnClient(zmqContext(),
@@ -1314,8 +833,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
   @Test
   public void t16() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "**************************************************** \n" +
         "                                                     \n" +
@@ -1335,11 +853,10 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         "                                                     \n" +
         "**************************************************** \n");
 
-    Fixture f = new Fixture();
+    ServiceFixture f = new ServiceFixture();
 
     // NOTE: this test case relies on HWM defaults settings which come along with every socket.
     // test will send 8 message, hopefully, 8 - is not greater or equal to default HWM settings.
-
     Client client = f.newConnClient(zmqContext(),
                                     "tcp://localhost:" + 333,  // NOT_AVAIL
                                     "tcp://localhost:" + 334,  // NOT_AVAIL
@@ -1358,8 +875,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
   @Test
   public void t17() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "******************************************************* \n" +
         "                                                        \n" +
@@ -1382,10 +898,10 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         "******************************************************* \n");
 
     int livePort = 333;
-    Fixture f = new Fixture();
-
-    f.deployWorkerWellknown(zmqContext(), "tcp://*:" + livePort, new Answering(WORLD()));
-
+    ServiceFixture f = new ServiceFixture();
+    {
+      f.workerWellknown(zmqContext(), "tcp://*:" + livePort, new Answering(WORLD()));
+    }
     f.init();
 
     int HWM_FOR_SEND = 10;
@@ -1423,8 +939,7 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
 
   @Test
   public void t18() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "******************************************************* \n" +
         "                                                        \n" +
@@ -1444,11 +959,11 @@ public class ServiceTest extends ZmqAbstractArchitectureTest {
         "                                                        \n" +
         "******************************************************* \n");
 
-    Fixture f = new Fixture();
-
-    f.deployWorkerWellknown(zmqContext(), "tcp://*:" + 333, new Answering(WORLD()));
-    f.deployWorkerWellknown(zmqContext(), "tcp://*:" + 334, new Answering(WORLD()));
-
+    ServiceFixture f = new ServiceFixture();
+    {
+      f.workerWellknown(zmqContext(), "tcp://*:" + 333, new Answering(WORLD()));
+      f.workerWellknown(zmqContext(), "tcp://*:" + 334, new Answering(WORLD()));
+    }
     f.init();
 
     Client client = Client.builder()

@@ -21,7 +21,8 @@
 package org.zeromq.messaging;
 
 import org.junit.Test;
-import org.zeromq.TestRecorder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,6 +36,8 @@ import static org.zeromq.messaging.ZmqMessage.DIV_FRAME;
 import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
 
 public class InputOutputMessageAdapterTest {
+
+  static final Logger LOG = LoggerFactory.getLogger(InputOutputMessageAdapterTest.class);
 
   private static final byte[] id_0 = "i0".getBytes();
   private static final byte[] id_1 = "i1".getBytes();
@@ -55,8 +58,7 @@ public class InputOutputMessageAdapterTest {
 
   @Test
   public void t0() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "Test conversion:                                                \n" +
         "                                                                \n" +
@@ -91,8 +93,7 @@ public class InputOutputMessageAdapterTest {
 
   @Test
   public void t1() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "Test conversion:                               \n" +
         "                                               \n" +
@@ -121,8 +122,7 @@ public class InputOutputMessageAdapterTest {
 
   @Test
   public void t2() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "Test conversion:                                                                   \n" +
         "                                                                                   \n" +
@@ -163,8 +163,7 @@ public class InputOutputMessageAdapterTest {
 
   @Test
   public void t3() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "Test conversion (DEALER case):                                                     \n" +
         "                                                                                   \n" +
@@ -207,8 +206,7 @@ public class InputOutputMessageAdapterTest {
 
   @Test
   public void t4() {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "\n" +
         "Test conversion:                                                                                   \n" +
         "                                                                                                   \n" +

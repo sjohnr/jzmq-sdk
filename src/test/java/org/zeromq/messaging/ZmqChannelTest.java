@@ -20,19 +20,17 @@
 
 package org.zeromq.messaging;
 
-import com.google.common.base.Stopwatch;
 import org.junit.Test;
-import org.zeromq.TestRecorder;
-
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.zeromq.messaging.ZmqAbstractTest.Fixture.HELLO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ZmqChannelTest extends ZmqAbstractTest {
 
+  static final Logger LOG = LoggerFactory.getLogger(ZmqChannelTest.class);
+
   @Test(expected = ZmqException.class)
   public void t0() {
-    TestRecorder r = new TestRecorder().start();
-    r.log("Test inproc:// connection behavior: connect first and bind second => exception.");
+    LOG.info("Test inproc:// connection behavior: connect first and bind second => exception.");
 
     ZmqChannel.builder()
               .withZmqContext(zmqContext())
@@ -49,8 +47,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
   @Test
   public void t1() {
-    TestRecorder r = new TestRecorder().start();
-    r.log("Test inproc:// connection behavior: bind first and connect second => good.");
+    LOG.info("Test inproc:// connection behavior: bind first and connect second => good.");
 
     ZmqChannel.builder()
               .withZmqContext(zmqContext())
@@ -67,8 +64,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
   @Test(expected = ZmqException.class)
   public void t2() {
-    TestRecorder r = new TestRecorder().start();
-    r.log("Test inproc:// connection behavior: bind first and then connect several times.");
+    LOG.info("Test inproc:// connection behavior: bind first and then connect several times.");
 
     ZmqChannel.builder()
               .withZmqContext(zmqContext())
@@ -80,42 +76,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
               .withZmqContext(zmqContext())
               .ofDEALERType()
               .withConnectAddress("inproc://service")
-              .withConnectAddress("inproc://service-huervice")
+              .withConnectAddress("inproc://service-nonabc")
               .build();
-  }
-
-  @Test
-  public void t3_perf() {
-    TestRecorder r = new TestRecorder().start();
-    r.log("Perf test for simple message .send() via DEALER to not-available peer. Just .send() and measure.");
-
-    int HWM = 1000000;
-    ZmqChannel channel = ZmqChannel.builder()
-                                   .ofDEALERType()
-                                   .withZmqContext(zmqContext())
-                                   .withConnectAddress("tcp://localhost:8833")
-                                   .withHwmForSend(HWM)
-                                   .withHwmForSend(HWM)
-                                   .build();
-    ZmqMessage src = HELLO();
-
-    ZmqFrames identities = new ZmqFrames();
-    identities.add("x".getBytes());
-    identities.add("y".getBytes());
-    identities.add("z".getBytes());
-
-    int ITER = 100;
-    int MESSAGE_NUM = 1000;
-    ZmqMessage message = ZmqMessage.builder(src)
-                                   .withIdentities(identities)
-                                   .withHeaders(new ZmqHeaders().set("x", "y"))
-                                   .build();
-    Stopwatch timer = new Stopwatch().start();
-    for (int j = 0; j < ITER; j++) {
-      for (int i = 0; i < MESSAGE_NUM; i++) {
-        assert channel.send(message);
-      }
-    }
-    r.logQoS((ITER * MESSAGE_NUM) / timer.stop().elapsedTime(MILLISECONDS), "messages/ms.");
   }
 }

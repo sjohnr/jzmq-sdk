@@ -20,17 +20,13 @@
 
 package org.zeromq.messaging;
 
-import com.google.common.base.Stopwatch;
 import org.junit.Test;
-import org.zeromq.TestRecorder;
 
 import java.util.Arrays;
 
-import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.zeromq.messaging.ZmqAbstractTest.Fixture.HELLO;
 import static org.zeromq.messaging.ZmqMessage.DIV_FRAME;
 import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
 
@@ -210,48 +206,6 @@ public class ZmqMessageTest {
     }
     catch (IllegalArgumentException e) {
     }
-  }
-
-  @Test
-  public void t7_perf() {
-    TestRecorder r = new TestRecorder();
-    r.log("Perf test for ZmqMessage.");
-
-    int ITER = 10;
-    int MESSAGE_NUM = 100000;
-    Stopwatch timer = new Stopwatch();
-
-    timer.reset().start();
-    for (int j = 0; j < ITER; j++) {
-      for (int i = 0; i < MESSAGE_NUM; i++) {
-        HELLO();
-      }
-    }
-    r.logQoS((float) timer.stop().elapsedTime(MICROSECONDS) / (ITER * MESSAGE_NUM), "microsec/message.");
-
-    timer.reset().start();
-    for (int j = 0; j < ITER; j++) {
-      for (int i = 0; i < MESSAGE_NUM; i++) {
-        ZmqMessage.builder(HELLO()).build();
-      }
-    }
-    r.logQoS((float) timer.stop().elapsedTime(MICROSECONDS) / (ITER * MESSAGE_NUM), "microsec/message.");
-
-    timer.reset().start();
-    for (int j = 0; j < ITER; j++) {
-      for (int i = 0; i < MESSAGE_NUM; i++) {
-        ZmqMessage.builder(HELLO())
-                  .withHeaders(new ZmqHeaders()
-                                   .set("a", "a")
-                                   .set("b", "b")
-                                   .set("c", "c")
-                                   .set("x", "x")
-                                   .set("y", "y")
-                                   .set("z", "z"))
-                  .build();
-      }
-    }
-    r.logQoS((float) timer.stop().elapsedTime(MICROSECONDS) / (ITER * MESSAGE_NUM), "microsec/message.");
   }
 
   @Test

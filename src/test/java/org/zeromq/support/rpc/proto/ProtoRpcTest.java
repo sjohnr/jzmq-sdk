@@ -23,9 +23,8 @@ package org.zeromq.support.rpc.proto;
 import com.google.protobuf.ByteString;
 import org.junit.Test;
 import org.springframework.test.context.ContextConfiguration;
-import org.zeromq.TestRecorder;
 import org.zeromq.messaging.ZmqException;
-import org.zeromq.support.rpc.SpringFixture;
+import org.zeromq.support.spring.SpringFixture;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -39,7 +38,6 @@ public class ProtoRpcTest {
 
   @Test // org.zeromq.support.rpc.proto.Proto.Pair
   public void t0() {
-    new TestRecorder().start();
     SpringFixture f = new SpringFixture().setup(ProtoRpcTest.class);
     try {
       CepasaService service = f.getBean(BEAN_ID);
@@ -55,7 +53,6 @@ public class ProtoRpcTest {
 
   @Test
   public void t1() {
-    new TestRecorder().start();
     SpringFixture f = new SpringFixture().setup(ProtoRpcTest.class);
     try {
       CepasaService service = f.getBean(BEAN_ID);

@@ -21,11 +21,14 @@
 package org.zeromq.support.thread;
 
 import org.junit.Test;
-import org.zeromq.TestRecorder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ZmqThreadPoolTest {
 
-  private static class ZmqRunnableContextTemplate implements ZmqRunnableContext {
+  static final Logger LOG = LoggerFactory.getLogger(ZmqThreadPoolTest.class);
+
+  static class ZmqRunnableContextTemplate implements ZmqRunnableContext {
 
     @Override
     public void block() {
@@ -50,8 +53,7 @@ public class ZmqThreadPoolTest {
 
   @Test
   public void t0() throws InterruptedException {
-    TestRecorder r = new TestRecorder().start();
-    r.log("Test ThreadPool: given InterruptableRunnable.");
+    LOG.info("Test ThreadPool: given InterruptableRunnable.");
 
     ZmqThreadPool target = ZmqThreadPool.newCachedDaemonThreadPool();
     target.withRunnable(newInterruptableRunnable());
@@ -59,16 +61,14 @@ public class ZmqThreadPoolTest {
 
     Thread.sleep(300);
 
-    r.log("Destroying ThreadPool and asserting that there will be no hangout at .destroy().");
+    LOG.info("Destroying ThreadPool and asserting that there will be no hangout at .destroy().");
 
     target.destroy();
   }
 
   @Test
   public void t1() throws InterruptedException {
-    TestRecorder r = new TestRecorder().start();
-    r.reset().start();
-    r.log("Test ThreadPool: few InterruptableRunnables.");
+    LOG.info("Test ThreadPool: few InterruptableRunnables.");
 
     ZmqThreadPool target = ZmqThreadPool.newCachedDaemonThreadPool();
     target.withRunnable(newInterruptableRunnable());
@@ -77,15 +77,14 @@ public class ZmqThreadPoolTest {
 
     Thread.sleep(300);
 
-    r.log("Destroying ThreadPool and asserting that there will be no hangout at .destroy().");
+    LOG.info("Destroying ThreadPool and asserting that there will be no hangout at .destroy().");
 
     target.destroy();
   }
 
   @Test
   public void t2() throws InterruptedException {
-    TestRecorder r = new TestRecorder().start();
-    r.log(
+    LOG.info(
         "Test ThreadPool: given InterruptableRunnable, FailingRunnable, " +
         "FailingRunnableAtInit, FailingRunnableAtDestroy.");
 
@@ -98,15 +97,14 @@ public class ZmqThreadPoolTest {
 
     Thread.sleep(300);
 
-    r.log("Destroying ThreadPool and asserting that there will be no hangout at .destroy().");
+    LOG.info("Destroying ThreadPool and asserting that there will be no hangout at .destroy().");
 
     target.destroy();
   }
 
   @Test
   public void t3() {
-    TestRecorder r = new TestRecorder().start();
-    r.log("Test ThreadPool: check that blocked on thread_pool.waitOnMe() maybe unblocked.");
+    LOG.info("Test ThreadPool: check that blocked on thread_pool.waitOnMe() maybe unblocked.");
 
     ZmqThreadPool target = ZmqThreadPool.newCachedDaemonThreadPool();
     target.withRunnable(newFailingRunnableAtInit());

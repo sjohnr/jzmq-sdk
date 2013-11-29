@@ -23,28 +23,11 @@ package org.zeromq.messaging;
 import org.junit.After;
 import org.junit.Before;
 
+import static junit.framework.Assert.assertEquals;
+
 public abstract class ZmqAbstractTest {
 
   public static final long MESSAGE_NUM = 100;
-
-  public static class Fixture {
-
-    public static ZmqMessage HELLO() {
-      return ZmqMessage.builder().withPayload("hello".getBytes()).build();
-    }
-
-    public static ZmqMessage WORLD() {
-      return ZmqMessage.builder().withPayload("world".getBytes()).build();
-    }
-
-    public static ZmqMessage CARP() {
-      return ZmqMessage.builder().withPayload("carp".getBytes()).build();
-    }
-
-    public static ZmqMessage SHIRT() {
-      return ZmqMessage.builder().withPayload("shirt".getBytes()).build();
-    }
-  }
 
   private final ZmqContext _ctx = new ZmqContext();
 
@@ -60,5 +43,27 @@ public abstract class ZmqAbstractTest {
   @After
   public final void cleanup() {
     _ctx.destroy();
+  }
+
+  public static ZmqMessage HELLO() {
+    return ZmqMessage.builder().withPayload("hello".getBytes()).build();
+  }
+
+  public static ZmqMessage WORLD() {
+    return ZmqMessage.builder().withPayload("world".getBytes()).build();
+  }
+
+  public static ZmqMessage CARP() {
+    return ZmqMessage.builder().withPayload("carp".getBytes()).build();
+  }
+
+  public static ZmqMessage SHIRT() {
+    return ZmqMessage.builder().withPayload("shirt".getBytes()).build();
+  }
+
+  public static void assertPayload(String payload, ZmqMessage message) {
+    assert message != null;
+    assert message.payload() != null;
+    assertEquals(payload, new String(message.payload()));
   }
 }

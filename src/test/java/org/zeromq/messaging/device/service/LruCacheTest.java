@@ -20,9 +20,9 @@
 
 package org.zeromq.messaging.device.service;
 
-import com.google.common.base.Stopwatch;
 import org.junit.Test;
-import org.zeromq.TestRecorder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqFrames;
 
@@ -30,21 +30,19 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 
-import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
 public class LruCacheTest {
 
+  static final Logger LOG = LoggerFactory.getLogger(LruCacheTest.class);
+
   private static final int TIMEOUT = 100;
-  private static int OPS = 100000;
-  private static int ITER = 10;
 
   @Test
   public void t0() throws InterruptedException {
-    TestRecorder r = new TestRecorder().start();
-    r.log("Store identity, expire identity, catch exception on accessing empty cache.");
+    LOG.info("Store identity, expire identity, catch exception on accessing empty cache.");
 
     LruCache target = new LruCache(TIMEOUT);
 
@@ -75,8 +73,7 @@ public class LruCacheTest {
 
   @Test
   public void t1() {
-    TestRecorder r = new TestRecorder().start();
-    r.log("Obtain identity from empty cache, catch exception on accessing empty cache.");
+    LOG.info("Obtain identity from empty cache, catch exception on accessing empty cache.");
 
     LruCache target = new LruCache(TIMEOUT);
 
@@ -98,8 +95,7 @@ public class LruCacheTest {
 
   @Test
   public void t2() {
-    TestRecorder r = new TestRecorder().start();
-    r.log("Store identity, obtain identity, after that check that cache is empty.");
+    LOG.info("Store identity, obtain identity, after that check that cache is empty.");
 
     LruCache target = new LruCache(TIMEOUT);
 
@@ -124,8 +120,7 @@ public class LruCacheTest {
 
   @Test
   public void t3() {
-    TestRecorder r = new TestRecorder().start();
-    r.log("Store identity, obtain identity, check that given identity comparator is being called.");
+    LOG.info("Store identity, obtain identity, check that given identity comparator is being called.");
 
     LruCache target =
         new LruCache(TIMEOUT,
@@ -159,56 +154,5 @@ public class LruCacheTest {
     assertSame(backendIdentities, target.obtain(frontendIdentities));
 
     assertEquals(0, target.size());
-  }
-
-  @Test
-  public void t4_perf() {
-    TestRecorder r = new TestRecorder();
-    r.log("Storage is empty. Hit rate is high.");
-
-    LruCache target = new LruCache(100);
-    Stopwatch timer = new Stopwatch().start();
-    for (int j = 0; j < ITER; j++) {
-      for (int i = 0; i < OPS; i++) {
-        try {
-          target.obtain(new ZmqFrames());
-        }
-        catch (ZmqException ignore) {
-        }
-      }
-    }
-    r.logQoS(timer.stop().elapsedTime(MICROSECONDS) / (ITER * OPS), "microsec/.obtain().");
-  }
-
-  @Test
-  public void t5_perf() {
-    TestRecorder r = new TestRecorder();
-    r.log("Storage is not empty, but no matched socket identity will be found. Hit rate is high.");
-
-    LruCache target =
-        new LruCache(Long.MAX_VALUE,
-                     new Comparator<byte[]>() {
-                       @Override
-                       public int compare(byte[] frontend, byte[] backend) {
-                         return -1;
-                       }
-                     });
-    ZmqFrames x = new ZmqFrames();
-    x.add("x".getBytes());
-    for (int i = 0; i < 1000; i++) {
-      target.store(x);
-    }
-
-    Stopwatch timer = new Stopwatch().start();
-    for (int j = 0; j < ITER; j++) {
-      for (int i = 0; i < OPS; i++) {
-        try {
-          target.obtain(x);
-        }
-        catch (ZmqException ignore) {
-        }
-      }
-    }
-    r.logQoS(timer.stop().elapsedTime(MICROSECONDS) / (ITER * OPS), "microsec/.obtain().");
   }
 }

@@ -23,9 +23,8 @@ package org.zeromq.support.rpc.javanative;
 import com.google.common.base.Throwables;
 import org.junit.Test;
 import org.springframework.test.context.ContextConfiguration;
-import org.zeromq.TestRecorder;
 import org.zeromq.messaging.ZmqException;
-import org.zeromq.support.rpc.SpringFixture;
+import org.zeromq.support.spring.SpringFixture;
 
 import java.rmi.RemoteException;
 
@@ -41,7 +40,6 @@ public class JavanativeRpcTest {
 
   @Test
   public void t0() {
-    new TestRecorder().start();
     SpringFixture f = new SpringFixture().setup(JavanativeRpcTest.class);
     try {
       OrigatoService service = f.getBean(BEAN_ID);
@@ -61,7 +59,6 @@ public class JavanativeRpcTest {
 
   @Test
   public void t1() {
-    new TestRecorder().start();
     SpringFixture f = new SpringFixture().setup(JavanativeRpcTest.class);
     try {
       OrigatoService service = f.getBean(BEAN_ID);

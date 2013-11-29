@@ -20,14 +20,13 @@
 
 package org.zeromq.messaging;
 
-import com.google.common.base.Stopwatch;
 import org.junit.Test;
-import org.zeromq.TestRecorder;
-
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.zeromq.messaging.ZmqAbstractTest.Fixture.HELLO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PubSubTest extends ZmqAbstractTest {
+
+  static final Logger LOG = LoggerFactory.getLogger(PubSubTest.class);
 
   static class Fixture {
 
@@ -56,6 +55,8 @@ public class PubSubTest extends ZmqAbstractTest {
 
   @Test
   public void t0() throws InterruptedException {
+    LOG.info("Testing .send()/.recv() .");
+
     Fixture f = new Fixture(zmqContext());
     ZmqChannel publisher = f.newPublisher();
     ZmqChannel subscriber = f.newSubscriber();
@@ -96,6 +97,8 @@ public class PubSubTest extends ZmqAbstractTest {
 
   @Test
   public void t1() throws InterruptedException {
+    LOG.info("Testing subscribtions and .send()/.recv() .");
+
     Fixture f = new Fixture(zmqContext());
     ZmqChannel publisher = f.newPublisher();
     ZmqChannel subscriber = f.newSubscriber();
@@ -127,6 +130,8 @@ public class PubSubTest extends ZmqAbstractTest {
 
   @Test
   public void t2() throws InterruptedException {
+    LOG.info("Testing subscribtions.");
+
     Fixture f = new Fixture(zmqContext());
     ZmqChannel publisher = f.newPublisher();
     ZmqChannel subscriber = f.newSubscriber();
@@ -166,33 +171,6 @@ public class PubSubTest extends ZmqAbstractTest {
     }
     finally {
       subscriber.destroy();
-      publisher.destroy();
-    }
-  }
-
-  @Test
-  public void t3_perf() {
-    TestRecorder r = new TestRecorder();
-    r.log("Perf test for PUB/SUB. Sending messages via PUB w/o subscriber.");
-
-    Fixture f = new Fixture(zmqContext());
-    ZmqChannel publisher = f.newPublisher();
-
-    try {
-      int ITER = 500;
-      int MESSAGE_NUM = 1000;
-      ZmqMessage message = ZmqMessage.builder(HELLO())
-                                     .withTopic("xyz".getBytes())
-                                     .build();
-      Stopwatch timer = new Stopwatch().start();
-      for (int j = 0; j < ITER; j++) {
-        for (int i = 0; i < MESSAGE_NUM; i++) {
-          assert publisher.send(message);
-        }
-      }
-      r.logQoS((ITER * MESSAGE_NUM) / timer.stop().elapsedTime(MILLISECONDS), "messages/ms.");
-    }
-    finally {
       publisher.destroy();
     }
   }

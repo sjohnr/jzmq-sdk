@@ -18,12 +18,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.zeromq.support.rpc;
+package org.zeromq.support.spring;
 
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
-import org.zeromq.support.spring.ZmqSpringContext;
 
 public final class SpringFixture {
 
