@@ -126,14 +126,14 @@ public final class ZmqChannel implements HasDestroy {
     }
 
     public Builder withHwmForSend(long hwmForSend) {
-      if (hwmForSend > 0) {
+      if (hwmForSend >= 0) {
         _target.hwmSend = hwmForSend;
       }
       return this;
     }
 
     public Builder withHwmForRecv(long hwmForRecv) {
-      if (hwmForRecv > 0) {
+      if (hwmForRecv >= 0) {
         _target.hwmRecv = hwmForRecv;
       }
       return this;
@@ -152,7 +152,7 @@ public final class ZmqChannel implements HasDestroy {
     }
 
     public Builder withWaitOnSend(int timeout) {
-      if (timeout > 0) {
+      if (timeout >= 0) {
         _target.timeoutSend = timeout;
       }
       return this;
@@ -164,7 +164,7 @@ public final class ZmqChannel implements HasDestroy {
     }
 
     public Builder withWaitOnRecv(int timeout) {
-      if (timeout > 0) {
+      if (timeout >= 0) {
         _target.timeoutRecv = timeout;
       }
       return this;
@@ -422,14 +422,14 @@ public final class ZmqChannel implements HasDestroy {
         ZmqFrames output = _outputAdapter.convert(message);
         int outputSize = output.size();
         int i = 0;
-        boolean sendWasGood = true;
+        boolean sent = false;
         for (byte[] frame : output) {
-          sendWasGood &= _socket.send(frame, ++i < outputSize ? ZMQ.SNDMORE : 0);
-          if (!sendWasGood) {
+          sent = _socket.send(frame, ++i < outputSize ? ZMQ.SNDMORE : 0);
+          if (!sent) {
             return false;
           }
         }
-        return sendWasGood;
+        return sent;
       }
       catch (Exception e) {
         LOG.error("!!! Message wasn't sent! Exception occured: " + e, e);

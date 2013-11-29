@@ -79,4 +79,25 @@ public class ZmqChannelTest extends ZmqAbstractTest {
               .withConnectAddress("inproc://service-nonabc")
               .build();
   }
+
+  @Test
+  public void t3() {
+    LOG.info("Test settings.");
+
+    ZmqChannel req = ZmqChannel.builder()
+                               .withZmqContext(zmqContext())
+                               .ofDEALERType()
+                               .withHwmForRecv(0)
+                               .withHwmForSend(0)
+                               .withWaitOnSend(1)
+                               .withWaitOnRecv(250)
+                               .withConnectAddress("tcp://localhost:4567")
+                               .build();
+
+    assert !req.hasOutput(); // some nice info: seems like you can't send a message.
+    assert req.send(HELLO()); // ... but! you can call .send() and ... that's it :|
+
+    assert !req.hasInput(); // obviously you don't have input.
+    assert req.recv() == null; // ... and you will not get it :|
+  }
 }
