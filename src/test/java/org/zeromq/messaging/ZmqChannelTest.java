@@ -23,6 +23,10 @@ package org.zeromq.messaging;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeromq.ZMQ;
+
+import static org.junit.Assert.fail;
+import static org.zeromq.messaging.ZmqException.ErrorCode.FATAL;
 
 public class ZmqChannelTest extends ZmqAbstractTest {
 
@@ -82,7 +86,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
   @Test
   public void t3() {
-    LOG.info("Test settings.");
+    LOG.info("Test some interesting settings.");
 
     ZmqChannel req = ZmqChannel.builder()
                                .withZmqContext(zmqContext())
@@ -95,9 +99,87 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                .build();
 
     assert !req.hasOutput(); // some nice info: seems like you can't send a message.
-    assert req.send(HELLO()); // ... but! you can call .send() and ... that's it :|
+    assert !req.send(HELLO()); // no, you can't :|
 
     assert !req.hasInput(); // obviously you don't have input.
     assert req.recv() == null; // ... and you will not get it :|
+  }
+
+  @Test
+  public void t4() {
+    LOG.info("Test some wrong attempts to use channel.");
+
+    ZmqChannel rep = ZmqChannel.builder()
+                               .withZmqContext(zmqContext())
+                               .ofROUTERType()
+                               .withBindAddress("tcp://*:6633")
+                               .build();
+
+    // try register channel twoce.
+    {
+      ZMQ.Poller poller = zmqContext().newPoller(1);
+      rep.register(poller); // register once.
+      try {
+        rep.register(poller); // register twice.
+        fail();
+      }
+      catch (ZmqException e) {
+        assert e.errorCode() == FATAL;
+      }
+    }
+
+    // try again with more sophisticated case: use channel for a while and then register it.
+    {
+      rep.destroy();
+      rep = ZmqChannel.builder()
+                      .withZmqContext(zmqContext())
+                      .ofROUTERType()
+                      .withBindAddress("tcp://*:6633")
+                      .build();
+
+      // use channel functions ...
+      assert !rep.hasInput();
+      assert !rep.hasOutput();
+
+      // register again and check that this fails.
+      try {
+        rep.register(zmqContext().newPoller(1));
+        fail();
+      }
+      catch (ZmqException e) {
+        assert e.errorCode() == FATAL;
+      }
+    }
+
+    // destroy channel and after that try to access it.
+    {
+      rep.destroy();
+      try {
+        rep.hasInput();
+        fail();
+      }
+      catch (ZmqException e) {
+        assert e.errorCode() == FATAL;
+      }
+    }
+  }
+
+  @Test
+  public void t5() throws InterruptedException {
+    LOG.info("Test poller operations on connected channel.");
+
+    ZmqChannel c = ZmqChannel.builder()
+                             .withZmqContext(zmqContext())
+                             .ofDEALERType()
+                             .withConnectAddress("tcp://localhost:3388")
+                             .build();
+
+    ZmqChannel s = ZmqChannel.builder()
+                             .withZmqContext(zmqContext())
+                             .ofROUTERType()
+                             .withBindAddress("tcp://*:3388")
+                             .build();
+
+    // TODO artemv: write some tests.
   }
 }
