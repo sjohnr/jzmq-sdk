@@ -89,8 +89,8 @@ public abstract class ZmqAbstractServiceDispatcher extends ZmqAbstractDeviceCont
       throw ZmqException.fatal();
     }
     _poller = zmqContext.newPoller(2);
-    _frontend.register(_poller);
-    _backend.register(_poller);
+    _frontend.watchRecv(_poller);
+    _backend.watchRecv(_poller);
   }
 
   @Override

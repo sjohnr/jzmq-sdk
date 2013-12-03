@@ -99,7 +99,7 @@ public final class LruRouter extends ZmqAbstractServiceDispatcher {
   @Override
   public void exec() {
     // ==== handle backend traffic first ====
-    if (_backend.hasInput()) {
+    if (_backend.canRecv()) {
       ZmqMessage message = _backend.recv();
       if (message == null) {
         LOG.error(".recv() failed on backend!");
@@ -150,7 +150,7 @@ public final class LruRouter extends ZmqAbstractServiceDispatcher {
     }
 
     // ==== handle frontend traffic second ====
-    if (_frontend.hasInput()) {
+    if (_frontend.canRecv()) {
       if (socketIdentityStorage.size() <= 0) {
         return;
       }

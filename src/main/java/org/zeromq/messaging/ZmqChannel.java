@@ -53,12 +53,6 @@ public final class ZmqChannel implements HasDestroy {
 
   private static final Logger LOG = LoggerFactory.getLogger(ZmqChannel.class);
 
-  private static enum Mode {
-    BOTH,
-    SENDER,
-    RECEIVER
-  }
-
   public static final class Builder implements ObjectBuilder<ZmqChannel> {
 
     private final ZmqChannel _target = new ZmqChannel();
@@ -203,7 +197,6 @@ public final class ZmqChannel implements HasDestroy {
       checkInvariant();
 
       if (_target.socketType == ZMQ.ROUTER) {
-        _target._mode = Mode.BOTH;
         _target._inputAdapter = InputMessageAdapter.builder()
                                                    .expectIdentities()
                                                    .build();
@@ -213,7 +206,6 @@ public final class ZmqChannel implements HasDestroy {
       }
 
       if (_target.socketType == ZMQ.DEALER) {
-        _target._mode = Mode.BOTH;
         _target._inputAdapter = InputMessageAdapter.builder()
                                                    .expectIdentities()
                                                    .build();
@@ -224,7 +216,6 @@ public final class ZmqChannel implements HasDestroy {
       }
 
       if (_target.socketType == ZMQ.PUB || _target.socketType == ZMQ.PUSH) {
-        _target._mode = Mode.SENDER;
         _target._inputAdapter = null;
         _target._outputAdapter = OutputMessageAdapter.builder()
                                                      .awareOfTopicFrame()
@@ -233,7 +224,6 @@ public final class ZmqChannel implements HasDestroy {
       }
 
       if (_target.socketType == ZMQ.SUB || _target.socketType == ZMQ.PULL) {
-        _target._mode = Mode.RECEIVER;
         _target._outputAdapter = null;
         _target._inputAdapter = InputMessageAdapter.builder()
                                                    .awareOfTopicFrame()
@@ -383,13 +373,10 @@ public final class ZmqChannel implements HasDestroy {
   private int timeoutRecv = DEFAULT_WAIT_ON_RECV;
 
   private ZMQ.Socket _socket;
-  private Mode _mode;
   private ObjectAdapter<ZmqFrames, ZmqMessage> _inputAdapter;
   private ObjectAdapter<ZmqMessage, ZmqFrames> _outputAdapter;
-  private ZMQ.Poller _pollerOnReceiver;
-  private ZMQ.Poller _pollerOnSender;
-  private int _pollableIndOnReceiver = POLLABLE_IND_NOT_INITIALIZED;
-  private int _pollableIndOnSender = POLLABLE_IND_NOT_INITIALIZED;
+  private ZMQ.Poller _poller;
+  private int _pollableInd = POLLABLE_IND_NOT_INITIALIZED;
 
   //// CONSTRUCTORS
 
@@ -417,26 +404,23 @@ public final class ZmqChannel implements HasDestroy {
    */
   public boolean send(ZmqMessage message) {
     assertSocketAlive();
-    if (_mode == Mode.BOTH || _mode == Mode.SENDER) {
-      try {
-        ZmqFrames output = _outputAdapter.convert(message);
-        int outputSize = output.size();
-        int i = 0;
-        boolean sent = false;
-        for (byte[] frame : output) {
-          sent = _socket.send(frame, ++i < outputSize ? ZMQ.SNDMORE : 0);
-          if (!sent) {
-            return false;
-          }
+    try {
+      ZmqFrames output = _outputAdapter.convert(message);
+      int outputSize = output.size();
+      int i = 0;
+      boolean sent = false;
+      for (byte[] frame : output) {
+        sent = _socket.send(frame, ++i < outputSize ? ZMQ.SNDMORE : 0);
+        if (!sent) {
+          return false;
         }
-        return sent;
       }
-      catch (Exception e) {
-        LOG.error("!!! Message wasn't sent! Exception occured: " + e, e);
-        throw ZmqException.seeCause(e);
-      }
+      return sent;
     }
-    throw new UnsupportedOperationException();
+    catch (Exception e) {
+      LOG.error("!!! Message wasn't sent! Exception occured: " + e, e);
+      throw ZmqException.seeCause(e);
+    }
   }
 
   /**
@@ -446,27 +430,24 @@ public final class ZmqChannel implements HasDestroy {
    */
   public ZmqMessage recv() {
     assertSocketAlive();
-    if (_mode == Mode.BOTH || _mode == Mode.RECEIVER) {
-      try {
-        ZmqFrames input = new ZmqFrames();
-        for (; ; ) {
-          byte[] frame = _socket.recv(0);
-          if (frame == null) {
-            return null;
-          }
-          input.add(frame);
-          if (!_socket.hasReceiveMore()) {
-            break;
-          }
+    try {
+      ZmqFrames input = new ZmqFrames();
+      for (; ; ) {
+        byte[] frame = _socket.recv(0);
+        if (frame == null) {
+          return null;
         }
-        return _inputAdapter.convert(input);
+        input.add(frame);
+        if (!_socket.hasReceiveMore()) {
+          break;
+        }
       }
-      catch (Exception e) {
-        LOG.error("!!! Message wasn't received! Exception occured: " + e, e);
-        throw ZmqException.seeCause(e);
-      }
+      return _inputAdapter.convert(input);
     }
-    throw new UnsupportedOperationException();
+    catch (Exception e) {
+      LOG.error("!!! Message wasn't received! Exception occured: " + e, e);
+      throw ZmqException.seeCause(e);
+    }
   }
 
   /**
@@ -476,9 +457,7 @@ public final class ZmqChannel implements HasDestroy {
    */
   public void subscribe(byte[] topic) {
     assertSocketAlive();
-    if (_mode == Mode.RECEIVER) {
-      _socket.subscribe(topic);
-    }
+    _socket.subscribe(topic);
   }
 
   /**
@@ -488,63 +467,65 @@ public final class ZmqChannel implements HasDestroy {
    */
   public void unsubscribe(byte[] topic) {
     assertSocketAlive();
-    if (_mode == Mode.RECEIVER) {
-      _socket.unsubscribe(topic);
-    }
+    _socket.unsubscribe(topic);
   }
 
-  /**
-   * Registers internal zmq_socket on
-   * given poller instance.
-   */
-  public void register(ZMQ.Poller poller) {
+  /** Registers internal {@link #_socket} on given poller instance. */
+  public void watchSendRecv(ZMQ.Poller poller) {
     assertSocketAlive();
-    if (_mode == Mode.BOTH || _mode == Mode.RECEIVER) {
-      registerReceiver(poller);
+    if (isRegistered()) {
+      throw ZmqException.fatal();
     }
-    if (_mode == Mode.BOTH || _mode == Mode.SENDER) {
-      registerSender();
-    }
+    _poller = poller;
+    _pollableInd = _poller.register(_socket, ZMQ.Poller.POLLOUT | ZMQ.Poller.POLLIN);
   }
 
-  /**
-   * Clears internal poller on
-   * internal zmq_socket.
-   */
+  /** Registers internal {@link #_socket} on given poller instance. */
+  public void watchSend(ZMQ.Poller poller) {
+    assertSocketAlive();
+    if (isRegistered()) {
+      throw ZmqException.fatal();
+    }
+    _poller = poller;
+    _pollableInd = _poller.register(_socket, ZMQ.Poller.POLLOUT);
+  }
+
+  /** Registers internal {@link #_socket} on given poller instance. */
+  public void watchRecv(ZMQ.Poller poller) {
+    assertSocketAlive();
+    if (isRegistered()) {
+      throw ZmqException.fatal();
+    }
+    _poller = poller;
+    _pollableInd = _poller.register(_socket, ZMQ.Poller.POLLIN);
+  }
+
+  /** Clears internal poller on internal {@link #_socket}. */
   public void unregister() {
     assertSocketAlive();
-    unregisterReceiver();
-    unregisterSender();
+    if (_poller != null) {
+      _poller.unregister(_socket);
+      _poller = null;
+      _pollableInd = POLLABLE_IND_NOT_INITIALIZED;
+    }
   }
 
-  /**
-   * Determines whether internal zmq_socket is ready
-   * for reading w/o blocking.
-   */
-  public boolean hasInput() {
+  /** Determines whether internal {@link #_socket} is ready for reading message w/o blocking. */
+  public boolean canRecv() {
     assertSocketAlive();
-    if (_mode == Mode.BOTH || _mode == Mode.RECEIVER) {
-      if (!isReceiverRegistered()) {
-        registerReceiver(zmqContext.newPoller(1));
-      }
-      return _pollerOnReceiver.pollin(_pollableIndOnReceiver);
+    if (!isRegistered()) {
+      throw ZmqException.fatal();
     }
-    throw new UnsupportedOperationException();
+    return _poller.pollin(_pollableInd);
   }
 
-  /**
-   * Determines whether internal zmq_socket is ready
-   * for writing w/o blocking.
-   */
-  public boolean hasOutput() {
+  /** Determines whether internal {@link #_socket} is ready for writing message w/o blocking. */
+  public boolean canSend() {
     assertSocketAlive();
-    if (_mode == Mode.BOTH || _mode == Mode.SENDER) {
-      if (!isSenderRegistered()) {
-        registerSender();
-      }
-      return _pollerOnSender.pollout(_pollableIndOnSender);
+    if (!isRegistered()) {
+      throw ZmqException.fatal();
     }
-    throw new UnsupportedOperationException();
+    return _poller.pollout(_pollableInd);
   }
 
   private void assertSocketAlive() {
@@ -553,43 +534,7 @@ public final class ZmqChannel implements HasDestroy {
     }
   }
 
-  private void registerReceiver(ZMQ.Poller poller) {
-    if (isReceiverRegistered()) {
-      throw ZmqException.fatal();
-    }
-    _pollerOnReceiver = poller;
-    _pollableIndOnReceiver = _pollerOnReceiver.register(_socket, ZMQ.Poller.POLLIN);
-  }
-
-  private boolean isReceiverRegistered() {
-    return _pollableIndOnReceiver != POLLABLE_IND_NOT_INITIALIZED;
-  }
-
-  private void registerSender() {
-    if (isSenderRegistered()) {
-      throw ZmqException.fatal();
-    }
-    _pollerOnSender = zmqContext.newPoller(1);
-    _pollableIndOnSender = _pollerOnSender.register(_socket, ZMQ.Poller.POLLOUT);
-  }
-
-  private boolean isSenderRegistered() {
-    return _pollableIndOnSender != POLLABLE_IND_NOT_INITIALIZED;
-  }
-
-  private void unregisterReceiver() {
-    if (_pollerOnReceiver != null) {
-      _pollerOnReceiver.unregister(_socket);
-      _pollerOnReceiver = null;
-      _pollableIndOnReceiver = POLLABLE_IND_NOT_INITIALIZED;
-    }
-  }
-
-  private void unregisterSender() {
-    if (_pollerOnSender != null) {
-      _pollerOnSender.unregister(_socket);
-      _pollerOnSender = null;
-      _pollableIndOnSender = POLLABLE_IND_NOT_INITIALIZED;
-    }
+  private boolean isRegistered() {
+    return _pollableInd != POLLABLE_IND_NOT_INITIALIZED;
   }
 }

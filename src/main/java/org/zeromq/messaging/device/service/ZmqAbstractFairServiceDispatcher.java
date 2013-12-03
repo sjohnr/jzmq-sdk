@@ -31,7 +31,7 @@ public abstract class ZmqAbstractFairServiceDispatcher extends ZmqAbstractServic
   @Override
   public final void exec() {
     // ==== handle backend traffic first ====
-    if (_backend.hasInput()) {
+    if (_backend.canRecv()) {
       ZmqMessage message = _backend.recv();
       if (message == null) {
         LOG.error(".recv() failed on backend!");
@@ -45,7 +45,7 @@ public abstract class ZmqAbstractFairServiceDispatcher extends ZmqAbstractServic
     }
 
     // ==== handle frontend traffic second ====
-    if (_frontend.hasInput()) {
+    if (_frontend.canRecv()) {
       ZmqMessage message = _frontend.recv();
       if (message == null) {
         LOG.error(".recv() failed on frontend!");

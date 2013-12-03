@@ -112,13 +112,13 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractDeviceContext {
       throw ZmqException.fatal();
     }
     _poller = zmqContext.newPoller(1);
-    _channel.register(_poller);
+    _channel.watchRecv(_poller);
     _pingStrategyForLogging = _pingStrategy.getClass().getSimpleName();
   }
 
   @Override
   public final void exec() {
-    if (!_channel.hasInput()) {
+    if (!_channel.canRecv()) {
       LOG.debug("No incoming requests. Delegating to {}.", _pingStrategyForLogging);
       _pingStrategy.ping(_channel);
       return;

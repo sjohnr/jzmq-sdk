@@ -86,28 +86,64 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
   @Test
   public void t3() {
-    LOG.info("Test some interesting settings.");
+    LOG.info("Test edge settings.");
 
     ZmqChannel req = ZmqChannel.builder()
                                .withZmqContext(zmqContext())
                                .ofDEALERType()
                                .withHwmForRecv(0)
                                .withHwmForSend(0)
-                               .withWaitOnSend(1)
-                               .withWaitOnRecv(250)
-                               .withConnectAddress("tcp://localhost:4567")
+                               .withWaitOnSend(-1)
+                               .withWaitOnRecv(1)
+                               .withConnectAddress("tcp://localhost:4466")
                                .build();
 
-    assert !req.hasOutput(); // some nice info: seems like you can't send a message.
-    assert !req.send(HELLO()); // no, you can't :|
+    ZMQ.Poller p = zmqContext().newPoller(1);
+    req.watchSendRecv(p);
 
-    assert !req.hasInput(); // obviously you don't have input.
+    p.poll(100);
+    assert req.send(HELLO()); // well, you can send, but that's not actual send :|
+    assert req.send(HELLO()); // well, you can send but that's not actual send :|
+    assert req.send(HELLO()); // well, you can send but that's not actual send :|
+
+    assert !req.canRecv(); // obviously you don't have input.
     assert req.recv() == null; // ... and you will not get it :|
   }
 
   @Test
   public void t4() {
-    LOG.info("Test some wrong attempts to use channel.");
+    LOG.info("Test edge settings.");
+
+    ZmqChannel req = ZmqChannel.builder()
+                               .withZmqContext(zmqContext())
+                               .ofDEALERType()
+                               .withHwmForRecv(1)
+                               .withHwmForSend(1)
+                               .withWaitOnSend(0)
+                               .withWaitOnRecv(0)
+                               .withConnectAddress("tcp://localhost:4466")
+                               .build();
+
+    ZMQ.Poller p = zmqContext().newPoller(1);
+    req.watchSendRecv(p);
+
+    p.poll(100);
+    assert req.canSend();
+    assert req.send(HELLO()); // you can send w/o blocking once :|
+
+    p.poll(100);
+    assert !req.canSend();
+    assert !req.send(HELLO()); // here, you will not block and will not send :|
+    assert !req.canSend();
+    assert !req.send(HELLO()); // here, you will not block and will not send :|
+
+    assert !req.canRecv(); // obviously you don't have input.
+    assert req.recv() == null; // ... and you will not get it :|
+  }
+
+  @Test
+  public void t5() {
+    LOG.info("Test wrong attempts to use channel.");
 
     ZmqChannel rep = ZmqChannel.builder()
                                .withZmqContext(zmqContext())
@@ -115,12 +151,12 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                .withBindAddress("tcp://*:6633")
                                .build();
 
-    // try register channel twoce.
+    // try register channel twice.
     {
       ZMQ.Poller poller = zmqContext().newPoller(1);
-      rep.register(poller); // register once.
+      rep.watchSendRecv(poller); // register once.
       try {
-        rep.register(poller); // register twice.
+        rep.watchSendRecv(poller); // register twice.
         fail();
       }
       catch (ZmqException e) {
@@ -138,12 +174,12 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                       .build();
 
       // use channel functions ...
-      assert !rep.hasInput();
-      assert !rep.hasOutput();
-
+      rep.watchSendRecv(zmqContext().newPoller(1));
+      assert !rep.canRecv();
+      assert !rep.canSend();
       // register again and check that this fails.
       try {
-        rep.register(zmqContext().newPoller(1));
+        rep.watchSendRecv(zmqContext().newPoller(1));
         fail();
       }
       catch (ZmqException e) {
@@ -155,7 +191,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     {
       rep.destroy();
       try {
-        rep.hasInput();
+        rep.canRecv();
         fail();
       }
       catch (ZmqException e) {
@@ -165,21 +201,61 @@ public class ZmqChannelTest extends ZmqAbstractTest {
   }
 
   @Test
-  public void t5() throws InterruptedException {
+  public void t6() {
     LOG.info("Test poller operations on connected channel.");
 
-    ZmqChannel c = ZmqChannel.builder()
-                             .withZmqContext(zmqContext())
-                             .ofDEALERType()
-                             .withConnectAddress("tcp://localhost:3388")
-                             .build();
+    ZmqChannel client = ZmqChannel.builder()
+                                  .withZmqContext(zmqContext())
+                                  .ofDEALERType()
+                                  .withWaitOnSend(0)
+                                  .withWaitOnRecv(100)
+                                  .withConnectAddress("tcp://localhost:6677")
+                                  .build();
 
-    ZmqChannel s = ZmqChannel.builder()
-                             .withZmqContext(zmqContext())
-                             .ofROUTERType()
-                             .withBindAddress("tcp://*:3388")
-                             .build();
+    ZmqChannel server = ZmqChannel.builder()
+                                  .withZmqContext(zmqContext())
+                                  .ofROUTERType()
+                                  .withWaitOnSend(0)
+                                  .withWaitOnRecv(100)
+                                  .withBindAddress("tcp://*:6677")
+                                  .build();
 
-    // TODO artemv: write some tests.
+    ZMQ.Poller clientPoller = zmqContext().newPoller(1);
+    client.watchRecv(clientPoller);
+
+    ZMQ.Poller serverPoller = zmqContext().newPoller(1);
+    server.watchRecv(serverPoller);
+
+    int timeout = 10;
+
+    clientPoller.poll(timeout);
+    assert !client.canRecv(); // no input initially.
+
+    serverPoller.poll(timeout);
+    assert !server.canRecv(); // no input initially.
+
+    assert client.send(HELLO()); // send once.
+    assert client.send(HELLO()); // send twice.
+    clientPoller.poll(timeout);
+    assert !client.canRecv(); // you don't have input yet (server not replied at this point).
+
+    serverPoller.poll(1000);
+    assert server.canRecv(); // at this point server has input.
+    assert server.recv() != null; // recv once.
+    serverPoller.poll(timeout);
+    assert server.canRecv(); // still server has input.
+    ZmqMessage req = server.recv(); // recv twice.
+    assert req != null;
+    serverPoller.poll(timeout);
+    assert !server.canRecv(); // no more input for server.
+    assert server.recv() == null; // and ofcourse you can't get input for server.
+    ZmqMessage rep = ZmqMessage.builder(req)
+                               .withPayload(WORLD().payload())
+                               .build();
+    assert server.send(rep); // reply to client.
+
+    clientPoller.poll(timeout);
+    assert client.canRecv(); // yes, client has input.
+    assert client.recv() != null;
   }
 }
