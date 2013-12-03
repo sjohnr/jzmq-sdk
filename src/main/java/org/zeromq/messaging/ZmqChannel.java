@@ -146,26 +146,12 @@ public final class ZmqChannel implements HasDestroy {
     }
 
     public Builder withWaitOnSend(int timeout) {
-      if (timeout >= 0) {
-        _target.timeoutSend = timeout;
-      }
-      return this;
-    }
-
-    public Builder withBlockOnSend() {
-      _target.timeoutSend = -1;
+      _target.timeoutSend = timeout;
       return this;
     }
 
     public Builder withWaitOnRecv(int timeout) {
-      if (timeout >= 0) {
-        _target.timeoutRecv = timeout;
-      }
-      return this;
-    }
-
-    public Builder withBlockOnRecv() {
-      _target.timeoutRecv = -1;
+      _target.timeoutRecv = timeout;
       return this;
     }
 

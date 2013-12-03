@@ -43,7 +43,7 @@ public final class ZmqContext implements HasInit, HasDestroy {
 
   private static final int DEFAULT_THREAD_NUM = 1;
 
-  private int threadNum;
+  private int threadNum = DEFAULT_THREAD_NUM;
 
   private ZMQ.Context _context;
   private List<ZMQ.Socket> _sockets = new ArrayList<ZMQ.Socket>();
@@ -57,15 +57,16 @@ public final class ZmqContext implements HasInit, HasDestroy {
   //// METHODS
 
   public void setThreadNum(int threadNum) {
-    this.threadNum = threadNum;
+    if (threadNum > 0) {
+      this.threadNum = threadNum;
+    }
   }
 
   /** Method does some sanity check and then creates the {@link #_context}. */
   @Override
   public void init() {
-    int t = threadNum > 0 ? threadNum : DEFAULT_THREAD_NUM;
-    LOG.info("Creating ZmqContext(threadNum={}) ...", t);
-    _context = ZMQ.context(t);
+    LOG.info("Creating ZmqContext(threadNum={}) ...", threadNum);
+    _context = ZMQ.context(threadNum);
     LOG.info("ZmqContext created.");
   }
 
