@@ -24,16 +24,12 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.6</maven.compiler.source>
     <maven.compiler.target>1.6</maven.compiler.target>
-    <jopt-simple.version>4.5</jopt-simple.version>
     <!-- Project deps -->
-    <maven-protoc-plugin.version>0.3.2</maven-protoc-plugin.version>
     <guava.version>12.0</guava.version>
     <junit.version>4.10</junit.version>
     <mockito-all.version>1.9.0</mockito-all.version>
     <jzmq.version>3.0.0</jzmq.version>
     <logback.version>1.0.13</logback.version>
-    <jcl-over-slf4j.version>1.7.5</jcl-over-slf4j.version>
-    <spring.version>3.2.2.RELEASE</spring.version>
     <jackson.version>2.2.3</jackson.version>
   </properties>
 
@@ -42,14 +38,12 @@
       <id>windows</id>
       <properties>
         <java.library.path>'${env.PATH}'</java.library.path>
-        <protobuf.version>2.5.0</protobuf.version>
       </properties>
     </profile>
     <profile>
       <id>travis-ci</id>
       <properties>
         <java.library.path>/usr/local/lib</java.library.path>
-        <protobuf.version>2.4.1</protobuf.version>
       </properties>
     </profile>
   </profiles>
@@ -64,16 +58,6 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
       <version>${jackson.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>net.sf.jopt-simple</groupId>
-      <artifactId>jopt-simple</artifactId>
-      <version>${jopt-simple.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.protobuf</groupId>
-      <artifactId>protobuf-java</artifactId>
-      <version>${protobuf.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -93,18 +77,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-test</artifactId>
-      <version>${spring.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>commons-logging</artifactId>
-          <groupId>commons-logging</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
       <groupId>org.zeromq</groupId>
       <artifactId>jzmq</artifactId>
       <version>${jzmq.version}</version>
@@ -114,39 +86,10 @@
       <artifactId>logback-classic</artifactId>
       <version>${logback.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
-      <version>${jcl-over-slf4j.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-context</artifactId>
-      <version>${spring.version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>commons-logging</artifactId>
-          <groupId>commons-logging</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
   </dependencies>
 
   <build>
     <plugins>
-      <plugin>
-        <groupId>com.google.protobuf.tools</groupId>
-        <artifactId>maven-protoc-plugin</artifactId>
-        <version>${maven-protoc-plugin.version}</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>compile</goal>
-              <goal>testCompile</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
