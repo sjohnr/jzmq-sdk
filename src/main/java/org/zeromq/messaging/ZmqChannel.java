@@ -50,6 +50,8 @@ public final class ZmqChannel implements HasDestroy {
   private static final int DEFAULT_WAIT_ON_RECV = 1000; // how long to wait on .recv(), best guess.
   private static final long DEFAULT_HWM_SEND = 1000; // HWM, best guess.
   private static final long DEFAULT_HWM_RECV = 1000; // HWM, best guess.
+  private static final long DEFAULT_RECONNECT_INTERVAL = 100; // reconnection interval, best guess.
+  private static final long DEFAULT_RECONNECT_INTERVAL_MAX = 60000; // reconnection interval max, best guess.
 
   private static final Logger LOG = LoggerFactory.getLogger(ZmqChannel.class);
 
@@ -155,6 +157,16 @@ public final class ZmqChannel implements HasDestroy {
       return this;
     }
 
+    public Builder withReconnectInterval(long reconnectInterval) {
+      _target.reconnectInterval = reconnectInterval;
+      return this;
+    }
+
+    public Builder withReconnectIntervalMax(long reconnectIntervalMax) {
+      _target.reconnectIntervalMax = reconnectIntervalMax;
+      return this;
+    }
+
     @Override
     public void checkInvariant() {
       if (_target.zmqContext == null) {
@@ -240,6 +252,10 @@ public final class ZmqChannel implements HasDestroy {
 
         // set socket identity: provided socket_prefix plus UUID long.
         setupSocketIdentity(socket);
+
+        // set reconnect settings.
+        socket.setReconnectIVL(_target.reconnectInterval);
+        socket.setReconnectIVLMax(_target.reconnectIntervalMax);
       }
 
       // ... and bind().
@@ -302,6 +318,8 @@ public final class ZmqChannel implements HasDestroy {
       opts.put("connect_addr", _target.connectAddresses);
       opts.put("timeout_send", socket.getSendTimeOut());
       opts.put("timeout_recv", socket.getReceiveTimeOut());
+      opts.put("reconn_intrvl", socket.getReconnectIVL());
+      opts.put("reconn_intrvl_max", socket.getReconnectIVLMax());
 
       LOG.info("Created socket: {}.", mapAsJson(opts));
     }
@@ -357,6 +375,8 @@ public final class ZmqChannel implements HasDestroy {
   private long linger = DEFAULT_LINGER;
   private int timeoutSend = DEFAULT_WAIT_ON_SEND;
   private int timeoutRecv = DEFAULT_WAIT_ON_RECV;
+  private long reconnectInterval = DEFAULT_RECONNECT_INTERVAL;
+  private long reconnectIntervalMax = DEFAULT_RECONNECT_INTERVAL_MAX;
 
   private ZMQ.Socket _socket;
   private ObjectAdapter<ZmqFrames, ZmqMessage> _inputAdapter;
