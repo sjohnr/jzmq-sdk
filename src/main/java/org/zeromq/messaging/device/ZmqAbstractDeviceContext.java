@@ -88,6 +88,9 @@ public abstract class ZmqAbstractDeviceContext implements ZmqRunnableContext {
 
   @Override
   public final void block() {
+    if (_poller == null) {
+      throw ZmqException.fatal();
+    }
     _poller.poll(pollTimeout);
   }
 }
