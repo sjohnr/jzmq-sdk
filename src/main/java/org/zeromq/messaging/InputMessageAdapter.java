@@ -135,5 +135,4 @@ class InputMessageAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
       throw ZmqException.seeCause(e);
     }
   }
-
 }

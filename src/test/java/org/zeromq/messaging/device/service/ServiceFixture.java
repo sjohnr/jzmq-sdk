@@ -225,39 +225,40 @@ class ServiceFixture extends BaseFixture {
                         });
   }
 
-  Client newBindingClient(ZmqContext zmqContext, String bindAddress) {
-    Client target = Client.builder()
-                          .withChannelBuilder(
-                              ZmqChannel.builder()
-                                        .withZmqContext(zmqContext)
-                                        .ofDEALERType()
-                                        .withBindAddress(bindAddress))
-                          .build();
+  SyncClient newBindingClient(ZmqContext zmqContext, String bindAddress) {
+    SyncClient target = SyncClient.builder()
+                                  .withChannelBuilder(
+                                      ZmqChannel.builder()
+                                                .withZmqContext(zmqContext)
+                                                .ofDEALERType()
+                                                .withBindAddress(bindAddress))
+                                  .build();
 
     with(target);
     return target;
   }
 
-  Client newConnClient(ZmqContext zmqContext, String... connAddresses) {
-    Client target = Client.builder()
-                          .withChannelBuilder(ZmqChannel.builder()
-                                                        .withZmqContext(zmqContext)
-                                                        .ofDEALERType()
-                                                        .withConnectAddresses(Arrays.asList(connAddresses)))
-                          .build();
+  SyncClient newConnClient(ZmqContext zmqContext, String... connAddresses) {
+    SyncClient target = SyncClient.builder()
+                                  .withChannelBuilder(ZmqChannel.builder()
+                                                                .withZmqContext(zmqContext)
+                                                                .ofDEALERType()
+                                                                .withConnectAddresses(Arrays.asList(
+                                                                    connAddresses)))
+                                  .build();
     with(target);
     return target;
   }
 
-  Client newConnClientWithIdentity(ZmqContext zmqContext, String identityPrefix, String... connAddresses) {
-    Client target = Client.builder()
-                          .withChannelBuilder(
-                              ZmqChannel.builder()
-                                        .withZmqContext(zmqContext)
-                                        .ofDEALERType()
-                                        .withConnectAddresses(Arrays.asList(connAddresses))
-                                        .withSocketIdentityPrefix(identityPrefix.getBytes()))
-                          .build();
+  SyncClient newConnClientWithIdentity(ZmqContext zmqContext, String identityPrefix, String... connAddresses) {
+    SyncClient target = SyncClient.builder()
+                                  .withChannelBuilder(
+                                      ZmqChannel.builder()
+                                                .withZmqContext(zmqContext)
+                                                .ofDEALERType()
+                                                .withConnectAddresses(Arrays.asList(connAddresses))
+                                                .withSocketIdentityPrefix(identityPrefix.getBytes()))
+                                  .build();
     with(target);
     return target;
   }

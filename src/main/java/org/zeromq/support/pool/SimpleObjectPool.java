@@ -138,4 +138,9 @@ public final class SimpleObjectPool<T> implements ObjectPool<T> {
     }
     return lease;
   }
+
+  @Override
+  public void destroy() {
+    // no-op.
+  }
 }

@@ -54,17 +54,17 @@ public abstract class ZmqAbstractFairServiceDispatcher extends ZmqAbstractServic
 
       boolean sent = _backend.send(message);
       if (!sent) {
-        LOG.info("Can't send message on backend. Asking to TRY_AGAIN ...");
-        boolean sentTryAgain = _frontend.send(ZmqMessage.builder(message)
-                                                        .withHeaders(new ServiceHeaders()
-                                                                         .copy(message.headers())
-                                                                         .setMsgTypeTryAgain())
-                                                        .build());
-        if (sentTryAgain) {
-          LOG.info("Asked to TRY_AGAIN.");
+        LOG.info("Can't send message on backend. Asking to retry ...");
+        boolean sentRetry = _frontend.send(ZmqMessage.builder(message)
+                                                     .withHeaders(new ServiceHeaders()
+                                                                      .copy(message.headers())
+                                                                      .setMsgTypeRetry())
+                                                     .build());
+        if (sentRetry) {
+          LOG.info("Asked to retry.");
         }
         else {
-          LOG.warn("Didn't send TRY_AGAIN!");
+          LOG.warn("Didn't send retry!");
         }
       }
     }

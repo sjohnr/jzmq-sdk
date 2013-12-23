@@ -179,17 +179,17 @@ public final class LruRouter extends ZmqAbstractServiceDispatcher {
       catch (ZmqException e) {
         ZmqException.ErrorCode errorCode = e.errorCode();
         if (errorCode == SOCKET_IDENTITY_STORAGE_IS_EMPTY || errorCode == SOCKET_IDENTITY_NOT_MATCHED) {
-          LOG.info("Can't obtain routing_identity (err_code={}). Asking to TRY_AGAIN ...", errorCode);
-          boolean sentTryAgain = _frontend.send(ZmqMessage.builder(message)
-                                                          .withHeaders(new ServiceHeaders()
-                                                                           .copy(origHeaders)
-                                                                           .setMsgTypeTryAgain())
-                                                          .build());
-          if (sentTryAgain) {
-            LOG.info("Asked to TRY_AGAIN.");
+          LOG.info("Can't obtain routing_identity (err_code={}). Asking to retry ...", errorCode);
+          boolean sentRetry = _frontend.send(ZmqMessage.builder(message)
+                                                       .withHeaders(new ServiceHeaders()
+                                                                        .copy(origHeaders)
+                                                                        .setMsgTypeRetry())
+                                                       .build());
+          if (sentRetry) {
+            LOG.info("Asked to retry.");
           }
           else {
-            LOG.warn("Didn't send TRY_AGAIN!");
+            LOG.warn("Didn't send retry!");
           }
           return;
         }

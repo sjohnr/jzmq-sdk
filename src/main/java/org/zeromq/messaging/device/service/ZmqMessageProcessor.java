@@ -25,7 +25,7 @@ import org.zeromq.messaging.ZmqMessage;
 /**
  * Entry point for processing incoming {@link ZmqMessage} on behalf of {@link ZmqAbstractWorker}.
  * <p/>
- * Client implementations should encapsulte parsing of incoming {@link ZmqMessage},
+ * Implementations should encapsulte parsing of incoming {@link ZmqMessage},
  * deserializing his payload and passing object down in the call chain.
  * Reverse process is similar: object should be converted back to the
  * {@link ZmqMessage} message.

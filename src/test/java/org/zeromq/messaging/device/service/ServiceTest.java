@@ -26,15 +26,12 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.Checker;
 import org.zeromq.messaging.ZmqAbstractTest;
 import org.zeromq.messaging.ZmqChannel;
-import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNull;
-import static org.junit.Assert.fail;
 import static org.zeromq.messaging.device.service.ServiceFixture.Answering;
 
 public class ServiceTest extends ZmqAbstractTest {
@@ -65,7 +62,8 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    SyncClient client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    client.lease();
     int MESSAGE_NUM = 10;
     try {
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -74,6 +72,7 @@ public class ServiceTest extends ZmqAbstractTest {
       assert client.recv() == null;
     }
     finally {
+      client.release();
       f.destroy();
     }
   }
@@ -102,7 +101,8 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    SyncClient client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -114,13 +114,13 @@ public class ServiceTest extends ZmqAbstractTest {
       assertEquals(MESSAGE_NUM, replies.size());
     }
     finally {
+      client.release();
       f.destroy();
     }
   }
 
   @Test
   public void t2() {
-
     LOG.info(
         "\n" +
         "******************************************************** \n" +
@@ -144,7 +144,8 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    SyncClient client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -156,6 +157,7 @@ public class ServiceTest extends ZmqAbstractTest {
       assertEquals(MESSAGE_NUM, replies.size());
     }
     finally {
+      client.release();
       f.destroy();
     }
   }
@@ -166,7 +168,7 @@ public class ServiceTest extends ZmqAbstractTest {
         "\n" +
         "*************************************************************** \n" +
         "                                                                \n" +
-        "Test DEALER(try_again=true) <--> ROUTER-ROUTER <--> DEALER.     \n" +
+        "Test DEALER(retry=true) <--> ROUTER-ROUTER <--> DEALER.         \n" +
         "                                                                \n" +
         "                          LRU                                   \n" +
         "----------         -----------------         ----------         \n" +
@@ -185,7 +187,8 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    SyncClient client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    client.lease();
     try {
       for (int i = 0; i < MESSAGE_NUM; i++) {
         assert client.send(HELLO());
@@ -193,6 +196,7 @@ public class ServiceTest extends ZmqAbstractTest {
       assert client.recv() == null;
     }
     finally {
+      client.release();
       f.destroy();
     }
   }
@@ -203,7 +207,7 @@ public class ServiceTest extends ZmqAbstractTest {
         "\n" +
         "******************************************************************************************* \n" +
         "                                                                                            \n" +
-        "Test DEALER(try_again=true) <--> ROUTER-DEALER <--> ROUTER-ROUTER <--> DEALER.              \n" +
+        "Test DEALER(retry=true) <--> ROUTER-DEALER <--> ROUTER-ROUTER <--> DEALER.                  \n" +
         "                                                                                            \n" +
         "                           gateway                            LRU                           \n" +
         "----------         --------------------------          -----------------         ---------- \n" +
@@ -223,7 +227,8 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    Client client = f.newConnClient(zmqContext(), "inproc://gateway");
+    SyncClient client = f.newConnClient(zmqContext(), "inproc://gateway");
+    client.lease();
     int MESSAGE_NUM = 10;
     try {
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -232,6 +237,7 @@ public class ServiceTest extends ZmqAbstractTest {
       assert client.recv() == null;
     }
     finally {
+      client.release();
       f.destroy();
     }
   }
@@ -268,7 +274,8 @@ public class ServiceTest extends ZmqAbstractTest {
 
     Runnable client = new Runnable() {
       public void run() {
-        Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+        SyncClient client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+        client.lease();
         Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
         for (int i = 0; i < MESSAGE_NUM; i++) {
           assert client.send(HELLO());
@@ -276,6 +283,7 @@ public class ServiceTest extends ZmqAbstractTest {
           assertPayload("world", reply);
           replies.add(reply);
         }
+        client.release();
         assertEquals(MESSAGE_NUM, replies.size());
       }
     };
@@ -334,13 +342,12 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    SyncClient client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    client.lease();
     try {
-      for (int i = 0; i < MESSAGE_NUM; i++) {
-        assert client.send(HELLO());
-      }
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
       for (int i = 0; i < MESSAGE_NUM; i++) {
+        assert client.send(HELLO());
         ZmqMessage reply = client.recv();
         assertPayload("world", reply);
         replies.add(reply);
@@ -348,6 +355,7 @@ public class ServiceTest extends ZmqAbstractTest {
       assertEquals(MESSAGE_NUM, replies.size());
     }
     finally {
+      client.release();
       f.destroy();
     }
   }
@@ -390,15 +398,17 @@ public class ServiceTest extends ZmqAbstractTest {
         new Runnable() {
           @Override
           public void run() {
-            Client c = f.newConnClientWithIdentity(zmqContext(), "X", "tcp://localhost:" + 333);
-            Collection<ZmqMessage> rr = new ArrayList<ZmqMessage>();
+            SyncClient client = f.newConnClientWithIdentity(zmqContext(), "X", "tcp://localhost:" + 333);
+            client.lease();
+            Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
             for (int i = 0; i < MESSAGE_NUM; i++) {
-              assert c.send(HELLO());
-              ZmqMessage reply = c.recv();
+              assert client.send(HELLO());
+              ZmqMessage reply = client.recv();
               assertPayload("shirt", reply);
-              rr.add(reply);
+              replies.add(reply);
             }
-            assertEquals(MESSAGE_NUM, rr.size());
+            client.release();
+            assertEquals(MESSAGE_NUM, replies.size());
           }
         }
     );
@@ -410,15 +420,17 @@ public class ServiceTest extends ZmqAbstractTest {
         new Runnable() {
           @Override
           public void run() {
-            Client c = f.newConnClientWithIdentity(zmqContext(), "Y", "tcp://localhost:" + 333);
-            Collection<ZmqMessage> rr = new ArrayList<ZmqMessage>();
+            SyncClient client = f.newConnClientWithIdentity(zmqContext(), "Y", "tcp://localhost:" + 333);
+            client.lease();
+            Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
             for (int i = 0; i < MESSAGE_NUM; i++) {
-              assert c.send(HELLO());
-              ZmqMessage reply = c.recv();
+              assert client.send(HELLO());
+              ZmqMessage reply = client.recv();
               assertPayload("carp", reply);
-              rr.add(reply);
+              replies.add(reply);
             }
-            assertEquals(MESSAGE_NUM, rr.size());
+            client.release();
+            assertEquals(MESSAGE_NUM, replies.size());
           }
         }
     );
@@ -466,7 +478,8 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    SyncClient client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -478,6 +491,7 @@ public class ServiceTest extends ZmqAbstractTest {
       assertEquals(MESSAGE_NUM, replies.size());
     }
     finally {
+      client.release();
       f.destroy();
     }
   }
@@ -513,7 +527,8 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    SyncClient client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -525,6 +540,7 @@ public class ServiceTest extends ZmqAbstractTest {
       assertEquals(MESSAGE_NUM, replies.size());
     }
     finally {
+      client.release();
       f.destroy();
     }
   }
@@ -562,9 +578,10 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    Client client = f.newConnClient(zmqContext(),
-                                    "tcp://localhost:" + 555,
-                                    "tcp://localhost:" + 556);
+    SyncClient client = f.newConnClient(zmqContext(),
+                                        "tcp://localhost:" + 555,
+                                        "tcp://localhost:" + 556);
+    client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -576,6 +593,7 @@ public class ServiceTest extends ZmqAbstractTest {
       assertEquals(MESSAGE_NUM, replies.size());
     }
     finally {
+      client.release();
       f.destroy();
     }
   }
@@ -618,19 +636,19 @@ public class ServiceTest extends ZmqAbstractTest {
 
     int HWM_FOR_SEND = 10;
     int NUM_OF_NOTAVAIL = 2;
-    Client client = Client.builder()
-                          .withChannelBuilder(
-                              ZmqChannel.builder()
-                                        .withZmqContext(zmqContext())
-                                        .ofDEALERType()
-                                        .withWaitOnSend(100)
-                                        .withWaitOnRecv(100)
-                                        .withHwmForSend(HWM_FOR_SEND)
-                                        .withConnectAddress("tcp://localhost:" + 556)
-                                        .withConnectAddress("tcp://localhost:" + 555)
-                                        .withConnectAddress("tcp://localhost:" + 559))
-                          .build();
-
+    SyncClient client = SyncClient.builder()
+                                  .withChannelBuilder(
+                                      ZmqChannel.builder()
+                                                .withZmqContext(zmqContext())
+                                                .ofDEALERType()
+                                                .withWaitOnSend(100)
+                                                .withWaitOnRecv(100)
+                                                .withHwmForSend(HWM_FOR_SEND)
+                                                .withConnectAddress("tcp://localhost:" + 556)
+                                                .withConnectAddress("tcp://localhost:" + 555)
+                                                .withConnectAddress("tcp://localhost:" + 559))
+                                  .build();
+    client.lease();
     int MESSAGE_NUM = 10 * HWM_FOR_SEND; // number of messages -- several times bigger than HWM.
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
@@ -645,6 +663,7 @@ public class ServiceTest extends ZmqAbstractTest {
       assertEquals(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM_FOR_SEND, replies.size());
     }
     finally {
+      client.release();
       f.destroy();
     }
   }
@@ -680,7 +699,8 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    Client client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    SyncClient client = f.newConnClient(zmqContext(), "tcp://localhost:" + 333);
+    client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -692,57 +712,13 @@ public class ServiceTest extends ZmqAbstractTest {
       assertEquals(MESSAGE_NUM, replies.size());
     }
     finally {
+      client.release();
       f.destroy();
     }
   }
 
   @Test
   public void t13() {
-    LOG.info(
-        "\n" +
-        "**************************************************** \n" +
-        "                                                     \n" +
-        "Test DEALER <--> [ROUTER].                           \n" +
-        "                                                     \n" +
-        "                                     --------------- \n" +
-        "                                     |             | \n" +
-        "------------   ____hello>>__<<carp___| ROUTER(333) | \n" +
-        "|          |  /                      |             | \n" +
-        "|          | /                       --------------- \n" +
-        "|  DEALER  |/                                        \n" +
-        "|          |\\                       --------------- \n" +
-        "|          | \\                      |             | \n" +
-        "------------  \\___hello>>__<<shirt__| ROUTER(334) | \n" +
-        "                                    |             |  \n" +
-        "                                    ---------------  \n" +
-        "                                                     \n" +
-        "**************************************************** \n");
-
-    ServiceFixture f = new ServiceFixture();
-    {
-      f.workerWellknown(zmqContext(), "tcp://*:" + 333, new Answering(CARP()));
-      f.workerWellknown(zmqContext(), "tcp://*:" + 334, new Answering(SHIRT()));
-    }
-    f.init();
-
-    Client client = f.newConnClient(zmqContext(),
-                                    "tcp://localhost:" + 333,
-                                    "tcp://localhost:" + 334);
-    try {
-      Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
-      for (int i = 0; i < MESSAGE_NUM; i++) {
-        assert client.send(HELLO());
-        replies.add(client.recv());
-      }
-      assertEquals(MESSAGE_NUM, replies.size());
-    }
-    finally {
-      f.destroy();
-    }
-  }
-
-  @Test
-  public void t14() {
     LOG.info(
         "\n" +
         "**************************************************** \n" +
@@ -770,7 +746,8 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    Client client = f.newBindingClient(zmqContext(), "tcp://*:" + 222);
+    SyncClient client = f.newBindingClient(zmqContext(), "tcp://*:" + 222);
+    client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -780,12 +757,13 @@ public class ServiceTest extends ZmqAbstractTest {
       assertEquals(MESSAGE_NUM, replies.size());
     }
     finally {
+      client.release();
       f.destroy();
     }
   }
 
   @Test
-  public void t15() {
+  public void t14() {
     LOG.info(
         "\n" +
         "******************************************************* \n" +
@@ -813,9 +791,10 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    Client client = f.newConnClient(zmqContext(),
-                                    "tcp://localhost:" + 333,
-                                    "tcp://localhost:" + 334);
+    SyncClient client = f.newConnClient(zmqContext(),
+                                        "tcp://localhost:" + 333,
+                                        "tcp://localhost:" + 334);
+    client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -827,12 +806,13 @@ public class ServiceTest extends ZmqAbstractTest {
       assertEquals(MESSAGE_NUM, replies.size());
     }
     finally {
+      client.release();
       f.destroy();
     }
   }
 
   @Test
-  public void t16() {
+  public void t15() {
     LOG.info(
         "\n" +
         "**************************************************** \n" +
@@ -857,11 +837,12 @@ public class ServiceTest extends ZmqAbstractTest {
 
     // NOTE: this test case relies on HWM defaults settings which come along with every socket.
     // test will send 8 message, hopefully, 8 - is not greater or equal to default HWM settings.
-    Client client = f.newConnClient(zmqContext(),
-                                    "tcp://localhost:" + 333,  // NOT_AVAIL
-                                    "tcp://localhost:" + 334,  // NOT_AVAIL
-                                    "tcp://localhost:" + 335,  // NOT_AVAIL
-                                    "tcp://localhost:" + 336); // NOT_AVAIL
+    SyncClient client = f.newConnClient(zmqContext(),
+                                        "tcp://localhost:" + 333,  // NOT_AVAIL
+                                        "tcp://localhost:" + 334,  // NOT_AVAIL
+                                        "tcp://localhost:" + 335,  // NOT_AVAIL
+                                        "tcp://localhost:" + 336); // NOT_AVAIL
+    client.lease();
     try {
       int MESSAGE_NUM = 10; // message num being sent is significantly less than default HWM.
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -869,12 +850,13 @@ public class ServiceTest extends ZmqAbstractTest {
       }
     }
     finally {
+      client.release();
       f.destroy();
     }
   }
 
   @Test
-  public void t17() {
+  public void t16() {
     LOG.info(
         "\n" +
         "******************************************************* \n" +
@@ -906,19 +888,19 @@ public class ServiceTest extends ZmqAbstractTest {
 
     int HWM_FOR_SEND = 10;
     int NUM_OF_NOTAVAIL = 2;
-    Client client = Client.builder()
-                          .withChannelBuilder(
-                              ZmqChannel.builder()
-                                        .withZmqContext(zmqContext())
-                                        .ofDEALERType()
-                                        .withWaitOnSend(100)
-                                        .withWaitOnRecv(100)
-                                        .withHwmForSend(HWM_FOR_SEND)
-                                        .withConnectAddress("tcp://localhost:" + 777)
-                                        .withConnectAddress("tcp://localhost:" + livePort)
-                                        .withConnectAddress("tcp://localhost:" + 780))
-                          .build();
-
+    SyncClient client = SyncClient.builder()
+                                  .withChannelBuilder(
+                                      ZmqChannel.builder()
+                                                .withZmqContext(zmqContext())
+                                                .ofDEALERType()
+                                                .withWaitOnSend(100)
+                                                .withWaitOnRecv(100)
+                                                .withHwmForSend(HWM_FOR_SEND)
+                                                .withConnectAddress("tcp://localhost:" + 777)
+                                                .withConnectAddress("tcp://localhost:" + livePort)
+                                                .withConnectAddress("tcp://localhost:" + 780))
+                                  .build();
+    client.lease();
     int MESSAGE_NUM = 10 * HWM_FOR_SEND; // number of messages -- several times bigger than HWM.
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
@@ -933,76 +915,7 @@ public class ServiceTest extends ZmqAbstractTest {
       assertEquals(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM_FOR_SEND, replies.size());
     }
     finally {
-      f.destroy();
-    }
-  }
-
-  @Test
-  public void t18() {
-    LOG.info(
-        "\n" +
-        "******************************************************* \n" +
-        "                                                        \n" +
-        "Test DEALER (with 'correlation_id') <--> [ROUTER].      \n" +
-        "                                                        \n" +
-        "                                       ---------------  \n" +
-        "                                       |             |  \n" +
-        "------------   ____hello>>__<<world____| ROUTER(333) |  \n" +
-        "|          |  /                        |             |  \n" +
-        "|          | /                         ---------------  \n" +
-        "|  DEALER  |/                                           \n" +
-        "|          |\\                          --------------- \n" +
-        "|          | \\                         |             | \n" +
-        "------------  \\____hello>>__<<world____| ROUTER(334) | \n" +
-        "                                       |             |  \n" +
-        "                                       ---------------  \n" +
-        "                                                        \n" +
-        "******************************************************* \n");
-
-    ServiceFixture f = new ServiceFixture();
-    {
-      f.workerWellknown(zmqContext(), "tcp://*:" + 333, new Answering(WORLD()));
-      f.workerWellknown(zmqContext(), "tcp://*:" + 334, new Answering(WORLD()));
-    }
-    f.init();
-
-    Client client = Client.builder()
-                          .withChannelBuilder(
-                              ZmqChannel.builder()
-                                        .withZmqContext(zmqContext())
-                                        .ofDEALERType()
-                                        .withConnectAddress("tcp://localhost:" + 333)
-                                        .withConnectAddress("tcp://localhost:" + 334))
-                          .build();
-    int correlationId = 1;
-    ZmqMessage hello = HELLO();
-    try {
-      // check nomal interaction.
-      Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
-      for (int i = 0; i < MESSAGE_NUM; i++) {
-        ZmqMessage helloCopy = ZmqMessage.builder(hello)
-                                         .withHeaders(new ServiceHeaders()
-                                                          .copy(hello.headers())
-                                                          .setCorrId(correlationId))
-                                         .build();
-        assert client.send(helloCopy);
-        ZmqMessage reply = client.recv();
-        assertPayload("world", reply);
-        replies.add(reply);
-      }
-      assertEquals(MESSAGE_NUM, replies.size());
-
-      // check exceptional cases: no 'correlation_id' header in the message.
-      try {
-        client.send(HELLO());
-        fail();
-      }
-      catch (ZmqException e) {
-      }
-      // calling .recv() before .send().
-      assertNull(client.recv());
-    }
-    finally {
+      client.release();
       f.destroy();
     }
   }
