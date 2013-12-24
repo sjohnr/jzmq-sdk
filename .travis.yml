@@ -25,11 +25,11 @@ install:
  - sudo ./configure
  - sudo make
  - sudo make install
- - sudo mvn install -e --quiet -DskipTests=true -Dgpg.skip=true
+ - mvn install -e --quiet -DskipTests=true -Dgpg.skip=true
  - cd ..
 
 before_script:
- - sudo mvn install -e --quiet -Ptravis-ci -DskipTests -Ptravis-ci
+ - mvn install -e --quiet -Ptravis-ci -DskipTests -Ptravis-ci
 
 script:
- - sudo mvn test -e -Ptravis-ci
+ - mvn test -e -Ptravis-ci
