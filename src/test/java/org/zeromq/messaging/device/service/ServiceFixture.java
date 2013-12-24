@@ -185,8 +185,12 @@ class ServiceFixture extends BaseFixture {
 
     private final ZmqMessage ANSWER;
 
-    public Answering(ZmqMessage ANSWER) {
+    private Answering(ZmqMessage ANSWER) {
       this.ANSWER = ANSWER;
+    }
+
+    public static Answering answering(ZmqMessage ANSWER) {
+      return new Answering(ANSWER);
     }
 
     @Override

@@ -40,7 +40,7 @@ public class PubSubTest extends ZmqAbstractTest {
       return ZmqChannel.builder()
                        .withZmqContext(zmqContext)
                        .ofPUBType()
-                       .withBindAddress("inproc://p")
+                       .withBindAddress(inprocAddr("p"))
                        .build();
     }
 
@@ -48,7 +48,7 @@ public class PubSubTest extends ZmqAbstractTest {
       return ZmqChannel.builder()
                        .withZmqContext(zmqContext)
                        .ofSUBType()
-                       .withConnectAddress("inproc://p")
+                       .withConnectAddress(inprocAddr("p"))
                        .build();
     }
   }

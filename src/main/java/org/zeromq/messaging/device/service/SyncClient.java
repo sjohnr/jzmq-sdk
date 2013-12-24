@@ -39,7 +39,7 @@ public final class SyncClient implements HasDestroy {
 
   private static final Logger LOG = LoggerFactory.getLogger(SyncClient.class);
 
-  private static final long DEFAULT_RETRY_TIMEOUT = 1000; // timeout before give up and returning null.
+  private static final long DEFAULT_RETRY_TIMEOUT = 3000; // timeout before give up and returning null.
 
   public static final class Builder implements ObjectBuilder<SyncClient> {
 

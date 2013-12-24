@@ -28,8 +28,6 @@ import static junit.framework.Assert.assertEquals;
 public abstract class ZmqAbstractTest {
 
   public static final long MESSAGE_NUM = 100;
-  public static final String NOT_AVAIL_0 = "tcp://localhost:667";
-  public static final String NOT_AVAIL_1 = "tcp://localhost:670";
 
   private final ZmqContext _ctx = new ZmqContext();
 
@@ -67,5 +65,25 @@ public abstract class ZmqAbstractTest {
     assert message != null;
     assert message.payload() != null;
     assertEquals(payload, new String(message.payload()));
+  }
+
+  public static String connAddr(int port) {
+    return "tcp://localhost:" + port;
+  }
+
+  public static String bindAddr(int port) {
+    return "tcp://*:" + port;
+  }
+
+  public static String notAvailConnAddr0() {
+    return "tcp://localhost:667";
+  }
+
+  public static String notAvailConnAddr1() {
+    return "tcp://localhost:670";
+  }
+
+  public static String inprocAddr(String addr) {
+    return "inproc://" + addr;
   }
 }

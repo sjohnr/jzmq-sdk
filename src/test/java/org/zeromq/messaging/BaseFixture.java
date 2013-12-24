@@ -47,10 +47,12 @@ public class BaseFixture implements HasInit, HasDestroy {
   }
 
   public final void with(HasDestroy d) {
+    assert d != null;
     _d.add(d);
   }
 
   public final void with(ZmqRunnable r) {
+    assert r != null;
     _t.withRunnable(r);
   }
 }
