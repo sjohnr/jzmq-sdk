@@ -33,10 +33,7 @@ import org.zeromq.support.pool.ObjectPool;
 import org.zeromq.support.pool.SimpleObjectPool;
 
 import java.util.BitSet;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
 
 public final class SyncClient implements HasDestroy {
 
@@ -63,14 +60,14 @@ public final class SyncClient implements HasDestroy {
       return this;
     }
 
-    public Builder withCorrelation(ObjectBuilder<Long> correlation) {
-      _target.correlation = correlation;
+    public Builder withCorrIdProvider(ObjectBuilder<Long> corrIdProvider) {
+      _target.corrIdProvider = corrIdProvider;
       return this;
     }
 
     @Override
     public void checkInvariant() {
-      if (_target.correlation == null) {
+      if (_target.corrIdProvider == null) {
         throw ZmqException.fatal();
       }
       if (_target.channelBuilder == null) {
@@ -91,7 +88,7 @@ public final class SyncClient implements HasDestroy {
         public Client build() {
           return new Client(_target.channelBuilder.build(),
                             _target.retryTimeout,
-                            _target.correlation);
+                            _target.corrIdProvider);
         }
       };
       _target._clientPool = new SimpleObjectPool<Client>(clientBuilder);
@@ -101,83 +98,89 @@ public final class SyncClient implements HasDestroy {
 
   private static class Client {
 
+    static final int BIT_SEND = 0;
+    static final int BIT_RECV = 1;
+
     final ZmqChannel channel;
     final long retryTimeout;
-    final ObjectBuilder<Long> correlation;
+    final ObjectBuilder<Long> corrIdProvider;
 
-    final State _state = new State();
-    final Map<Long, AtomicLong> _history = new HashMap<Long, AtomicLong>(1);
+    final BitSet _state = new BitSet(2); // state is always either SEND or RECV.
+    Long _corrId;
 
-    Client(ZmqChannel channel, long retryTimeout, ObjectBuilder<Long> correlation) {
+    Client(ZmqChannel channel, long retryTimeout, ObjectBuilder<Long> corrIdProvider) {
       this.channel = channel;
       this.retryTimeout = retryTimeout;
-      this.correlation = correlation;
+      this.corrIdProvider = corrIdProvider;
+      // initially, set client' state to SEND and RECV, to both.
+      _state.set(BIT_SEND);
+      _state.set(BIT_RECV);
     }
 
     boolean send(ZmqMessage message) {
-      ServiceHeaders headers = message.headersAs(ServiceHeaders.class);
-      if (_state.isInitial() || _state.setSending()) {
-        _history.clear();
-        if (headers.getHeaderOrNull(ServiceHeaders.HEADER_CORRELATION_ID) == null) {
-          Long corrId = correlation.build();
-          headers = new ServiceHeaders().copy(headers).setCorrId(corrId);
-          message = ZmqMessage.builder(message)
-                              .withHeaders(headers)
-                              .build();
-        }
-      }
-      handleCorrelationOnSend(headers);
+      setSend();
+
+      message = ZmqMessage.builder(message)
+                          .withHeaders(new ServiceHeaders()
+                                           .copy(message.headers())
+                                           .setCorrId(_corrId))
+                          .build();
+
       return channel.send(message);
     }
 
     ZmqMessage recv() {
-      _state.setReceiving();
+      setRecv();
 
+      // recv first time.
       Stopwatch timer = new Stopwatch().start();
       ZmqMessage message = channel.recv();
       timer.stop();
 
       if (message != null) {
-        ServiceHeaders headers = message.headersAs(ServiceHeaders.class);
         int i = 0;
         long t = retryTimeout;
-        long nextTimeout;
+        long timeout;
         do {
+          ServiceHeaders headers = message.headersAs(ServiceHeaders.class);
+          validate(headers);
           if (headers.isMsgTypeNotSet()) {
-            handleCorrelationOnRecv(headers);
             return message;
           }
-          if (!headers.isMsgTypeRetry()) {
-            LOG.error("Unsupported 'msg_type' detected. Returning null.");
-            return null;
-          }
-          nextTimeout = t - Math.max(timer.elapsedMillis(), 1);
-          if (nextTimeout <= 0) {
-            LOG.warn("Can't retry: timeout({} ms) exceeded. Returning null.", retryTimeout);
-            return null;
-          }
+          if (headers.isMsgTypeRetry()) {
+            timeout = t - Math.max(timer.elapsedMillis(), 1);
+            if (timeout <= 0) {
+              LOG.warn("Can't retry: timeout({} ms) exceeded. Returning null.", retryTimeout);
+              return null;
+            }
 
-          LOG.debug("Retry detected. Calling.");
-          timer.reset().start();
-          boolean sent = channel.send(ZmqMessage.builder(message)
-                                                .withHeaders(new ServiceHeaders()
-                                                                 .copy(message.headers())
-                                                                 .setMsgTypeNotSet())
-                                                .build());
-          if (!sent) {
-            LOG.warn("Can't retry: .send() failed! Returning null.");
-            return null;
-          }
-          message = channel.recv();
-          timer.stop();
+            timer.reset().start();
+            LOG.debug("Retry detected. Calling.");
+            boolean sent = channel.send(ZmqMessage.builder(message)
+                                                  .withHeaders(new ServiceHeaders()
+                                                                   .copy(message.headers())
+                                                                   .setMsgTypeNotSet())
+                                                  .build());
+            if (!sent) {
+              LOG.warn("Can't retry: .send() failed! Returning null.");
+              return null;
+            }
+            message = channel.recv();
+            timer.stop();
 
-          if (message == null) {
-            LOG.warn("Can't retry: .recv() failed! Returning null.");
-            return null;
-          }
+            if (message == null) {
+              LOG.warn("Can't retry: .recv() failed! Returning null.");
+              return null;
+            }
 
-          i++;
-          t = nextTimeout;
+            i++;
+            t = timeout;
+          }
+          else {
+            String msgType = headers.getHeaderOrException(ServiceHeaders.HEADER_MSG_TYPE);
+            LOG.error("!!! Unsupported msg_type={} detected.", msgType);
+            throw ZmqException.wrongMessage();
+          }
         }
         while (true);
       }
@@ -185,70 +188,38 @@ public final class SyncClient implements HasDestroy {
       return message;
     }
 
-    void handleCorrelationOnSend(ServiceHeaders headers) {
-      Long corrId = headers.getCorrId();
-      AtomicLong counter = _history.get(corrId);
-      if (counter == null) {
-        _history.put(corrId, counter = new AtomicLong());
-        if (_history.size() > 1) {
-          LOG.error("!!! Multiple 'correlation_id'-s detected.");
-          throw ZmqException.wrongMessage();
-        }
+    boolean setSend() {
+      _state.set(BIT_SEND);
+      boolean wasRecv = _state.get(BIT_RECV);
+      _state.clear(BIT_RECV);
+      if (wasRecv) {
+        // clear saved state.
+        _corrId = null;
+        // setup any new preparations for sending.
+        _corrId = corrIdProvider.build();
       }
-      counter.incrementAndGet();
+      return wasRecv;
     }
 
-    void handleCorrelationOnRecv(ServiceHeaders headers) {
-      AtomicLong counter = _history.get(headers.getCorrId());
-      if (counter == null) {
-        LOG.error("!!! Unrecognized 'correlation_id'.");
+    boolean setRecv() {
+      _state.set(BIT_RECV);
+      boolean wasSend = _state.get(BIT_SEND);
+      _state.clear(BIT_SEND);
+      return wasSend;
+    }
+
+    void validate(ServiceHeaders headers) {
+      Long corrId = headers.getCorrId();
+      if (_corrId.compareTo(corrId) != 0) {
+        LOG.error("!!! Unrecognized correlation_id={} (expected {}).", corrId, _corrId);
         throw ZmqException.wrongMessage();
       }
-      else {
-        if (counter.decrementAndGet() == 0) {
-          _history.clear();
-        }
-      }
-    }
-  }
-
-  private static class State {
-
-    static final int BIT_SENDING = 0;
-    static final int BIT_RECEIVING = 1;
-
-    final BitSet _op = new BitSet(2);
-
-    boolean isInitial() {
-      return _op.cardinality() == 0;
-    }
-
-    boolean setSending() {
-      _op.set(BIT_SENDING);
-      return clearReceiving();
-    }
-
-    boolean setReceiving() {
-      _op.set(BIT_RECEIVING);
-      return clearSending();
-    }
-
-    boolean clearSending() {
-      boolean isSending = _op.get(BIT_SENDING);
-      _op.clear(BIT_SENDING);
-      return isSending;
-    }
-
-    boolean clearReceiving() {
-      boolean isReceiving = _op.get(BIT_RECEIVING);
-      _op.clear(BIT_RECEIVING);
-      return isReceiving;
     }
   }
 
   private ZmqChannel.Builder channelBuilder;
   private long retryTimeout = DEFAULT_RETRY_TIMEOUT;
-  private ObjectBuilder<Long> correlation = new ObjectBuilder<Long>() {
+  private ObjectBuilder<Long> corrIdProvider = new ObjectBuilder<Long>() {
     @Override
     public void checkInvariant() {
       // no-op.

@@ -628,28 +628,26 @@ public class ServiceTest extends ZmqAbstractTest {
       // NOT: there will be only one LIVE HUB.
       f.workerAcceptor(zmqContext(),
                        new Answering(WORLD()),
-                       "tcp://localhost:" + 667,  // NOT_AVAIL
-                       "tcp://localhost:" + 666,  // !!!!! LIVE HUB !!!!!
-                       "tcp://localhost:" + 670); // NOT_AVAIL
+                       NOT_AVAIL_0,
+                       "tcp://localhost:" + 666,
+                       NOT_AVAIL_1);
     }
     f.init();
 
-    int HWM_FOR_SEND = 10;
+    int HWM = 1;
     int NUM_OF_NOTAVAIL = 2;
     SyncClient client = SyncClient.builder()
                                   .withChannelBuilder(
                                       ZmqChannel.builder()
                                                 .withZmqContext(zmqContext())
                                                 .ofDEALERType()
-                                                .withWaitOnSend(100)
-                                                .withWaitOnRecv(100)
-                                                .withHwmForSend(HWM_FOR_SEND)
-                                                .withConnectAddress("tcp://localhost:" + 556)
+                                                .withHwmForSend(HWM)
+                                                .withConnectAddress(NOT_AVAIL_0)
                                                 .withConnectAddress("tcp://localhost:" + 555)
-                                                .withConnectAddress("tcp://localhost:" + 559))
+                                                .withConnectAddress(NOT_AVAIL_1))
                                   .build();
     client.lease();
-    int MESSAGE_NUM = 10 * HWM_FOR_SEND; // number of messages -- several times bigger than HWM.
+    int MESSAGE_NUM = 10 * HWM; // number of messages -- several times bigger than HWM.
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -660,7 +658,7 @@ public class ServiceTest extends ZmqAbstractTest {
           replies.add(reply);
         }
       }
-      assertEquals(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM_FOR_SEND, replies.size());
+      assertEquals(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM, replies.size());
     }
     finally {
       client.release();
@@ -837,11 +835,7 @@ public class ServiceTest extends ZmqAbstractTest {
 
     // NOTE: this test case relies on HWM defaults settings which come along with every socket.
     // test will send 8 message, hopefully, 8 - is not greater or equal to default HWM settings.
-    SyncClient client = f.newConnClient(zmqContext(),
-                                        "tcp://localhost:" + 333,  // NOT_AVAIL
-                                        "tcp://localhost:" + 334,  // NOT_AVAIL
-                                        "tcp://localhost:" + 335,  // NOT_AVAIL
-                                        "tcp://localhost:" + 336); // NOT_AVAIL
+    SyncClient client = f.newConnClient(zmqContext(), NOT_AVAIL_0, NOT_AVAIL_1);
     client.lease();
     try {
       int MESSAGE_NUM = 10; // message num being sent is significantly less than default HWM.
@@ -886,22 +880,20 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    int HWM_FOR_SEND = 10;
+    int HWM = 1;
     int NUM_OF_NOTAVAIL = 2;
     SyncClient client = SyncClient.builder()
                                   .withChannelBuilder(
                                       ZmqChannel.builder()
                                                 .withZmqContext(zmqContext())
                                                 .ofDEALERType()
-                                                .withWaitOnSend(100)
-                                                .withWaitOnRecv(100)
-                                                .withHwmForSend(HWM_FOR_SEND)
-                                                .withConnectAddress("tcp://localhost:" + 777)
+                                                .withHwmForSend(HWM)
+                                                .withConnectAddress(NOT_AVAIL_0)
                                                 .withConnectAddress("tcp://localhost:" + livePort)
-                                                .withConnectAddress("tcp://localhost:" + 780))
+                                                .withConnectAddress(NOT_AVAIL_1))
                                   .build();
     client.lease();
-    int MESSAGE_NUM = 10 * HWM_FOR_SEND; // number of messages -- several times bigger than HWM.
+    int MESSAGE_NUM = 10 * HWM; // number of messages -- several times bigger than HWM.
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -912,7 +904,7 @@ public class ServiceTest extends ZmqAbstractTest {
           replies.add(reply);
         }
       }
-      assertEquals(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM_FOR_SEND, replies.size());
+      assertEquals(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM, replies.size());
     }
     finally {
       client.release();

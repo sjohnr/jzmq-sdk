@@ -28,6 +28,8 @@ import static junit.framework.Assert.assertEquals;
 public abstract class ZmqAbstractTest {
 
   public static final long MESSAGE_NUM = 100;
+  public static final String NOT_AVAIL_0 = "tcp://localhost:667";
+  public static final String NOT_AVAIL_1 = "tcp://localhost:670";
 
   private final ZmqContext _ctx = new ZmqContext();
 
