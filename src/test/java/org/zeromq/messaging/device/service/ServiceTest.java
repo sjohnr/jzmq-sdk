@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.zeromq.messaging.device.service.ServiceFixture.Answering.answering;
 
 public class ServiceTest extends ZmqAbstractTest {
@@ -890,6 +891,72 @@ public class ServiceTest extends ZmqAbstractTest {
         }
       }
       assertEquals(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM, replies.size());
+    }
+    finally {
+      client.release();
+      f.destroy();
+    }
+  }
+
+  @Test
+  public void t17() {
+    LOG.info(
+        "\n" +
+        "****************************************************** \n" +
+        "                                                       \n" +
+        "                 [  NOT_AVAIL  ]                       \n" +
+        "Test DEALER <--> [ROUTER-DEALER] <--> ROUTER.          \n" +
+        "                 [  NOT_AVAIL  ]                       \n" +
+        "                                                       \n" +
+        "                 -----------------                     \n" +
+        "             ___>|   NOT_AVAIL   | <__                 \n" +
+        "----------  /    -----------------     \\  ----------  \n" +
+        "|        | /     -----------------      \\ |        |  \n" +
+        "| DEALER |/----->| R(555)-D(666) |<------\\| ROUTER |  \n" +
+        "|        | \\     ----------------       / |        |  \n" +
+        "----------  \\    -----------------     /  ----------  \n" +
+        "             \\__>|  NOT_AVAIL    |<___/               \n" +
+        "                 -----------------                     \n" +
+        "                                                       \n" +
+        "                                                       \n" +
+        "****************************************************** \n");
+
+    ServiceFixture f = new ServiceFixture();
+    {
+      f.fairRouter(zmqContext(), bindAddr(555), bindAddr(666));
+      // Create worker connected at all HUBs' backends.
+      // NOT: there will be only one LIVE HUB.
+      f.workerAcceptor(zmqContext(), answering(WORLD()), notAvailConnAddr0(), connAddr(666), notAvailConnAddr1());
+    }
+    f.init();
+
+    int HWM = 10;
+    int NUM_OF_NOTAVAIL = 2;
+    SyncClient client = SyncClient.builder()
+                                  .withChannelBuilder(
+                                      ZmqChannel.builder()
+                                                .withZmqContext(zmqContext())
+                                                .ofDEALERType()
+                                                .withHwmForSend(HWM)
+                                                .withWaitOnRecv(10)
+                                                .withWaitOnSend(10)
+                                                .withConnectAddress(connAddr(555))
+                                                .withConnectAddress(notAvailConnAddr0())
+                                                .withConnectAddress(notAvailConnAddr1()))
+                                  .build();
+    client.lease();
+    int MESSAGE_NUM = 100 * HWM; // number of messages -- several times bigger than HWM.
+    try {
+      Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
+      for (int i = 0; i < MESSAGE_NUM; i++) {
+        assert client.send(HELLO());
+        ZmqMessage reply = client.recv();
+        if (reply != null) {
+          assertPayload("world", reply);
+          replies.add(reply);
+        }
+      }
+      assertTrue(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM >= replies.size());
     }
     finally {
       client.release();

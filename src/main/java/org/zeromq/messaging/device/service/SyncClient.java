@@ -98,23 +98,24 @@ public final class SyncClient implements HasDestroy {
 
   private static class Client {
 
-    static final int BIT_SEND = 0;
-    static final int BIT_RECV = 1;
+    static final int SEND = 0;
+    static final int RECV = 1;
+    static final int RECV_REPLY = 2;
+    static final int RECV_SEND_RETRY = 3;
+    static final int RECV_REPLY_VALIDATE = 4;
 
     final ZmqChannel channel;
     final long retryTimeout;
     final ObjectBuilder<Long> corrIdProvider;
 
-    final BitSet _state = new BitSet(2); // state is always either SEND or RECV.
+    final BitSet _fsm = new BitSet(5);
     Long _corrId;
 
     Client(ZmqChannel channel, long retryTimeout, ObjectBuilder<Long> corrIdProvider) {
       this.channel = channel;
       this.retryTimeout = retryTimeout;
       this.corrIdProvider = corrIdProvider;
-      // initially, set client' state to SEND and RECV, to both.
-      _state.set(BIT_SEND);
-      _state.set(BIT_RECV);
+      this.initFsm();
     }
 
     boolean send(ZmqMessage message) {
@@ -131,50 +132,36 @@ public final class SyncClient implements HasDestroy {
 
     ZmqMessage recv() {
       setRecv();
+      setRecvReply(); // initially FSM is set to "receive reply".
 
-      // recv first time.
       Stopwatch timer = new Stopwatch().start();
-      ZmqMessage message = channel.recv();
-      timer.stop();
-
-      if (message != null) {
-        int i = 0;
-        long t = retryTimeout;
-        long timeout;
-        do {
-          ServiceHeaders headers = message.headersAs(ServiceHeaders.class);
-          validate(headers);
+      ZmqMessage message = null;
+      ServiceHeaders headers = null;
+      for (; ; ) {
+        // receive reply.
+        if (isRecvReply()) {
+          message = channel.recv();
+          if (message == null) {
+            return null;
+          }
+          headers = message.headersAs(ServiceHeaders.class);
+          setRecvReplyValidate();
+        }
+        // validate reply: check corresponding headers.
+        if (isRecvReplyValidate()) {
+          // check correlation.
+          Long corrId = headers.getCorrId();
+          if (_corrId.compareTo(corrId) != 0) {
+            LOG.warn("Unrecognized correlation_id={} (expected {}).", corrId, _corrId);
+            setRecvReply(); // recv reply again.
+            continue;
+          }
+          // check headers.
           if (headers.isMsgTypeNotSet()) {
             return message;
           }
-          if (headers.isMsgTypeRetry()) {
-            timeout = t - Math.max(timer.elapsedMillis(), 1);
-            if (timeout <= 0) {
-              LOG.warn("Can't retry: timeout({} ms) exceeded. Returning null.", retryTimeout);
-              return null;
-            }
-
-            timer.reset().start();
-            LOG.debug("Retry detected. Calling.");
-            boolean sent = channel.send(ZmqMessage.builder(message)
-                                                  .withHeaders(new ServiceHeaders()
-                                                                   .copy(message.headers())
-                                                                   .setMsgTypeNotSet())
-                                                  .build());
-            if (!sent) {
-              LOG.warn("Can't retry: .send() failed! Returning null.");
-              return null;
-            }
-            message = channel.recv();
-            timer.stop();
-
-            if (message == null) {
-              LOG.warn("Can't retry: .recv() failed! Returning null.");
-              return null;
-            }
-
-            i++;
-            t = timeout;
+          else if (headers.isMsgTypeRetry()) {
+            setRecvSendRetry();
           }
           else {
             String msgType = headers.getHeaderOrException(ServiceHeaders.HEADER_MSG_TYPE);
@@ -182,16 +169,34 @@ public final class SyncClient implements HasDestroy {
             throw ZmqException.wrongMessage();
           }
         }
-        while (true);
+        // got retry command: check a timer first.
+        if (isRecvSendRetry()) {
+          if (retryTimeout - timer.elapsedMillis() <= 0) {
+            LOG.warn("Can't retry: timeout({} ms) exceeded. Returning null.", retryTimeout);
+            return null;
+          }
+          boolean sent = channel.send(ZmqMessage.builder(message)
+                                                .withHeaders(new ServiceHeaders()
+                                                                 .copy(message.headers())
+                                                                 .setMsgTypeNotSet())
+                                                .build());
+          if (!sent) {
+            return null;
+          }
+          setRecvReply();
+        }
       }
+    }
 
-      return message;
+    void initFsm() {
+      _fsm.set(SEND);
+      _fsm.set(RECV);
     }
 
     boolean setSend() {
-      _state.set(BIT_SEND);
-      boolean wasRecv = _state.get(BIT_RECV);
-      _state.clear(BIT_RECV);
+      _fsm.set(SEND);
+      boolean wasRecv = _fsm.get(RECV);
+      _fsm.clear(RECV);
       if (wasRecv) {
         // clear saved state.
         _corrId = null;
@@ -202,18 +207,40 @@ public final class SyncClient implements HasDestroy {
     }
 
     boolean setRecv() {
-      _state.set(BIT_RECV);
-      boolean wasSend = _state.get(BIT_SEND);
-      _state.clear(BIT_SEND);
+      _fsm.set(RECV);
+      boolean wasSend = _fsm.get(SEND);
+      _fsm.clear(SEND);
       return wasSend;
     }
 
-    void validate(ServiceHeaders headers) {
-      Long corrId = headers.getCorrId();
-      if (_corrId.compareTo(corrId) != 0) {
-        LOG.error("!!! Unrecognized correlation_id={} (expected {}).", corrId, _corrId);
-        throw ZmqException.wrongMessage();
-      }
+    void setRecvSendRetry() {
+      _fsm.set(RECV_SEND_RETRY);
+      _fsm.clear(RECV_REPLY);
+      _fsm.clear(RECV_REPLY_VALIDATE);
+    }
+
+    boolean isRecvSendRetry() {
+      return _fsm.get(RECV_SEND_RETRY);
+    }
+
+    void setRecvReply() {
+      _fsm.set(RECV_REPLY);
+      _fsm.clear(RECV_SEND_RETRY);
+      _fsm.clear(RECV_REPLY_VALIDATE);
+    }
+
+    boolean isRecvReply() {
+      return _fsm.get(RECV_REPLY);
+    }
+
+    void setRecvReplyValidate() {
+      _fsm.set(RECV_REPLY_VALIDATE);
+      _fsm.clear(RECV_REPLY);
+      _fsm.clear(RECV_SEND_RETRY);
+    }
+
+    boolean isRecvReplyValidate() {
+      return _fsm.get(RECV_REPLY_VALIDATE);
     }
   }
 
