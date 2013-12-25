@@ -96,10 +96,15 @@ public final class SyncClient implements HasDestroy {
 
   private static class Client {
 
+    /** State indicating that client can {@code send}. */
     static final int SEND = 0;
+    /** State indicating that client can {@code recv} (see other derived states further). */
     static final int RECV = 1;
+    /** Derived {@code recv} state indicating that client can {@code recv_reply}. */
     static final int RECV_REPLY = 2;
+    /** Derived {@code recv} state indicating that client can {@code send_retry}. */
     static final int RECV_SEND_RETRY = 3;
+    /** Derived {@code recv} state indicating that client can {@code validate_received_reply}. */
     static final int RECV_REPLY_VALIDATE = 4;
 
     final ZmqChannel channel;
@@ -117,7 +122,14 @@ public final class SyncClient implements HasDestroy {
     }
 
     boolean send(ZmqMessage message) {
-      setSend();
+      boolean wasRecv = setSend();
+
+      if (wasRecv) {
+        // clear any saved instance_state which was bound to previous state SEND.
+        _corrId = null;
+        // setup new instance_state for new state SEND.
+        _corrId = corrIdProvider.build();
+      }
 
       message = ZmqMessage.builder(message)
                           .withHeaders(new ServiceHeaders()
@@ -189,31 +201,35 @@ public final class SyncClient implements HasDestroy {
       }
     }
 
+    /** FSM init function. Turns on only two primary states: {@code send} and {@code recv}. */
     void initFsm() {
       _fsm.set(SEND);
       _fsm.set(RECV);
     }
 
+    /** Turns on {@code send} state and clears all rest. Return true if prev state was {@code recv}. */
     boolean setSend() {
       _fsm.set(SEND);
       boolean wasRecv = _fsm.get(RECV);
       _fsm.clear(RECV);
-      if (wasRecv) {
-        // clear saved state.
-        _corrId = null;
-        // setup any new preparations for sending.
-        _corrId = corrIdProvider.build();
-      }
+      _fsm.clear(RECV_REPLY);
+      _fsm.clear(RECV_SEND_RETRY);
+      _fsm.clear(RECV_REPLY_VALIDATE);
       return wasRecv;
     }
 
+    /** Turns on {@code recv} state and clears all rest. Return true if prev state was {@code send}. */
     boolean setRecv() {
       _fsm.set(RECV);
       boolean wasSend = _fsm.get(SEND);
       _fsm.clear(SEND);
+      _fsm.clear(RECV_REPLY);
+      _fsm.clear(RECV_SEND_RETRY);
+      _fsm.clear(RECV_REPLY_VALIDATE);
       return wasSend;
     }
 
+    /** Turns on {@code send_retry} state and clears all rest derived {@code recv} states. */
     void setRecvSendRetry() {
       _fsm.set(RECV_SEND_RETRY);
       _fsm.clear(RECV_REPLY);
@@ -224,6 +240,7 @@ public final class SyncClient implements HasDestroy {
       return _fsm.get(RECV_SEND_RETRY);
     }
 
+    /** Turns on {@code recv_reply} state and clears all rest derived {@code recv} states. */
     void setRecvReply() {
       _fsm.set(RECV_REPLY);
       _fsm.clear(RECV_SEND_RETRY);
@@ -234,6 +251,7 @@ public final class SyncClient implements HasDestroy {
       return _fsm.get(RECV_REPLY);
     }
 
+    /** Turns on {@code validate_received_reply} state and clears all rest derived {@code recv} states. */
     void setRecvReplyValidate() {
       _fsm.set(RECV_REPLY_VALIDATE);
       _fsm.clear(RECV_REPLY);
@@ -274,12 +292,16 @@ public final class SyncClient implements HasDestroy {
   }
 
   public void lease() {
-    _l = _clientPool.lease();
+    if (_l == null) {
+      _l = _clientPool.lease();
+    }
   }
 
   public void release() {
-    _l.release();
-    _l = null;
+    if (_l != null) {
+      _l.release();
+      _l = null;
+    }
   }
 
   public boolean send(ZmqMessage message) {

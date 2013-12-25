@@ -26,8 +26,9 @@ import org.zeromq.messaging.ZmqContext;
 import org.zeromq.messaging.ZmqMessage;
 import org.zeromq.support.thread.ZmqRunnable;
 
-import java.util.Arrays;
 import java.util.Comparator;
+
+import static java.util.Arrays.asList;
 
 class ServiceFixture extends BaseFixture {
 
@@ -39,7 +40,7 @@ class ServiceFixture extends BaseFixture {
                    .withRunnableContext(
                        WorkerAnonymEmitter.builder()
                                           .withZmqContext(zmqContext)
-                                          .withConnectAddresses(Arrays.asList(connectAddresses))
+                                          .withConnectAddresses(asList(connectAddresses))
                                           .withMessageProcessor(messageProcessor)
                                           .withPollTimeout(10)
                                           .build()
@@ -57,7 +58,7 @@ class ServiceFixture extends BaseFixture {
                    .withRunnableContext(
                        WorkerAnonymEmitter.builder()
                                           .withZmqContext(zmqContext)
-                                          .withConnectAddresses(Arrays.asList(connectAddresses))
+                                          .withConnectAddresses(asList(connectAddresses))
                                           .withMessageProcessor(messageProcessor)
                                           .withIdentity(identity)
                                           .withPollTimeout(10)
@@ -75,7 +76,7 @@ class ServiceFixture extends BaseFixture {
                    .withRunnableContext(
                        WorkerAnonymAcceptor.builder()
                                            .withZmqContext(zmqContext)
-                                           .withConnectAddresses(Arrays.asList(connectAddresses))
+                                           .withConnectAddresses(asList(connectAddresses))
                                            .withMessageProcessor(messageProcessor)
                                            .build()
                    )
@@ -247,8 +248,7 @@ class ServiceFixture extends BaseFixture {
                                   .withChannelBuilder(ZmqChannel.builder()
                                                                 .withZmqContext(zmqContext)
                                                                 .ofDEALERType()
-                                                                .withConnectAddresses(Arrays.asList(
-                                                                    connAddresses)))
+                                                                .withConnectAddresses(asList(connAddresses)))
                                   .build();
     with(target);
     return target;
@@ -260,7 +260,7 @@ class ServiceFixture extends BaseFixture {
                                       ZmqChannel.builder()
                                                 .withZmqContext(zmqContext)
                                                 .ofDEALERType()
-                                                .withConnectAddresses(Arrays.asList(connAddresses))
+                                                .withConnectAddresses(asList(connAddresses))
                                                 .withSocketIdentityPrefix(identityPrefix.getBytes()))
                                   .build();
     with(target);
