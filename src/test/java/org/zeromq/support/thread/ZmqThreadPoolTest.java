@@ -23,12 +23,20 @@ package org.zeromq.support.thread;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeromq.support.exception.ExceptionHandler;
 
 public class ZmqThreadPoolTest {
 
   static final Logger LOG = LoggerFactory.getLogger(ZmqThreadPoolTest.class);
 
-  static class ZmqRunnableContextTemplate implements ZmqRunnableContext {
+  static class InterruptingExceptionHandler implements ExceptionHandler {
+    @Override
+    public void handleException(Throwable t) {
+      Thread.currentThread().interrupt();
+    }
+  }
+
+  static class ZmqRunnableContextPrototype implements ZmqRunnableContext {
 
     @Override
     public void block() {
@@ -104,7 +112,7 @@ public class ZmqThreadPoolTest {
 
   @Test
   public void t3() {
-    LOG.info("Test ThreadPool: check that blocked on thread_pool.waitOnMe() maybe unblocked.");
+    LOG.info("Test ThreadPool: check that blocked on thread_pool.waitOnMe() can be unblocked.");
 
     ZmqThreadPool target = ZmqThreadPool.newCachedDaemonThreadPool();
     target.withRunnable(newFailingRunnableAtInit());
@@ -115,7 +123,8 @@ public class ZmqThreadPoolTest {
 
   private ZmqRunnable newInterruptableRunnable() {
     return ZmqRunnable.builder()
-                      .withRunnableContext(new ZmqRunnableContextTemplate() {
+                      .withExceptionHandler(new InterruptingExceptionHandler())
+                      .withRunnableContext(new ZmqRunnableContextPrototype() {
                         @Override
                         public void block() {
                           try {
@@ -126,18 +135,14 @@ public class ZmqThreadPoolTest {
                             throw new RuntimeException(e);
                           }
                         }
-
-                        @Override
-                        public void destroy() {
-                          throw new UnsupportedOperationException();
-                        }
                       })
                       .build();
   }
 
   private ZmqRunnable newFailingRunnable() {
     return ZmqRunnable.builder()
-                      .withRunnableContext(new ZmqRunnableContextTemplate() {
+                      .withExceptionHandler(new InterruptingExceptionHandler())
+                      .withRunnableContext(new ZmqRunnableContextPrototype() {
                         @Override
                         public void exec() {
                           throw new UnsupportedOperationException();
@@ -148,7 +153,8 @@ public class ZmqThreadPoolTest {
 
   private ZmqRunnable newFailingRunnableAtInit() {
     return ZmqRunnable.builder()
-                      .withRunnableContext(new ZmqRunnableContextTemplate() {
+                      .withExceptionHandler(new InterruptingExceptionHandler())
+                      .withRunnableContext(new ZmqRunnableContextPrototype() {
                         @Override
                         public void init() {
                           throw new UnsupportedOperationException();
@@ -159,7 +165,8 @@ public class ZmqThreadPoolTest {
 
   private ZmqRunnable newFailingRunnableAtDestroy() {
     return ZmqRunnable.builder()
-                      .withRunnableContext(new ZmqRunnableContextTemplate() {
+                      .withExceptionHandler(new InterruptingExceptionHandler())
+                      .withRunnableContext(new ZmqRunnableContextPrototype() {
                         @Override
                         public void destroy() {
                           throw new UnsupportedOperationException();

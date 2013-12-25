@@ -38,6 +38,12 @@ public final class ZmqRunnable implements Runnable {
 
   private static final Logger LOG = LoggerFactory.getLogger(ZmqRunnable.class);
 
+  private static final ExceptionHandler DEFAULT_EXCEPTION_HANDLER =
+      new InternalExceptionHandler()
+          .withNext(new JniExceptionHandler()
+                        .withNext(new InterruptedExceptionHandler()
+                                      .withNext(new LoggingExceptionHandler())));
+
   public static class Builder implements ObjectBuilder<ZmqRunnable> {
 
     private final ZmqRunnable _target = new ZmqRunnable();
@@ -47,6 +53,11 @@ public final class ZmqRunnable implements Runnable {
 
     public Builder withRunnableContext(ZmqRunnableContext runnableContext) {
       _target.runnableContext = runnableContext;
+      return this;
+    }
+
+    public Builder withExceptionHandler(ExceptionHandler exceptionHandler) {
+      _target.exceptionHandler = exceptionHandler;
       return this;
     }
 
@@ -90,12 +101,7 @@ public final class ZmqRunnable implements Runnable {
    */
   private CountDownLatch destroyLatch;
   private ZmqRunnableContext runnableContext;
-
-  private final ExceptionHandler _exceptionHandlerChain =
-      new InternalExceptionHandler()
-          .withNext(new JniExceptionHandler()
-                        .withNext(new InterruptedExceptionHandler()
-                                      .withNext(new LoggingExceptionHandler())));
+  private ExceptionHandler exceptionHandler = DEFAULT_EXCEPTION_HANDLER;
 
   //// CONSTRUCTORS
 
@@ -112,7 +118,7 @@ public final class ZmqRunnable implements Runnable {
    * <ul>
    * <li>method loops indefinitely calling <i>some client specified logic</i> util something is happened.</li>
    * <li>thread was interrupted => this is the loop exit.</li>
-   * <li>got exception and {@link #_exceptionHandlerChain} failed to process it and re-thrown it => loop exit.</li>
+   * <li>got exception and {@link #exceptionHandler} failed to process it and re-thrown it => loop exit.</li>
    * </ul>
    */
   @Override
@@ -133,7 +139,7 @@ public final class ZmqRunnable implements Runnable {
           // there're two exits at this point:
           // -- something really bad happened and one of the handlers in the chain raised exception.
           // -- something exceptional happened but not catastrophic and we can loop again.
-          _exceptionHandlerChain.handleException(e);
+          exceptionHandler.handleException(e);
         }
       }
     }
