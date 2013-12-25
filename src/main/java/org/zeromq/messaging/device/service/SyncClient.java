@@ -54,9 +54,7 @@ public final class SyncClient implements HasDestroy {
     }
 
     public Builder withRetryTimeout(long retryTimeout) {
-      if (retryTimeout > 0) {
-        _target.retryTimeout = retryTimeout;
-      }
+      _target.retryTimeout = retryTimeout;
       return this;
     }
 
@@ -169,9 +167,12 @@ public final class SyncClient implements HasDestroy {
             throw ZmqException.wrongMessage();
           }
         }
-        // got retry command: check a timer first.
+        // got retry command: check the retryTimeout and a timer.
         if (isRecvSendRetry()) {
-          if (retryTimeout - timer.elapsedMillis() <= 0) {
+          if (retryTimeout == 0) {
+            return null;
+          }
+          if (retryTimeout > 0 && retryTimeout - timer.elapsedMillis() <= 0) {
             LOG.warn("Can't retry: timeout({} ms) exceeded. Returning null.", retryTimeout);
             return null;
           }
