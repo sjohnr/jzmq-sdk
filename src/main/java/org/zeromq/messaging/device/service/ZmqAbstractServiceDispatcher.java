@@ -22,16 +22,16 @@ package org.zeromq.messaging.device.service;
 
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
-import org.zeromq.messaging.device.ZmqAbstractDeviceContext;
+import org.zeromq.messaging.device.ZmqAbstractRunnableContext;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class ZmqAbstractServiceDispatcher extends ZmqAbstractDeviceContext {
+public abstract class ZmqAbstractServiceDispatcher extends ZmqAbstractRunnableContext {
 
   @SuppressWarnings("unchecked")
   public static abstract class Builder<B extends Builder, T extends ZmqAbstractServiceDispatcher>
-      extends ZmqAbstractDeviceContext.Builder<B, T> {
+      extends ZmqAbstractRunnableContext.Builder<B, T> {
 
     protected Builder(T _target) {
       super(_target);

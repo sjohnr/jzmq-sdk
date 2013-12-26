@@ -25,18 +25,18 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
-import org.zeromq.messaging.device.ZmqAbstractDeviceContext;
+import org.zeromq.messaging.device.ZmqAbstractRunnableContext;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class ZmqAbstractWorker extends ZmqAbstractDeviceContext {
+public abstract class ZmqAbstractWorker extends ZmqAbstractRunnableContext {
 
   private static final Logger LOG = LoggerFactory.getLogger(ZmqAbstractWorker.class);
 
   @SuppressWarnings("unchecked")
   public static abstract class Builder<B extends Builder, T extends ZmqAbstractWorker>
-      extends ZmqAbstractDeviceContext.Builder<B, T> {
+      extends ZmqAbstractRunnableContext.Builder<B, T> {
 
     protected Builder(T _target) {
       super(_target);

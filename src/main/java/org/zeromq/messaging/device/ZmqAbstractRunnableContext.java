@@ -26,12 +26,12 @@ import org.zeromq.messaging.ZmqException;
 import org.zeromq.support.ObjectBuilder;
 import org.zeromq.support.thread.ZmqRunnableContext;
 
-public abstract class ZmqAbstractDeviceContext implements ZmqRunnableContext {
+public abstract class ZmqAbstractRunnableContext implements ZmqRunnableContext {
 
   private static final long DEFAULT_POLL_TIMEOUT = 1000;
 
   @SuppressWarnings("unchecked")
-  public static abstract class Builder<B extends Builder, T extends ZmqAbstractDeviceContext>
+  public static abstract class Builder<B extends Builder, T extends ZmqAbstractRunnableContext>
       implements ObjectBuilder<T> {
 
     protected final T _target;
@@ -71,7 +71,7 @@ public abstract class ZmqAbstractDeviceContext implements ZmqRunnableContext {
 
   //// CONSTRUCTOR
 
-  protected ZmqAbstractDeviceContext() {
+  protected ZmqAbstractRunnableContext() {
   }
 
   //// METHODS
