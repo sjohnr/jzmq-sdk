@@ -35,11 +35,10 @@ class DoPing implements ZmqPingStrategy {
                                 .withHeaders(
                                     new ServiceHeaders()
                                         .setMsgTypePing()
-                                        .setNumOfHops(0)
-                                )
+                                        .setNumOfHops(0))
                                 .build();
     if (!channel.send(ping)) {
-      LOG.warn("Failed on sending PING!");
+      LOG.warn("Can't send PING.");
     }
   }
 }
