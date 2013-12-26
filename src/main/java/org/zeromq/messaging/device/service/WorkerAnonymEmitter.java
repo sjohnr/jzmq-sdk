@@ -22,7 +22,6 @@ package org.zeromq.messaging.device.service;
 
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
-import org.zeromq.support.IsPrototype;
 import org.zeromq.support.ObjectAdapter;
 
 /**
@@ -31,9 +30,7 @@ import org.zeromq.support.ObjectAdapter;
  *   <-w(DEALER) / with-ping
  * </pre>
  */
-public final class WorkerAnonymEmitter extends ZmqAbstractWorker implements IsPrototype {
-
-  private static final int DEFAULT_NUM_OF_COPIES = 2;
+public final class WorkerAnonymEmitter extends ZmqAbstractWorker {
 
   public static class Builder extends ZmqAbstractWorker.Builder<Builder, WorkerAnonymEmitter> {
 
@@ -65,7 +62,6 @@ public final class WorkerAnonymEmitter extends ZmqAbstractWorker implements IsPr
     }
   }
 
-  private int numOfCopies = DEFAULT_NUM_OF_COPIES;
   private String identity;
   private ObjectAdapter<String, byte[]> identityConverter = new ObjectAdapter<String, byte[]>() {
     @Override
@@ -91,17 +87,6 @@ public final class WorkerAnonymEmitter extends ZmqAbstractWorker implements IsPr
 
   public void setIdentityConverter(ObjectAdapter<String, byte[]> identityConverter) {
     this.identityConverter = identityConverter;
-  }
-
-  public void setNumOfCopies(int numOfCopies) {
-    if (numOfCopies > 0) {
-      this.numOfCopies = numOfCopies;
-    }
-  }
-
-  @Override
-  public int numOfCopies() {
-    return numOfCopies;
   }
 
   @Override
