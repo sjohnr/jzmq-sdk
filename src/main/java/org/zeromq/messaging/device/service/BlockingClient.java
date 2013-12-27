@@ -35,15 +35,15 @@ import org.zeromq.support.pool.SimpleObjectPool;
 import java.util.BitSet;
 import java.util.UUID;
 
-public final class SyncClient implements HasDestroy {
+public final class BlockingClient implements HasDestroy {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SyncClient.class);
+  private static final Logger LOG = LoggerFactory.getLogger(BlockingClient.class);
 
   private static final long DEFAULT_RETRY_TIMEOUT = 3000; // timeout before give up and returning null.
 
-  public static final class Builder implements ObjectBuilder<SyncClient> {
+  public static final class Builder implements ObjectBuilder<BlockingClient> {
 
-    private final SyncClient _target = new SyncClient();
+    private final BlockingClient _target = new BlockingClient();
 
     private Builder() {
     }
@@ -74,7 +74,7 @@ public final class SyncClient implements HasDestroy {
     }
 
     @Override
-    public SyncClient build() {
+    public BlockingClient build() {
       checkInvariant();
       ObjectBuilder<Client> clientBuilder = new ObjectBuilder<Client>() {
         @Override
@@ -282,7 +282,7 @@ public final class SyncClient implements HasDestroy {
 
   //// CONSTRUCTORS
 
-  private SyncClient() {
+  private BlockingClient() {
   }
 
   //// METHODS

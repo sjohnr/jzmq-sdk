@@ -63,7 +63,7 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    SyncClient client = f.newConnClient(zmqContext(), connAddr(333));
+    BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(333));
     client.lease();
     int MESSAGE_NUM = 10;
     try {
@@ -102,7 +102,7 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    SyncClient client = f.newConnClient(zmqContext(), connAddr(333));
+    BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(333));
     client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
@@ -145,7 +145,7 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    SyncClient client = f.newConnClient(zmqContext(), connAddr(333));
+    BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(333));
     client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
@@ -188,7 +188,7 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    SyncClient client = f.newConnClient(zmqContext(), connAddr(333));
+    BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(333));
     client.lease();
     try {
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -228,7 +228,7 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    SyncClient client = f.newConnClient(zmqContext(), inprocAddr("gateway"));
+    BlockingClient client = f.newConnBlockingClient(zmqContext(), inprocAddr("gateway"));
     client.lease();
     int MESSAGE_NUM = 10;
     try {
@@ -275,7 +275,7 @@ public class ServiceTest extends ZmqAbstractTest {
 
     Runnable client = new Runnable() {
       public void run() {
-        SyncClient client = f.newConnClient(zmqContext(), connAddr(333));
+        BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(333));
         client.lease();
         Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
         for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -343,7 +343,7 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    SyncClient client = f.newConnClient(zmqContext(), connAddr(333));
+    BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(333));
     client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
@@ -395,7 +395,7 @@ public class ServiceTest extends ZmqAbstractTest {
         new Runnable() {
           @Override
           public void run() {
-            SyncClient client = f.newConnClientWithIdentity(zmqContext(), "X", connAddr(333));
+            BlockingClient client = f.newConnBlockingClientWithIdentity(zmqContext(), "X", connAddr(333));
             client.lease();
             Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
             for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -417,7 +417,7 @@ public class ServiceTest extends ZmqAbstractTest {
         new Runnable() {
           @Override
           public void run() {
-            SyncClient client = f.newConnClientWithIdentity(zmqContext(), "Y", connAddr(333));
+            BlockingClient client = f.newConnBlockingClientWithIdentity(zmqContext(), "Y", connAddr(333));
             client.lease();
             Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
             for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -475,7 +475,7 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    SyncClient client = f.newConnClient(zmqContext(), connAddr(333));
+    BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(333));
     client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
@@ -524,7 +524,7 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    SyncClient client = f.newConnClient(zmqContext(), connAddr(333));
+    BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(333));
     client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
@@ -572,7 +572,7 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    SyncClient client = f.newConnClient(zmqContext(), connAddr(555), connAddr(556));
+    BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(555), connAddr(556));
     client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
@@ -624,16 +624,16 @@ public class ServiceTest extends ZmqAbstractTest {
 
     int HWM = 1;
     int NUM_OF_NOTAVAIL = 2;
-    SyncClient client = SyncClient.builder()
-                                  .withChannelBuilder(
-                                      ZmqChannel.builder()
-                                                .withZmqContext(zmqContext())
-                                                .ofDEALERType()
-                                                .withHwmForSend(HWM)
-                                                .withConnectAddress(notAvailConnAddr0())
-                                                .withConnectAddress(connAddr(555))
-                                                .withConnectAddress(notAvailConnAddr1()))
-                                  .build();
+    BlockingClient client = BlockingClient.builder()
+                                          .withChannelBuilder(
+                                              ZmqChannel.builder()
+                                                        .withZmqContext(zmqContext())
+                                                        .ofDEALERType()
+                                                        .withHwmForSend(HWM)
+                                                        .withConnectAddress(notAvailConnAddr0())
+                                                        .withConnectAddress(connAddr(555))
+                                                        .withConnectAddress(notAvailConnAddr1()))
+                                          .build();
     client.lease();
     int MESSAGE_NUM = 10 * HWM; // number of messages -- several times bigger than HWM.
     try {
@@ -685,7 +685,7 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    SyncClient client = f.newConnClient(zmqContext(), connAddr(333));
+    BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(333));
     client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
@@ -732,7 +732,7 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    SyncClient client = f.newBindingClient(zmqContext(), bindAddr(222));
+    BlockingClient client = f.newBindBlockingClient(zmqContext(), bindAddr(222));
     client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
@@ -777,7 +777,7 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    SyncClient client = f.newConnClient(zmqContext(), connAddr(333), connAddr(334));
+    BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(333), connAddr(334));
     client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
@@ -821,7 +821,7 @@ public class ServiceTest extends ZmqAbstractTest {
 
     // NOTE: this test case relies on HWM defaults settings which come along with every socket.
     // test will send 8 message, hopefully, 8 - is not greater or equal to default HWM settings.
-    SyncClient client = f.newConnClient(zmqContext(), notAvailConnAddr0(), notAvailConnAddr1());
+    BlockingClient client = f.newConnBlockingClient(zmqContext(), notAvailConnAddr0(), notAvailConnAddr1());
     client.lease();
     try {
       int MESSAGE_NUM = 10; // message num being sent is significantly less than default HWM.
@@ -868,16 +868,16 @@ public class ServiceTest extends ZmqAbstractTest {
 
     int HWM = 1;
     int NUM_OF_NOTAVAIL = 2;
-    SyncClient client = SyncClient.builder()
-                                  .withChannelBuilder(
-                                      ZmqChannel.builder()
-                                                .withZmqContext(zmqContext())
-                                                .ofDEALERType()
-                                                .withHwmForSend(HWM)
-                                                .withConnectAddress(notAvailConnAddr0())
-                                                .withConnectAddress(connAddr(livePort))
-                                                .withConnectAddress(notAvailConnAddr1()))
-                                  .build();
+    BlockingClient client = BlockingClient.builder()
+                                          .withChannelBuilder(
+                                              ZmqChannel.builder()
+                                                        .withZmqContext(zmqContext())
+                                                        .ofDEALERType()
+                                                        .withHwmForSend(HWM)
+                                                        .withConnectAddress(notAvailConnAddr0())
+                                                        .withConnectAddress(connAddr(livePort))
+                                                        .withConnectAddress(notAvailConnAddr1()))
+                                          .build();
     client.lease();
     int MESSAGE_NUM = 10 * HWM; // number of messages -- several times bigger than HWM.
     try {
@@ -932,18 +932,18 @@ public class ServiceTest extends ZmqAbstractTest {
 
     int HWM = 10;
     int NUM_OF_NOTAVAIL = 2;
-    SyncClient client = SyncClient.builder()
-                                  .withChannelBuilder(
-                                      ZmqChannel.builder()
-                                                .withZmqContext(zmqContext())
-                                                .ofDEALERType()
-                                                .withHwmForSend(HWM)
-                                                .withWaitOnRecv(10)
-                                                .withWaitOnSend(10)
-                                                .withConnectAddress(connAddr(555))
-                                                .withConnectAddress(notAvailConnAddr0())
-                                                .withConnectAddress(notAvailConnAddr1()))
-                                  .build();
+    BlockingClient client = BlockingClient.builder()
+                                          .withChannelBuilder(
+                                              ZmqChannel.builder()
+                                                        .withZmqContext(zmqContext())
+                                                        .ofDEALERType()
+                                                        .withHwmForSend(HWM)
+                                                        .withWaitOnRecv(10)
+                                                        .withWaitOnSend(10)
+                                                        .withConnectAddress(connAddr(555))
+                                                        .withConnectAddress(notAvailConnAddr0())
+                                                        .withConnectAddress(notAvailConnAddr1()))
+                                          .build();
     client.lease();
     int MESSAGE_NUM = 100 * HWM; // number of messages -- several times bigger than HWM.
     try {
