@@ -963,4 +963,75 @@ public class ServiceTest extends ZmqAbstractTest {
       f.destroy();
     }
   }
+
+  @Test
+  public void t18() {
+    LOG.info(
+        "\n" +
+        "******************************************************* \n" +
+        "                                                        \n" +
+        "                 [NOT_AVAIL].                           \n" +
+        "Test DEALER <--> [ROUTER].                              \n" +
+        "                 [NOT_AVAIL].                           \n" +
+        "                                                        \n" +
+        "                                       ---------------  \n" +
+        "                                       |             |  \n" +
+        "------------   ________________________|   NOT_AVAIL |  \n" +
+        "|          |  /                        |             |  \n" +
+        "|          | /                         ---------------  \n" +
+        "|  DEALER  |/                                           \n" +
+        "|          |\\                          --------------- \n" +
+        "|          | \\                         |             | \n" +
+        "------------  \\____hello>>__<<world____| ROUTER(333) | \n" +
+        "                                       |             |  \n" +
+        "                                       ---------------  \n" +
+        "                                                        \n" +
+        "******************************************************* \n");
+
+    ServiceFixture f = new ServiceFixture();
+    int livePort0 = 555;
+    int livePort1 = 560;
+    int livePort2 = 565;
+    {
+      f.workerWellknown(zmqContext(), bindAddr(livePort0), answering(WORLD()));
+      f.workerWellknown(zmqContext(), bindAddr(livePort1), answering(WORLD()));
+      f.workerWellknown(zmqContext(), bindAddr(livePort2), answering(WORLD()));
+    }
+    f.init();
+
+    int HWM = 1;
+    BlockingClient client = BlockingClient.builder()
+                                          .withChannelBuilder(
+                                              ZmqChannel.builder()
+                                                        .withZmqContext(zmqContext())
+                                                        .ofDEALERType()
+                                                        .withHwmForSend(HWM)
+                                                        .withConnectAddress(connAddr(livePort0))
+                                                        .withConnectAddress(notAvailConnAddr0())
+                                                        .withConnectAddress(connAddr(livePort1))
+                                                        .withConnectAddress(notAvailConnAddr1())
+                                                        .withConnectAddress(connAddr(livePort2)))
+                                          .build();
+    client.lease();
+    int MESSAGE_NUM = 5;
+    int NUM_OF_NOTAVAIL = 2;
+    try {
+      for (int i = 0; i < MESSAGE_NUM; i++) {
+        assert client.send(HELLO());
+      }
+      Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
+      for (int i = 0; i < MESSAGE_NUM; i++) {
+        ZmqMessage reply = client.recv();
+        if (reply != null) {
+          assertPayload("world", reply);
+          replies.add(reply);
+        }
+      }
+      assertEquals(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM, replies.size());
+    }
+    finally {
+      client.release();
+      f.destroy();
+    }
+  }
 }
