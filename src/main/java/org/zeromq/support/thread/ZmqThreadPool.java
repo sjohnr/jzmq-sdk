@@ -34,9 +34,9 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * ThreadPool wrapper abstraction. Supports only {@link ZmqRunnable}-s objects when
- * client submitting tasks; this is done in order to provide graceful
- * shutdown of task executions.
+ * ThreadPool wrapper abstraction. Works only with {@link ZmqRunnable}.
+ * Overall this class is aimed to provide graceful shutdown for
+ * submitted tasks.
  */
 public final class ZmqThreadPool implements HasInit, HasDestroy {
 
