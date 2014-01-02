@@ -23,10 +23,11 @@ package org.zeromq.messaging.device.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.messaging.ZmqMessage;
+import org.zeromq.messaging.device.ZmqAbstractProxy;
 
-public abstract class ZmqAbstractFairServiceDispatcher extends ZmqAbstractServiceDispatcher {
+public abstract class ZmqAbstractFairService extends ZmqAbstractProxy {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ZmqAbstractFairServiceDispatcher.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ZmqAbstractFairService.class);
 
   @Override
   public final void exec() {

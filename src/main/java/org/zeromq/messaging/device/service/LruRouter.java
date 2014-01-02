@@ -27,6 +27,7 @@ import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqFrames;
 import org.zeromq.messaging.ZmqHeaders;
 import org.zeromq.messaging.ZmqMessage;
+import org.zeromq.messaging.device.ZmqAbstractProxy;
 import org.zeromq.messaging.device.ZmqSocketIdentityStorage;
 
 import static org.zeromq.messaging.ZmqException.ErrorCode.HEADER_IS_NOT_SET;
@@ -39,11 +40,11 @@ import static org.zeromq.messaging.ZmqException.ErrorCode.SOCKET_IDENTITY_STORAG
  *   [:f(ROUTER) / :b(ROUTER)]
  * </pre>
  */
-public final class LruRouter extends ZmqAbstractServiceDispatcher {
+public final class LruRouter extends ZmqAbstractProxy {
 
   private static final Logger LOG = LoggerFactory.getLogger(LruRouter.class);
 
-  public static final class Builder extends ZmqAbstractServiceDispatcher.Builder<Builder, LruRouter> {
+  public static final class Builder extends ZmqAbstractProxy.Builder<Builder, LruRouter> {
 
     private Builder() {
       super(new LruRouter());

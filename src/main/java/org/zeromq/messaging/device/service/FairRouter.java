@@ -21,6 +21,7 @@
 package org.zeromq.messaging.device.service;
 
 import org.zeromq.messaging.ZmqChannel;
+import org.zeromq.messaging.device.ZmqAbstractProxy;
 
 /**
  * Fair device:
@@ -28,9 +29,9 @@ import org.zeromq.messaging.ZmqChannel;
  *   [:f(ROUTER) / :b(DEALER)]
  * </pre>
  */
-public final class FairRouter extends ZmqAbstractFairServiceDispatcher {
+public final class FairRouter extends ZmqAbstractFairService {
 
-  public static class Builder extends ZmqAbstractServiceDispatcher.Builder<Builder, FairRouter> {
+  public static class Builder extends ZmqAbstractProxy.Builder<Builder, FairRouter> {
     private Builder() {
       super(new FairRouter());
     }
