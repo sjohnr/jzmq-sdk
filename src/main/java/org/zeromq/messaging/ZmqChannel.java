@@ -51,7 +51,7 @@ public final class ZmqChannel implements HasDestroy {
   private static final long DEFAULT_HWM_SEND = 1000; // HWM, best guess.
   private static final long DEFAULT_HWM_RECV = 1000; // HWM, best guess.
   private static final long DEFAULT_RECONNECT_INTERVAL = 100; // reconnection interval, best guess.
-  private static final long DEFAULT_RECONNECT_INTERVAL_MAX = 60000; // reconnection interval max, best guess.
+  private static final long DEFAULT_RECONNECT_INTERVAL_MAX = 0; // reconnection interval max, best guess.
 
   private static final Logger LOG = LoggerFactory.getLogger(ZmqChannel.class);
 
