@@ -81,9 +81,7 @@ public abstract class ZmqAbstractRunnableContext implements ZmqRunnableContext {
   }
 
   public final void setPollTimeout(long pollTimeout) {
-    if (pollTimeout > 0) {
-      this.pollTimeout = pollTimeout;
-    }
+    this.pollTimeout = pollTimeout;
   }
 
   @Override

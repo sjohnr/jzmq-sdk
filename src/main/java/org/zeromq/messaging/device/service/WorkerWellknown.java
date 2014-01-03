@@ -26,7 +26,7 @@ import org.zeromq.messaging.ZmqException;
 /**
  * Wellknown-worker device:
  * <pre>
- *   :(ROUTER) / no-ping
+ *   :w(ROUTER) / no-ping
  * </pre>
  */
 public final class WorkerWellknown extends ZmqAbstractWorker {
@@ -40,7 +40,10 @@ public final class WorkerWellknown extends ZmqAbstractWorker {
     @Override
     public void checkInvariant() {
       super.checkInvariant();
-      if (_target.bindAddresses.isEmpty()) {
+      if (_target.props.getBindAddresses().isEmpty()) {
+        throw ZmqException.fatal();
+      }
+      if (!_target.props.getConnectAddresses().isEmpty()) {
         throw ZmqException.fatal();
       }
     }
@@ -62,9 +65,9 @@ public final class WorkerWellknown extends ZmqAbstractWorker {
     _pingStrategy = new DontPing();
 
     _channel = ZmqChannel.builder()
-                         .ofROUTERType()
                          .withZmqContext(zmqContext)
-                         .withBindAddresses(bindAddresses)
+                         .ofROUTERType()
+                         .withProps(props)
                          .build();
 
     super.init();

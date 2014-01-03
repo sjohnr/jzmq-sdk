@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.Checker;
+import org.zeromq.messaging.Props;
 import org.zeromq.messaging.ZmqAbstractTest;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqMessage;
@@ -629,10 +630,13 @@ public class ServiceTest extends ZmqAbstractTest {
                                               ZmqChannel.builder()
                                                         .withZmqContext(zmqContext())
                                                         .ofDEALERType()
-                                                        .withHwmForSend(HWM)
-                                                        .withConnectAddress(notAvailConnAddr0())
-                                                        .withConnectAddress(connAddr(555))
-                                                        .withConnectAddress(notAvailConnAddr1()))
+                                                        .withProps(Props.builder()
+                                                                        .withHwmSend(HWM)
+                                                                        .withConnectAddress(notAvailConnAddr0())
+                                                                        .withConnectAddress(connAddr(555))
+                                                                        .withConnectAddress(notAvailConnAddr1())
+                                                                        .build())
+                                          )
                                           .build();
     client.lease();
     int MESSAGE_NUM = 10 * HWM; // number of messages -- several times bigger than HWM.
@@ -873,10 +877,12 @@ public class ServiceTest extends ZmqAbstractTest {
                                               ZmqChannel.builder()
                                                         .withZmqContext(zmqContext())
                                                         .ofDEALERType()
-                                                        .withHwmForSend(HWM)
-                                                        .withConnectAddress(notAvailConnAddr0())
-                                                        .withConnectAddress(connAddr(livePort))
-                                                        .withConnectAddress(notAvailConnAddr1()))
+                                                        .withProps(Props.builder()
+                                                                        .withHwmSend(HWM)
+                                                                        .withConnectAddress(notAvailConnAddr0())
+                                                                        .withConnectAddress(connAddr(livePort))
+                                                                        .withConnectAddress(notAvailConnAddr1())
+                                                                        .build()))
                                           .build();
     client.lease();
     int MESSAGE_NUM = 10 * HWM; // number of messages -- several times bigger than HWM.
@@ -937,12 +943,14 @@ public class ServiceTest extends ZmqAbstractTest {
                                               ZmqChannel.builder()
                                                         .withZmqContext(zmqContext())
                                                         .ofDEALERType()
-                                                        .withHwmForSend(HWM)
-                                                        .withWaitOnRecv(10)
-                                                        .withWaitOnSend(10)
-                                                        .withConnectAddress(connAddr(555))
-                                                        .withConnectAddress(notAvailConnAddr0())
-                                                        .withConnectAddress(notAvailConnAddr1()))
+                                                        .withProps(Props.builder()
+                                                                        .withHwmSend(HWM)
+                                                                        .withWaitRecv(10)
+                                                                        .withWaitSend(10)
+                                                                        .withConnectAddress(connAddr(555))
+                                                                        .withConnectAddress(notAvailConnAddr0())
+                                                                        .withConnectAddress(notAvailConnAddr1())
+                                                                        .build()))
                                           .build();
     client.lease();
     int MESSAGE_NUM = 100 * HWM; // number of messages -- several times bigger than HWM.
@@ -1005,12 +1013,14 @@ public class ServiceTest extends ZmqAbstractTest {
                                               ZmqChannel.builder()
                                                         .withZmqContext(zmqContext())
                                                         .ofDEALERType()
-                                                        .withHwmForSend(HWM)
-                                                        .withConnectAddress(connAddr(livePort0))
-                                                        .withConnectAddress(notAvailConnAddr0())
-                                                        .withConnectAddress(connAddr(livePort1))
-                                                        .withConnectAddress(notAvailConnAddr1())
-                                                        .withConnectAddress(connAddr(livePort2)))
+                                                        .withProps(Props.builder()
+                                                                        .withHwmSend(HWM)
+                                                                        .withConnectAddress(connAddr(livePort0))
+                                                                        .withConnectAddress(notAvailConnAddr0())
+                                                                        .withConnectAddress(connAddr(livePort1))
+                                                                        .withConnectAddress(notAvailConnAddr1())
+                                                                        .withConnectAddress(connAddr(livePort2))
+                                                                        .build()))
                                           .build();
     client.lease();
     int MESSAGE_NUM = 5;

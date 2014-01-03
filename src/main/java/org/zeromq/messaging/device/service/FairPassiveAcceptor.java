@@ -21,6 +21,7 @@
 package org.zeromq.messaging.device.service;
 
 import org.zeromq.messaging.ZmqChannel;
+import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.device.ZmqAbstractProxy;
 
 /**
@@ -32,8 +33,26 @@ import org.zeromq.messaging.device.ZmqAbstractProxy;
 public final class FairPassiveAcceptor extends ZmqAbstractFairService {
 
   public static class Builder extends ZmqAbstractProxy.Builder<Builder, FairPassiveAcceptor> {
+
     private Builder() {
       super(new FairPassiveAcceptor());
+    }
+
+    @Override
+    public void checkInvariant() {
+      super.checkInvariant();
+      if (!_target.frontendProps.getBindAddresses().isEmpty()) {
+        throw ZmqException.fatal();
+      }
+      if (_target.backendProps.getBindAddresses().isEmpty()) {
+        throw ZmqException.fatal();
+      }
+      if (_target.frontendProps.getConnectAddresses().isEmpty()) {
+        throw ZmqException.fatal();
+      }
+      if (!_target.backendProps.getConnectAddresses().isEmpty()) {
+        throw ZmqException.fatal();
+      }
     }
   }
 
@@ -51,14 +70,15 @@ public final class FairPassiveAcceptor extends ZmqAbstractFairService {
   @Override
   public void init() {
     _frontend = ZmqChannel.builder()
-                          .ofROUTERType()
                           .withZmqContext(zmqContext)
-                          .withConnectAddresses(frontendAddresses)
+                          .ofROUTERType()
+                          .withProps(frontendProps)
                           .build();
+
     _backend = ZmqChannel.builder()
-                         .ofDEALERType()
                          .withZmqContext(zmqContext)
-                         .withBindAddresses(backendAddresses)
+                         .ofDEALERType()
+                         .withProps(backendProps)
                          .build();
 
     super.init();

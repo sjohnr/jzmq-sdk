@@ -22,7 +22,6 @@ package org.zeromq.messaging.device.service;
 
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
-import org.zeromq.support.ObjectAdapter;
 
 /**
  * Emitter-worker device:
@@ -38,37 +37,17 @@ public final class WorkerAnonymEmitter extends ZmqAbstractWorker {
       super(new WorkerAnonymEmitter());
     }
 
-    public Builder withIdentity(String identity) {
-      _target.setIdentity(identity);
-      return this;
-    }
-
-    public Builder withIdentityConverter(ObjectAdapter<String, byte[]> identityConverter) {
-      _target.setIdentityConverter(identityConverter);
-      return this;
-    }
-
     @Override
     public void checkInvariant() {
       super.checkInvariant();
-      if (_target.connectAddresses.isEmpty()) {
+      if (_target.props.getConnectAddresses().isEmpty()) {
         throw ZmqException.fatal();
       }
-      if (_target.identity != null) {
-        if (_target.identityConverter == null) {
-          throw ZmqException.fatal();
-        }
+      if (!_target.props.getBindAddresses().isEmpty()) {
+        throw ZmqException.fatal();
       }
     }
   }
-
-  private String identity;
-  private ObjectAdapter<String, byte[]> identityConverter = new ObjectAdapter<String, byte[]>() {
-    @Override
-    public byte[] convert(String src) {
-      return src.getBytes();
-    }
-  };
 
   //// CONSTRUCTORS
 
@@ -81,26 +60,15 @@ public final class WorkerAnonymEmitter extends ZmqAbstractWorker {
     return new Builder();
   }
 
-  public void setIdentity(String identity) {
-    this.identity = identity;
-  }
-
-  public void setIdentityConverter(ObjectAdapter<String, byte[]> identityConverter) {
-    this.identityConverter = identityConverter;
-  }
-
   @Override
   public void init() {
     _pingStrategy = new DoPing();
 
-    ZmqChannel.Builder builder = ZmqChannel.builder();
-    if (identity != null) {
-      builder.withSocketIdentityPrefix(identityConverter.convert(identity));
-    }
-    _channel = builder.withZmqContext(zmqContext)
-                      .withConnectAddresses(connectAddresses)
-                      .ofDEALERType()
-                      .build();
+    _channel = ZmqChannel.builder()
+                         .withZmqContext(zmqContext)
+                         .ofDEALERType()
+                         .withProps(props)
+                         .build();
 
     super.init();
   }

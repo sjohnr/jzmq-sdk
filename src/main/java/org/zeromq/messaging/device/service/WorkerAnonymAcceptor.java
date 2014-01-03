@@ -40,7 +40,10 @@ public final class WorkerAnonymAcceptor extends ZmqAbstractWorker {
     @Override
     public void checkInvariant() {
       super.checkInvariant();
-      if (_target.connectAddresses.isEmpty()) {
+      if (_target.props.getConnectAddresses().isEmpty()) {
+        throw ZmqException.fatal();
+      }
+      if (!_target.props.getBindAddresses().isEmpty()) {
         throw ZmqException.fatal();
       }
     }
@@ -63,8 +66,8 @@ public final class WorkerAnonymAcceptor extends ZmqAbstractWorker {
 
     _channel = ZmqChannel.builder()
                          .withZmqContext(zmqContext)
-                         .withConnectAddresses(connectAddresses)
                          .ofROUTERType()
+                         .withProps(props)
                          .build();
 
     super.init();

@@ -28,9 +28,7 @@ import org.zeromq.support.HasDestroy;
 import org.zeromq.support.ObjectAdapter;
 import org.zeromq.support.ObjectBuilder;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -44,14 +42,6 @@ public final class ZmqChannel implements HasDestroy {
   private static final int INPROC_CONN_TIMEOUT = 1000; // inproc protocol conn timeout, best guess.
 
   private static final int POLLABLE_IND_NOT_INITIALIZED = -1;
-
-  private static final int DEFAULT_LINGER = 0; // by default it's allowed to close socket and not be blocked.
-  private static final int DEFAULT_WAIT_ON_SEND = 1000; // how long to wait on .send(), best guess.
-  private static final int DEFAULT_WAIT_ON_RECV = 1000; // how long to wait on .recv(), best guess.
-  private static final long DEFAULT_HWM_SEND = 1000; // HWM, best guess.
-  private static final long DEFAULT_HWM_RECV = 1000; // HWM, best guess.
-  private static final long DEFAULT_RECONNECT_INTERVAL = 100; // reconnection interval, best guess.
-  private static final long DEFAULT_RECONNECT_INTERVAL_MAX = 0; // reconnection interval max, best guess.
 
   private static final Logger LOG = LoggerFactory.getLogger(ZmqChannel.class);
 
@@ -97,73 +87,8 @@ public final class ZmqChannel implements HasDestroy {
       return this;
     }
 
-    public Builder withBindAddress(String address) {
-      _target.bindAddresses.add(address);
-      return this;
-    }
-
-    public Builder withBindAddresses(Iterable<String> addresses) {
-      for (String address : addresses) {
-        withBindAddress(address);
-      }
-      return this;
-    }
-
-    public Builder withConnectAddress(String address) {
-      _target.connectAddresses.add(address);
-      return this;
-    }
-
-    public Builder withConnectAddresses(Iterable<String> addresses) {
-      for (String address : addresses) {
-        withConnectAddress(address);
-      }
-      return this;
-    }
-
-    public Builder withHwmForSend(long hwmForSend) {
-      if (hwmForSend >= 0) {
-        _target.hwmSend = hwmForSend;
-      }
-      return this;
-    }
-
-    public Builder withHwmForRecv(long hwmForRecv) {
-      if (hwmForRecv >= 0) {
-        _target.hwmRecv = hwmForRecv;
-      }
-      return this;
-    }
-
-    public Builder withSocketIdentityPrefix(byte[] socketIdentityPrefix) {
-      _target.socketIdentityPrefix = socketIdentityPrefix;
-      return this;
-    }
-
-    public Builder withLinger(long linger) {
-      if (linger >= 0) {
-        _target.linger = linger;
-      }
-      return this;
-    }
-
-    public Builder withWaitOnSend(int timeout) {
-      _target.timeoutSend = timeout;
-      return this;
-    }
-
-    public Builder withWaitOnRecv(int timeout) {
-      _target.timeoutRecv = timeout;
-      return this;
-    }
-
-    public Builder withReconnectInterval(long reconnectInterval) {
-      _target.reconnectInterval = reconnectInterval;
-      return this;
-    }
-
-    public Builder withReconnectIntervalMax(long reconnectIntervalMax) {
-      _target.reconnectIntervalMax = reconnectIntervalMax;
+    public Builder withProps(Props props) {
+      _target.props = props;
       return this;
     }
 
@@ -172,11 +97,6 @@ public final class ZmqChannel implements HasDestroy {
       if (_target.zmqContext == null) {
         throw ZmqException.fatal();
       }
-
-      if (_target.bindAddresses.isEmpty() && _target.connectAddresses.isEmpty()) {
-        throw ZmqException.fatal();
-      }
-
       switch (_target.socketType) {
         case ZMQ.PUB:
         case ZMQ.SUB:
@@ -187,6 +107,9 @@ public final class ZmqChannel implements HasDestroy {
           break;
         default:
           throw ZmqException.fatal();
+      }
+      if (_target.props == null) {
+        throw ZmqException.fatal();
       }
     }
 
@@ -240,26 +163,26 @@ public final class ZmqChannel implements HasDestroy {
 
       {
         // set high water marks.
-        socket.setSndHWM(_target.hwmSend);
-        socket.setRcvHWM(_target.hwmRecv);
+        socket.setSndHWM(_target.props.getHwmSend());
+        socket.setRcvHWM(_target.props.getHwmRecv());
 
         // set socket .send()/.recv() timeout.
-        socket.setSendTimeOut(_target.timeoutSend);
-        socket.setReceiveTimeOut(_target.timeoutRecv);
+        socket.setSendTimeOut(_target.props.getTimeoutSend());
+        socket.setReceiveTimeOut(_target.props.getTimeoutRecv());
 
         // setting LINGER to zero -- don't block on socket.close().
-        socket.setLinger(_target.linger);
+        socket.setLinger(_target.props.getLinger());
 
         // set socket identity: provided socket_prefix plus UUID long.
-        setupSocketIdentity(socket);
+        setupIdentity(socket);
 
         // set reconnect settings.
-        socket.setReconnectIVL(_target.reconnectInterval);
-        socket.setReconnectIVLMax(_target.reconnectIntervalMax);
+        socket.setReconnectIVL(_target.props.getReconnectInterval());
+        socket.setReconnectIVLMax(_target.props.getReconnectIntervalMax());
       }
 
-      // ... and bind().
-      for (String addr : _target.bindAddresses) {
+      // ... bind().
+      for (String addr : _target.props.getBindAddresses()) {
         try {
           socket.bind(addr);
         }
@@ -269,8 +192,8 @@ public final class ZmqChannel implements HasDestroy {
         }
       }
 
-      // ... and connect().
-      for (String addr : _target.connectAddresses) {
+      // ... connect().
+      for (String addr : _target.props.getConnectAddresses()) {
         // check if this is inproc: address.
         if (addr.startsWith("inproc://")) {
           long timer = System.currentTimeMillis();
@@ -299,23 +222,21 @@ public final class ZmqChannel implements HasDestroy {
         }
       }
 
-      logCreation(socket);
+      logOpts(socket);
 
       return socket;
     }
 
-    void logCreation(ZMQ.Socket socket) {
+    void logOpts(ZMQ.Socket socket) {
       Map<String, Object> opts = new LinkedHashMap<String, Object>();
 
-      if (_target.socketIdentityPrefix != null) {
-        opts.put("identity", makeHash(ImmutableList.of(socket.getIdentity())));
-      }
       opts.put("type", getLoggableSocketType());
+      opts.put("identity", makeHash(ImmutableList.of(socket.getIdentity())));
       opts.put("hwm_send", socket.getSndHWM());
       opts.put("hwm_recv", socket.getRcvHWM());
       opts.put("linger", socket.getLinger());
-      opts.put("bind_addr", _target.bindAddresses);
-      opts.put("connect_addr", _target.connectAddresses);
+      opts.put("bind_addr", _target.props.getBindAddresses());
+      opts.put("connect_addr", _target.props.getConnectAddresses());
       opts.put("timeout_send", socket.getSendTimeOut());
       opts.put("timeout_recv", socket.getReceiveTimeOut());
       opts.put("reconn_intrvl", socket.getReconnectIVL());
@@ -324,16 +245,12 @@ public final class ZmqChannel implements HasDestroy {
       LOG.info("Created socket: {}.", mapAsJson(opts));
     }
 
-    /**
-     * Constructs socket_identity byte array based on {@link #socketIdentityPrefix} plus random UUID suffix.
-     *
-     * @param socket target socket on which identity will be set.
-     */
-    void setupSocketIdentity(ZMQ.Socket socket) {
-      if (_target.socketIdentityPrefix != null) {
+    void setupIdentity(ZMQ.Socket socket) {
+      if (_target.props.getSocketIdPrefix() != null) {
+        byte[] delimiter = "#".getBytes();
         byte[] uuid = longAsBytes(UUID.randomUUID().getMostSignificantBits());
-        byte[] socketIdentity = mergeBytes(ImmutableList.of(_target.socketIdentityPrefix, uuid));
-        socket.setIdentity(socketIdentity);
+        byte[] identity = mergeBytes(ImmutableList.of(_target.props.getSocketIdPrefix().getBytes(), delimiter, uuid));
+        socket.setIdentity(identity);
       }
     }
 
@@ -367,16 +284,7 @@ public final class ZmqChannel implements HasDestroy {
 
   private ZmqContext zmqContext;
   private int socketType = -1;
-  private List<String> bindAddresses = new ArrayList<String>();
-  private List<String> connectAddresses = new ArrayList<String>();
-  private long hwmSend = DEFAULT_HWM_SEND;
-  private long hwmRecv = DEFAULT_HWM_RECV;
-  private byte[] socketIdentityPrefix;
-  private long linger = DEFAULT_LINGER;
-  private int timeoutSend = DEFAULT_WAIT_ON_SEND;
-  private int timeoutRecv = DEFAULT_WAIT_ON_RECV;
-  private long reconnectInterval = DEFAULT_RECONNECT_INTERVAL;
-  private long reconnectIntervalMax = DEFAULT_RECONNECT_INTERVAL_MAX;
+  private Props props;
 
   private ZMQ.Socket _socket;
   private ObjectAdapter<ZmqFrames, ZmqMessage> _inputAdapter;

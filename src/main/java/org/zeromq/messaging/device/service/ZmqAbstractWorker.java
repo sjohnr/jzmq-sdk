@@ -22,17 +22,15 @@ package org.zeromq.messaging.device.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeromq.messaging.Props;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
 import org.zeromq.messaging.device.ZmqAbstractRunnableContext;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public abstract class ZmqAbstractWorker extends ZmqAbstractRunnableContext {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ZmqAbstractWorker.class);
+  protected static final Logger LOG = LoggerFactory.getLogger(ZmqAbstractWorker.class);
 
   @SuppressWarnings("unchecked")
   public static abstract class Builder<B extends Builder, T extends ZmqAbstractWorker>
@@ -42,46 +40,29 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractRunnableContext {
       super(_target);
     }
 
+    public final B withProps(Props props) {
+      _target.setProps(props);
+      return (B) this;
+    }
+
     public final B withMessageProcessor(ZmqMessageProcessor messageProcessor) {
       _target.setMessageProcessor(messageProcessor);
       return (B) this;
     }
 
-    public final B withConnectAddress(String address) {
-      _target.connectAddresses.add(address);
-      return (B) this;
-    }
-
-    public final B withConnectAddresses(Iterable<String> addresses) {
-      for (String address : addresses) {
-        withConnectAddress(address);
-      }
-      return (B) this;
-    }
-
-    public final B withBindAddress(String address) {
-      _target.bindAddresses.add(address);
-      return (B) this;
-    }
-
-    public final B withBindAddresses(Iterable<String> addresses) {
-      for (String address : addresses) {
-        withBindAddress(address);
-      }
-      return (B) this;
-    }
-
     public void checkInvariant() {
       super.checkInvariant();
+      if (_target.props == null) {
+        throw ZmqException.fatal();
+      }
       if (_target.messageProcessor == null) {
         throw ZmqException.fatal();
       }
     }
   }
 
+  protected Props props;
   protected ZmqMessageProcessor messageProcessor;
-  protected List<String> connectAddresses = new ArrayList<String>();
-  protected List<String> bindAddresses = new ArrayList<String>();
 
   protected ZmqChannel _channel;
   protected ZmqPingStrategy _pingStrategy;
@@ -94,16 +75,13 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractRunnableContext {
 
   //// METHODS
 
+
+  public final void setProps(Props props) {
+    this.props = props;
+  }
+
   public final void setMessageProcessor(ZmqMessageProcessor messageProcessor) {
     this.messageProcessor = messageProcessor;
-  }
-
-  public final void setConnectAddresses(List<String> connectAddresses) {
-    this.connectAddresses = connectAddresses;
-  }
-
-  public final void setBindAddresses(List<String> bindAddresses) {
-    this.bindAddresses = bindAddresses;
   }
 
   @Override

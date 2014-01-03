@@ -20,11 +20,9 @@
 
 package org.zeromq.messaging.device;
 
+import org.zeromq.messaging.Props;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public abstract class ZmqAbstractProxy extends ZmqAbstractRunnableContext {
 
@@ -36,30 +34,30 @@ public abstract class ZmqAbstractProxy extends ZmqAbstractRunnableContext {
       super(_target);
     }
 
-    public final B withFrontendAddress(String address) {
-      _target.frontendAddresses.add(address);
+    public final B withFrontendProps(Props props) {
+      _target.frontendProps = props;
       return (B) this;
     }
 
-    public final B withBackendAddress(String address) {
-      _target.backendAddresses.add(address);
+    public final B withBackendProps(Props props) {
+      _target.backendProps = props;
       return (B) this;
     }
 
     @Override
     public void checkInvariant() {
       super.checkInvariant();
-      if (_target.frontendAddresses.isEmpty()) {
+      if (_target.frontendProps == null) {
         throw ZmqException.fatal();
       }
-      if (_target.backendAddresses.isEmpty()) {
+      if (_target.backendProps == null) {
         throw ZmqException.fatal();
       }
     }
   }
 
-  protected List<String> frontendAddresses = new ArrayList<String>();
-  protected List<String> backendAddresses = new ArrayList<String>();
+  protected Props frontendProps;
+  protected Props backendProps;
 
   protected ZmqChannel _frontend;
   protected ZmqChannel _backend;
@@ -71,12 +69,12 @@ public abstract class ZmqAbstractProxy extends ZmqAbstractRunnableContext {
 
   //// METHODS
 
-  public final void setFrontendAddresses(List<String> frontendAddresses) {
-    this.frontendAddresses = frontendAddresses;
+  public final void setFrontendProps(Props frontendProps) {
+    this.frontendProps = frontendProps;
   }
 
-  public final void setBackendAddresses(List<String> backendAddresses) {
-    this.backendAddresses = backendAddresses;
+  public final void setBackendProps(Props backendProps) {
+    this.backendProps = backendProps;
   }
 
   @Override

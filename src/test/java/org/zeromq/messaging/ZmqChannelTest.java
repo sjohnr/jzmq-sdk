@@ -39,13 +39,17 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     ZmqChannel.builder()
               .withZmqContext(zmqContext())
               .ofDEALERType()
-              .withConnectAddress(inprocAddr("service"))
+              .withProps(Props.builder()
+                              .withConnectAddress(inprocAddr("service"))
+                              .build())
               .build();
 
     ZmqChannel.builder()
               .withZmqContext(zmqContext())
               .ofDEALERType()
-              .withBindAddress(inprocAddr("service"))
+              .withProps(Props.builder()
+                              .withBindAddress(inprocAddr("service"))
+                              .build())
               .build();
   }
 
@@ -56,13 +60,17 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     ZmqChannel.builder()
               .withZmqContext(zmqContext())
               .ofDEALERType()
-              .withBindAddress(inprocAddr("service"))
+              .withProps(Props.builder()
+                              .withBindAddress(inprocAddr("service"))
+                              .build())
               .build();
 
     ZmqChannel.builder()
               .withZmqContext(zmqContext())
               .ofDEALERType()
-              .withConnectAddress(inprocAddr("service"))
+              .withProps(Props.builder()
+                              .withConnectAddress(inprocAddr("service"))
+                              .build())
               .build();
   }
 
@@ -73,14 +81,20 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     ZmqChannel.builder()
               .withZmqContext(zmqContext())
               .ofDEALERType()
-              .withBindAddress(inprocAddr("service"))
+              .withProps(Props.builder()
+                              .withBindAddress(inprocAddr("service"))
+                              .build())
               .build();
 
     ZmqChannel.builder()
               .withZmqContext(zmqContext())
               .ofDEALERType()
-              .withConnectAddress(inprocAddr("service"))
-              .withConnectAddress(inprocAddr("service-noabc"))
+              .withProps(Props.builder()
+                              .withConnectAddress(inprocAddr("service"))
+                              .build())
+              .withProps(Props.builder()
+                              .withConnectAddress(inprocAddr("service-noabc"))
+                              .build())
               .build();
   }
 
@@ -91,11 +105,13 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     ZmqChannel req = ZmqChannel.builder()
                                .withZmqContext(zmqContext())
                                .ofDEALERType()
-                               .withHwmForRecv(0)
-                               .withHwmForSend(0)
-                               .withWaitOnSend(-1)
-                               .withWaitOnRecv(1)
-                               .withConnectAddress(connAddr(4466))
+                               .withProps(Props.builder()
+                                               .withHwmRecv(0)
+                                               .withHwmSend(0)
+                                               .withWaitSend(-1)
+                                               .withWaitRecv(1)
+                                               .withConnectAddress(connAddr(4466))
+                                               .build())
                                .build();
 
     ZMQ.Poller p = zmqContext().newPoller(1);
@@ -117,11 +133,13 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     ZmqChannel req = ZmqChannel.builder()
                                .withZmqContext(zmqContext())
                                .ofDEALERType()
-                               .withHwmForRecv(1)
-                               .withHwmForSend(1)
-                               .withWaitOnSend(0)
-                               .withWaitOnRecv(0)
-                               .withConnectAddress(connAddr(4466))
+                               .withProps(Props.builder()
+                                               .withHwmRecv(1)
+                                               .withHwmSend(1)
+                                               .withWaitSend(0)
+                                               .withWaitRecv(0)
+                                               .withConnectAddress(connAddr(4466))
+                                               .build())
                                .build();
 
     ZMQ.Poller p = zmqContext().newPoller(1);
@@ -148,7 +166,9 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     ZmqChannel rep = ZmqChannel.builder()
                                .withZmqContext(zmqContext())
                                .ofROUTERType()
-                               .withBindAddress(bindAddr(6633))
+                               .withProps(Props.builder()
+                                               .withBindAddress(bindAddr(6633))
+                                               .build())
                                .build();
 
     // try register channel twice.
@@ -170,7 +190,9 @@ public class ZmqChannelTest extends ZmqAbstractTest {
       rep = ZmqChannel.builder()
                       .withZmqContext(zmqContext())
                       .ofROUTERType()
-                      .withBindAddress(bindAddr(6633))
+                      .withProps(Props.builder()
+                                      .withBindAddress(bindAddr(6633))
+                                      .build())
                       .build();
 
       // use channel functions ...
@@ -207,17 +229,21 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     ZmqChannel client = ZmqChannel.builder()
                                   .withZmqContext(zmqContext())
                                   .ofDEALERType()
-                                  .withWaitOnSend(0)
-                                  .withWaitOnRecv(100)
-                                  .withConnectAddress(connAddr(6677))
+                                  .withProps(Props.builder()
+                                                  .withWaitSend(0)
+                                                  .withWaitRecv(100)
+                                                  .withConnectAddress(connAddr(6677))
+                                                  .build())
                                   .build();
 
     ZmqChannel server = ZmqChannel.builder()
                                   .withZmqContext(zmqContext())
                                   .ofROUTERType()
-                                  .withWaitOnSend(0)
-                                  .withWaitOnRecv(100)
-                                  .withBindAddress(bindAddr(6677))
+                                  .withProps(Props.builder()
+                                                  .withWaitSend(0)
+                                                  .withWaitRecv(100)
+                                                  .withBindAddress(bindAddr(6677))
+                                                  .build())
                                   .build();
 
     ZMQ.Poller clientPoller = zmqContext().newPoller(1);

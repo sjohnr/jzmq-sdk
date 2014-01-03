@@ -61,6 +61,18 @@ public final class LruRouter extends ZmqAbstractProxy {
       if (_target.socketIdentityStorage == null) {
         throw ZmqException.fatal();
       }
+      if (_target.frontendProps.getBindAddresses().isEmpty()) {
+        throw ZmqException.fatal();
+      }
+      if (_target.backendProps.getBindAddresses().isEmpty()) {
+        throw ZmqException.fatal();
+      }
+      if (!_target.frontendProps.getConnectAddresses().isEmpty()) {
+        throw ZmqException.fatal();
+      }
+      if (!_target.backendProps.getConnectAddresses().isEmpty()) {
+        throw ZmqException.fatal();
+      }
     }
   }
 
@@ -84,14 +96,15 @@ public final class LruRouter extends ZmqAbstractProxy {
   @Override
   public void init() {
     _frontend = ZmqChannel.builder()
-                          .ofROUTERType()
                           .withZmqContext(zmqContext)
-                          .withBindAddresses(frontendAddresses)
+                          .ofROUTERType()
+                          .withProps(frontendProps)
                           .build();
+
     _backend = ZmqChannel.builder()
-                         .ofROUTERType()
                          .withZmqContext(zmqContext)
-                         .withBindAddresses(backendAddresses)
+                         .ofROUTERType()
+                         .withProps(backendProps)
                          .build();
 
     super.init();
