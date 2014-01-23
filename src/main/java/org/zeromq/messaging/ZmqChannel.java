@@ -77,6 +77,16 @@ public final class ZmqChannel implements HasDestroy {
       return this;
     }
 
+    public Builder ofXPUBType() {
+      _target.socketType = ZMQ.XPUB;
+      return this;
+    }
+
+    public Builder ofXSUBType() {
+      _target.socketType = ZMQ.XSUB;
+      return this;
+    }
+
     public Builder ofPUSHType() {
       _target.socketType = ZMQ.PUSH;
       return this;
@@ -136,7 +146,7 @@ public final class ZmqChannel implements HasDestroy {
                                                      .build();
       }
 
-      if (_target.socketType == ZMQ.PUB || _target.socketType == ZMQ.PUSH) {
+      if (_target.socketType == ZMQ.PUB || _target.socketType == ZMQ.XPUB || _target.socketType == ZMQ.PUSH) {
         _target._inputAdapter = null;
         _target._outputAdapter = OutputMessageAdapter.builder()
                                                      .awareOfTopicFrame()
@@ -144,7 +154,7 @@ public final class ZmqChannel implements HasDestroy {
                                                      .build();
       }
 
-      if (_target.socketType == ZMQ.SUB || _target.socketType == ZMQ.PULL) {
+      if (_target.socketType == ZMQ.SUB || _target.socketType == ZMQ.XSUB || _target.socketType == ZMQ.PULL) {
         _target._outputAdapter = null;
         _target._inputAdapter = InputMessageAdapter.builder()
                                                    .awareOfTopicFrame()
@@ -262,6 +272,12 @@ public final class ZmqChannel implements HasDestroy {
           break;
         case ZMQ.SUB:
           loggableSocketType = "SUB";
+          break;
+        case ZMQ.XPUB:
+          loggableSocketType = "XPUB";
+          break;
+        case ZMQ.XSUB:
+          loggableSocketType = "XSUB";
           break;
         case ZMQ.PUSH:
           loggableSocketType = "PUSH";

@@ -21,10 +21,14 @@
 package org.zeromq.messaging.device;
 
 import org.zeromq.ZMQ;
+import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqContext;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.support.ObjectBuilder;
 import org.zeromq.support.thread.ZmqRunnableContext;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class ZmqAbstractRunnableContext implements ZmqRunnableContext {
 
@@ -66,6 +70,7 @@ public abstract class ZmqAbstractRunnableContext implements ZmqRunnableContext {
 
   protected ZmqContext zmqContext;
   protected long pollTimeout = DEFAULT_POLL_TIMEOUT;
+  protected List<ZmqChannel> channels = new ArrayList<ZmqChannel>();
 
   protected ZMQ.Poller _poller;
 
@@ -90,5 +95,19 @@ public abstract class ZmqAbstractRunnableContext implements ZmqRunnableContext {
       throw ZmqException.fatal();
     }
     _poller.poll(pollTimeout);
+  }
+
+  @Override
+  public void destroy() {
+    for (ZmqChannel channel : channels) {
+      channel.destroy();
+    }
+  }
+
+  protected final void register(ZmqChannel channel) {
+    if (channel == null) {
+      throw ZmqException.fatal();
+    }
+    channels.add(channel);
   }
 }
