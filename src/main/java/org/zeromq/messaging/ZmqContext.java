@@ -136,6 +136,8 @@ public final class ZmqContext implements HasInit, HasDestroy {
       case ZMQ.ROUTER:
       case ZMQ.PUB:
       case ZMQ.SUB:
+      case ZMQ.XPUB:
+      case ZMQ.XSUB:
       case ZMQ.PUSH:
       case ZMQ.PULL:
       case ZMQ.PAIR:

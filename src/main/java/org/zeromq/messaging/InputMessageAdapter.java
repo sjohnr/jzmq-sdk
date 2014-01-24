@@ -60,9 +60,15 @@ class InputMessageAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
       return this;
     }
 
+    public Builder awareOfExtendedPubSub() {
+      _target.awareOfExtendedPubSub = true;
+      return this;
+    }
+
     @Override
     public void checkInvariant() {
       // no-op.
+      // TODO -- add validation.
     }
 
     @Override
@@ -74,6 +80,7 @@ class InputMessageAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
 
   private boolean awareOfTopicFrame;
   private boolean expectIdentities;
+  private boolean awareOfExtendedPubSub;
 
   //// CONSTRUCTORS
 
@@ -90,6 +97,9 @@ class InputMessageAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
   public ZmqMessage convert(ZmqFrames frames) {
     try {
       ZmqMessage.Builder builder = ZmqMessage.builder();
+
+      // -- if this is XPUB or XSUB then handle frames accordingly.
+      // TODO -- implement.
 
       // --- topic
 

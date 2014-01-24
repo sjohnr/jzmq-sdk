@@ -65,6 +65,11 @@ class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
       return this;
     }
 
+    public Builder awareOfExtendedPubSub() {
+      _target.awareOfExtendedPubSub = true;
+      return this;
+    }
+
     @Override
     public void checkInvariant() {
       if (_target.awareOfTopicFrame && _target.awareOfDEALERType) {
@@ -73,6 +78,7 @@ class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
       if (_target.awareOfDEALERType && !_target.expectIdentities) {
         throw ZmqException.fatal();
       }
+      // TODO -- add validation.
     }
 
     @Override
@@ -85,6 +91,7 @@ class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
   private boolean awareOfTopicFrame;
   private boolean awareOfDEALERType;
   private boolean expectIdentities;
+  private boolean awareOfExtendedPubSub;
 
   //// CONSTRUCTORS
 
@@ -101,6 +108,9 @@ class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
   public ZmqFrames convert(ZmqMessage message) {
     try {
       ZmqFrames target = new ZmqFrames();
+
+      // -- if this is XPUB or XSUB then handle message accordingly.
+      // TODO -- implement.
 
       // --- topic
 

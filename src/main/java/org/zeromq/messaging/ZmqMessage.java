@@ -30,6 +30,8 @@ public final class ZmqMessage {
 
   public static final byte[] EMPTY_FRAME = "".getBytes();
   public static final byte[] DIV_FRAME = new byte[]{'\u001D'}; // group separator.
+  public static final byte BYTE_SUB = 1; // denotes subscribe request.
+  public static final byte BYTE_UNSUB = 0; // denotes unsubscribe request.
 
   public static final class Builder implements ObjectBuilder<ZmqMessage> {
 
@@ -39,15 +41,18 @@ public final class ZmqMessage {
     }
 
     private Builder(ZmqMessage message) {
-      withTopic(message.topic);
-      withIdentities(message.identities);
-      withHeaders(message.headers);
-      withPayload(message.payload);
+      _target.topic = message.topic;
+      _target.identities = new ZmqFrames(message.identities);
+      _target.headers = new ZmqHeaders().copy(message.headers);
+      _target.payload = message.payload;
     }
 
     @Override
     public void checkInvariant() {
-      // no-op.
+      if (_target.extendedPubSubFlag != -1) {
+        // check that topic is present when XPUB/XSUB  flag  is set.
+        checkArgument(_target.topic != null);
+      }
     }
 
     @Override
@@ -87,14 +92,20 @@ public final class ZmqMessage {
       _target.payload = payload;
       return this;
     }
+
+    public Builder withExtendedPubSubFlag(byte extendedPubSubFlag) {
+      checkArgument(extendedPubSubFlag == BYTE_SUB || extendedPubSubFlag == BYTE_UNSUB);
+      _target.extendedPubSubFlag = extendedPubSubFlag;
+      return this;
+    }
   }
 
   /**
-   * PUB/SUB feature.
+   * PUB/SUB/XPUB/XSUB topic.
    * <p/>
-   * <b>NOTE: this field is optional. Used for PUB/SUB.</b>
+   * <b>NOTE: this field is optional.</b>
    */
-  private byte[] topic = EMPTY_FRAME;
+  private byte[] topic;
   /**
    * ZMQ' socket peer_identity container.
    * <p/>
@@ -134,7 +145,14 @@ public final class ZmqMessage {
    * <p/>
    * <b>NOTE: this field is optional.</b>
    */
-  private byte[] payload = EMPTY_FRAME;
+  private byte[] payload;
+  /**
+   * Byte denoting whether this is SUBSCRIBE message or UNSUBSCRIBE one. It's only make
+   * sense in the context of XPUB or XSUB.
+   * <p/>
+   * <b>NOTE: this field is optional.</b>
+   */
+  private byte extendedPubSubFlag = -1;
 
   //// CONSTRUCTORS
 
@@ -184,5 +202,13 @@ public final class ZmqMessage {
 
   public byte[] payload() {
     return payload;
+  }
+
+  public boolean isSubscribe() {
+    return extendedPubSubFlag == BYTE_SUB;
+  }
+
+  public boolean isUnsubscribe() {
+    return extendedPubSubFlag == BYTE_UNSUB;
   }
 }

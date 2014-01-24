@@ -84,18 +84,18 @@ public final class Chat extends ZmqAbstractRunnableContext {
   /**
    * XPUB -- for serving local multithreaded subscribers:
    * <pre>
-   *         ---> thread SUB
-   *   --> L ---> thread SUB
-   *         ---> thread SUB
+   *  thread SUB <---
+   *  thread SUB <--- L -->
+   *  thread SUB <---
    * </pre>
    */
   private ZmqChannel _localSubscriber;
   /**
    * XSUB -- for serving cluster wide publishers:
    * <pre>
-   *   cluster PUB <---
-   *   cluster PUB <--- C -->
-   *   cluster PUB <---
+   *        ---> cluster PUB
+   *  <-- C ---> cluster PUB
+   *        ---> cluster PUB
    * </pre>
    */
   private ZmqChannel _clusterSubscriber;
@@ -146,7 +146,7 @@ public final class Chat extends ZmqAbstractRunnableContext {
     register(_clusterPublisher = ZmqChannel.builder()
                                             .withZmqContext(zmqContext)
                                             .ofXPUBType()
-                                            .withProps(clusterSubscriberProps)
+                                            .withProps(clusterPublisherProps)
                                             .build());
 
     register(_localSubscriber = ZmqChannel.builder()
@@ -158,7 +158,7 @@ public final class Chat extends ZmqAbstractRunnableContext {
     register(_clusterSubscriber = ZmqChannel.builder()
                                            .withZmqContext(zmqContext)
                                            .ofXSUBType()
-                                           .withProps(clusterPublisherProps)
+                                           .withProps(clusterSubscriberProps)
                                            .build());
 
     _poller = zmqContext.newPoller(4);
@@ -173,20 +173,20 @@ public final class Chat extends ZmqAbstractRunnableContext {
   public void exec() {
     if (_localPublisher.canRecv()) {
       _clusterPublisher.send(_localPublisher.recv());
-      LOG.trace("Handle outgoing traffic: local publisher(s) send message to the cluster.");
+      LOG.trace("Handle --> traffic: local publisher(s) send message to the cluster.");
     }
     if (_clusterSubscriber.canRecv()) {
       _localSubscriber.send(_clusterSubscriber.recv());
-      LOG.trace("Handle incoming traffic: cluster wide publisher(s) send message to this socket.");
+      LOG.trace("Handle <-- traffic: cluster wide publisher(s) send message to this socket.");
     }
 
     if (_localSubscriber.canRecv()) {
       _clusterSubscriber.send(_localSubscriber.recv());
-      LOG.trace("Handle outgoing subscriptions: server local subscribers, forward their subscriptions.");
+      LOG.trace("Handle --> subscriptions: server local subscribers, forward their subscriptions.");
     }
     if (_clusterPublisher.canRecv()) {
       _localPublisher.send(_clusterPublisher.recv());
-      LOG.trace("Handle incoming subscriptions: serve cluster subscribers, forward their subscriptions.");
+      LOG.trace("Handle <-- subscriptions: serve cluster subscribers, forward their subscriptions.");
     }
   }
 }
