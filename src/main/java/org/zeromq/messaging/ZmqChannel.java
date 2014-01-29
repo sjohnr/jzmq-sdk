@@ -52,8 +52,8 @@ public final class ZmqChannel implements HasDestroy {
     private Builder() {
     }
 
-    public Builder withCtx(ZmqContext zmqContext) {
-      _target.ctx = zmqContext;
+    public Builder withCtx(ZmqContext ctx) {
+      _target.ctx = ctx;
       return this;
     }
 

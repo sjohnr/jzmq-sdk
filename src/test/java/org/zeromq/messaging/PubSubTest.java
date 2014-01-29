@@ -24,21 +24,23 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
+
 public class PubSubTest extends ZmqAbstractTest {
 
   static final Logger LOG = LoggerFactory.getLogger(PubSubTest.class);
 
   static class Fixture {
 
-    final ZmqContext zmqContext;
+    final ZmqContext ctx;
 
-    Fixture(ZmqContext zmqContext) {
-      this.zmqContext = zmqContext;
+    Fixture(ZmqContext ctx) {
+      this.ctx = ctx;
     }
 
     ZmqChannel newPublisher() {
       return ZmqChannel.builder()
-                       .withCtx(zmqContext)
+                       .withCtx(ctx)
                        .ofPUBType()
                        .withProps(Props.builder()
                                        .withBindAddress(inprocAddr("p"))
@@ -48,7 +50,7 @@ public class PubSubTest extends ZmqAbstractTest {
 
     ZmqChannel newSubscriber() {
       return ZmqChannel.builder()
-                       .withCtx(zmqContext)
+                       .withCtx(ctx)
                        .ofSUBType()
                        .withProps(Props.builder()
                                        .withConnectAddress(inprocAddr("p"))
@@ -83,7 +85,7 @@ public class PubSubTest extends ZmqAbstractTest {
 
       // send other messages.
       for (int i = 0; i < 3; i++) {
-        publisher.send(HELLO());
+        publisher.send(ZmqMessage.builder(HELLO()).withTopic(EMPTY_FRAME).build());
       }
 
       // receive three messages.
