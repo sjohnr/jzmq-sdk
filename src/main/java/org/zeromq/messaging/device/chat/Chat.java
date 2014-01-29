@@ -124,19 +124,6 @@ public final class Chat extends ZmqAbstractRunnableContext {
 
   @Override
   public void init() {
-    if (frontendPubProps == null) {
-      throw ZmqException.fatal();
-    }
-    if (clusterPubProps == null) {
-      throw ZmqException.fatal();
-    }
-    if (frontendSubProps == null) {
-      throw ZmqException.fatal();
-    }
-    if (clusterSubProps == null) {
-      throw ZmqException.fatal();
-    }
-
     reg(_localPublisher = ZmqChannel.builder()
                                     .withCtx(ctx)
                                     .ofXSUBType()

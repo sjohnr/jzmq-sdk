@@ -79,12 +79,9 @@ public abstract class ZmqAbstractProxy extends ZmqAbstractRunnableContext {
 
   @Override
   public void init() {
-    if (_frontend == null) {
-      throw ZmqException.fatal();
-    }
-    if (_backend == null) {
-      throw ZmqException.fatal();
-    }
+    reg(_frontend);
+    reg(_backend);
+
     _frontend.watchRecv(_poller);
     _backend.watchRecv(_poller);
   }

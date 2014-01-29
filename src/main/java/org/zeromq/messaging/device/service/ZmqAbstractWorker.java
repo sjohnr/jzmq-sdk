@@ -86,9 +86,8 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractRunnableContext {
 
   @Override
   public void init() {
-    if (_channel == null) {
-      throw ZmqException.fatal();
-    }
+    reg(_channel);
+
     _channel.watchRecv(_poller);
     _pingStrategyForLogging = _pingStrategy.getClass().getSimpleName();
   }
