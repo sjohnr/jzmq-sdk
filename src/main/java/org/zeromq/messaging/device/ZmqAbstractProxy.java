@@ -30,8 +30,8 @@ public abstract class ZmqAbstractProxy extends ZmqAbstractRunnableContext {
   public static abstract class Builder<B extends Builder, T extends ZmqAbstractProxy>
       extends ZmqAbstractRunnableContext.Builder<B, T> {
 
-    protected Builder(T _target) {
-      super(_target);
+    protected Builder(T target) {
+      super(target);
     }
 
     public final B withFrontendProps(Props props) {

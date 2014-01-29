@@ -38,7 +38,7 @@ public class PubSubTest extends ZmqAbstractTest {
 
     ZmqChannel newPublisher() {
       return ZmqChannel.builder()
-                       .withZmqContext(zmqContext)
+                       .withCtx(zmqContext)
                        .ofPUBType()
                        .withProps(Props.builder()
                                        .withBindAddress(inprocAddr("p"))
@@ -48,7 +48,7 @@ public class PubSubTest extends ZmqAbstractTest {
 
     ZmqChannel newSubscriber() {
       return ZmqChannel.builder()
-                       .withZmqContext(zmqContext)
+                       .withCtx(zmqContext)
                        .ofSUBType()
                        .withProps(Props.builder()
                                        .withConnectAddress(inprocAddr("p"))
@@ -61,7 +61,7 @@ public class PubSubTest extends ZmqAbstractTest {
   public void t0() throws InterruptedException {
     LOG.info("Testing .send()/.recv() .");
 
-    Fixture f = new Fixture(zmqContext());
+    Fixture f = new Fixture(ctx());
     ZmqChannel publisher = f.newPublisher();
     ZmqChannel subscriber = f.newSubscriber();
 
@@ -103,7 +103,7 @@ public class PubSubTest extends ZmqAbstractTest {
   public void t1() throws InterruptedException {
     LOG.info("Testing subscribtions and .send()/.recv() .");
 
-    Fixture f = new Fixture(zmqContext());
+    Fixture f = new Fixture(ctx());
     ZmqChannel publisher = f.newPublisher();
     ZmqChannel subscriber = f.newSubscriber();
 
@@ -136,7 +136,7 @@ public class PubSubTest extends ZmqAbstractTest {
   public void t2() throws InterruptedException {
     LOG.info("Testing subscribtions.");
 
-    Fixture f = new Fixture(zmqContext());
+    Fixture f = new Fixture(ctx());
     ZmqChannel publisher = f.newPublisher();
     ZmqChannel subscriber = f.newSubscriber();
 

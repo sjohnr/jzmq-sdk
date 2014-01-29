@@ -7,36 +7,36 @@ import org.zeromq.support.thread.ZmqRunnable;
 
 public class ChatFixture extends BaseFixture {
 
-  private final ZmqContext zmqContext;
+  private final ZmqContext ctx;
 
-  public ChatFixture(ZmqContext zmqContext) {
-    this.zmqContext = zmqContext;
+  public ChatFixture(ZmqContext ctx) {
+    this.ctx = ctx;
   }
 
-  void chat(String localPubAddr,
-            String clusterPubAddr,
-            String localSubAddr,
-            String clusterSubAddr) {
+  void chat(String frontendPub,
+            String clusterPub,
+            String frontendSub,
+            String clusterSub) {
     with(
         ZmqRunnable.builder()
                    .withRunnableContext(
                        Chat.builder()
-                           .withZmqContext(zmqContext)
-                           .withLocalPublisherProps(
+                           .withCtx(ctx)
+                           .withFrontendPubProps(
                                Props.builder()
-                                    .withBindAddress(localPubAddr)
+                                    .withBindAddress(frontendPub)
                                     .build())
-                           .withClusterPublisherProps(
+                           .withClusterPubProps(
                                Props.builder()
-                                    .withBindAddress(clusterPubAddr)
+                                    .withBindAddress(clusterPub)
                                     .build())
-                           .withLocalSubscriberProps(
+                           .withFrontendSubProps(
                                Props.builder()
-                                    .withBindAddress(localSubAddr)
+                                    .withBindAddress(frontendSub)
                                     .build())
-                           .withClusterSubscriberProps(
+                           .withClusterSubProps(
                                Props.builder()
-                                    .withConnectAddress(clusterSubAddr)
+                                    .withConnectAddress(clusterSub)
                                     .build())
                            .build()
                    )

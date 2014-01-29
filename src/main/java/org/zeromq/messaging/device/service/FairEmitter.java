@@ -70,13 +70,13 @@ public final class FairEmitter extends ZmqAbstractFairService {
   @Override
   public void init() {
     _frontend = ZmqChannel.builder()
-                          .withZmqContext(zmqContext)
+                          .withCtx(ctx)
                           .ofROUTERType()
                           .withProps(frontendProps)
                           .build();
 
     _backend = ZmqChannel.builder()
-                         .withZmqContext(zmqContext)
+                         .withCtx(ctx)
                          .ofDEALERType()
                          .withProps(backendProps)
                          .build();

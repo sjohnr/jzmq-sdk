@@ -11,27 +11,20 @@ public class ChatTest extends ZmqAbstractTest {
 
   @Test
   public void t0() throws InterruptedException {
-    ChatFixture f = new ChatFixture(zmqContext());
+    ChatFixture f = new ChatFixture(ctx());
 
-    String talking_gala = "talking_gala";
-    String listening_gala = "listening_gala";
-    String talking_alenka = "talking_alenka";
-    String listening_alenka = "listening_alenka";
+    String talking_gala = "gala>>>";
+    String listening_gala = "gala<<<";
+    String talking_alenka = "alenka>>>";
+    String listening_alenka = "alenka<<<";
 
-    f.chat(inprocAddr(talking_gala),
-           bindAddr(4040),
-           inprocAddr(listening_gala),
-           connAddr(5050));
-
-    f.chat(inprocAddr(talking_alenka),
-           bindAddr(5050),
-           inprocAddr(listening_alenka),
-           connAddr(4040));
+    f.chat(inprocAddr(talking_gala), bindAddr(4040), inprocAddr(listening_gala), connAddr(5050));
+    f.chat(inprocAddr(talking_alenka), bindAddr(5050), inprocAddr(listening_alenka), connAddr(4040));
 
     f.init();
     try {
       ZmqChannel gala_says = ZmqChannel.builder()
-                                       .withZmqContext(zmqContext())
+                                       .withCtx(ctx())
                                        .ofPUBType()
                                        .withProps(Props.builder()
                                                        .withConnectAddress(inprocAddr(talking_gala))
@@ -39,7 +32,7 @@ public class ChatTest extends ZmqAbstractTest {
                                        .build();
 
       ZmqChannel gala_listens = ZmqChannel.builder()
-                                          .withZmqContext(zmqContext())
+                                          .withCtx(ctx())
                                           .ofSUBType()
                                           .withProps(Props.builder()
                                                           .withConnectAddress(inprocAddr(listening_gala))
@@ -47,7 +40,7 @@ public class ChatTest extends ZmqAbstractTest {
                                           .build();
 
       ZmqChannel alenka_says = ZmqChannel.builder()
-                                         .withZmqContext(zmqContext())
+                                         .withCtx(ctx())
                                          .ofPUBType()
                                          .withProps(Props.builder()
                                                          .withConnectAddress(inprocAddr(talking_alenka))
@@ -55,7 +48,7 @@ public class ChatTest extends ZmqAbstractTest {
                                          .build();
 
       ZmqChannel alenka_listens = ZmqChannel.builder()
-                                            .withZmqContext(zmqContext())
+                                            .withCtx(ctx())
                                             .ofSUBType()
                                             .withProps(Props.builder()
                                                             .withConnectAddress(inprocAddr(listening_alenka))
@@ -64,8 +57,12 @@ public class ChatTest extends ZmqAbstractTest {
 
       TimeUnit.SECONDS.sleep(1);
 
-      gala_listens.subscribe("sex".getBytes());
-      alenka_listens.subscribe("sex".getBytes());
+      byte[] topic = "xxx".getBytes();
+
+      gala_listens.subscribe(topic);
+      alenka_listens.subscribe(topic);
+
+      TimeUnit.SECONDS.sleep(1);
     }
     finally {
       f.destroy();

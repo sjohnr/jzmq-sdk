@@ -40,12 +40,12 @@ public abstract class ZmqAbstractRunnableContext implements ZmqRunnableContext {
 
     protected final T _target;
 
-    protected Builder(T _target) {
-      this._target = _target;
+    protected Builder(T target) {
+      this._target = target;
     }
 
-    public final B withZmqContext(ZmqContext zmqContext) {
-      _target.setZmqContext(zmqContext);
+    public final B withCtx(ZmqContext ctx) {
+      _target.setCtx(ctx);
       return (B) this;
     }
 
@@ -56,7 +56,7 @@ public abstract class ZmqAbstractRunnableContext implements ZmqRunnableContext {
 
     @Override
     public void checkInvariant() {
-      if (_target.zmqContext == null) {
+      if (_target.ctx == null) {
         throw ZmqException.fatal();
       }
     }
@@ -68,7 +68,7 @@ public abstract class ZmqAbstractRunnableContext implements ZmqRunnableContext {
     }
   }
 
-  protected ZmqContext zmqContext;
+  protected ZmqContext ctx;
   private long pollTimeout = DEFAULT_POLL_TIMEOUT;
   private List<ZmqChannel> channels = new ArrayList<ZmqChannel>();
 
@@ -81,8 +81,8 @@ public abstract class ZmqAbstractRunnableContext implements ZmqRunnableContext {
 
   //// METHODS
 
-  public final void setZmqContext(ZmqContext zmqContext) {
-    this.zmqContext = zmqContext;
+  public final void setCtx(ZmqContext ctx) {
+    this.ctx = ctx;
   }
 
   public final void setPollTimeout(long pollTimeout) {

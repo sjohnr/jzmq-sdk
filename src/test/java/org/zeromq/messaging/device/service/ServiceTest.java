@@ -59,12 +59,12 @@ public class ServiceTest extends ZmqAbstractTest {
 
     ServiceFixture f = new ServiceFixture();
     {
-      f.lruRouter(zmqContext(), bindAddr(333), bindAddr(444), f.defaultLruCache());
-      f.workerAcceptor(zmqContext(), answering(SHIRT()), connAddr(444));
+      f.lruRouter(ctx(), bindAddr(333), bindAddr(444), f.defaultLruCache());
+      f.workerAcceptor(ctx(), answering(SHIRT()), connAddr(444));
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(333));
+    BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(333));
     client.lease();
     int MESSAGE_NUM = 10;
     try {
@@ -98,12 +98,12 @@ public class ServiceTest extends ZmqAbstractTest {
 
     ServiceFixture f = new ServiceFixture();
     {
-      f.lruRouter(zmqContext(), bindAddr(333), bindAddr(444), f.defaultLruCache());
-      f.workerEmitter(zmqContext(), answering(WORLD()), connAddr(444));
+      f.lruRouter(ctx(), bindAddr(333), bindAddr(444), f.defaultLruCache());
+      f.workerEmitter(ctx(), answering(WORLD()), connAddr(444));
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(333));
+    BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(333));
     client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
@@ -141,12 +141,12 @@ public class ServiceTest extends ZmqAbstractTest {
 
     ServiceFixture f = new ServiceFixture();
     {
-      f.lruRouter(zmqContext(), bindAddr(333), bindAddr(444), f.volatileLruCache());
-      f.workerEmitter(zmqContext(), answering(WORLD()), connAddr(444));
+      f.lruRouter(ctx(), bindAddr(333), bindAddr(444), f.volatileLruCache());
+      f.workerEmitter(ctx(), answering(WORLD()), connAddr(444));
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(333));
+    BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(333));
     client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
@@ -184,12 +184,12 @@ public class ServiceTest extends ZmqAbstractTest {
 
     ServiceFixture f = new ServiceFixture();
     {
-      f.lruRouter(zmqContext(), bindAddr(333), bindAddr(444), f.notMatchingLruCache());
-      f.workerEmitter(zmqContext(), answering(WORLD()), connAddr(444));
+      f.lruRouter(ctx(), bindAddr(333), bindAddr(444), f.notMatchingLruCache());
+      f.workerEmitter(ctx(), answering(WORLD()), connAddr(444));
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(333));
+    BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(333));
     client.lease();
     try {
       for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -223,13 +223,13 @@ public class ServiceTest extends ZmqAbstractTest {
 
     ServiceFixture f = new ServiceFixture();
     {
-      f.fairEmitter(zmqContext(), inprocAddr("gateway"), connAddr(333));
-      f.lruRouter(zmqContext(), bindAddr(333), bindAddr(444), f.notMatchingLruCache());
-      f.workerEmitter(zmqContext(), answering(WORLD()), connAddr(444));
+      f.fairEmitter(ctx(), inprocAddr("gateway"), connAddr(333));
+      f.lruRouter(ctx(), bindAddr(333), bindAddr(444), f.notMatchingLruCache());
+      f.workerEmitter(ctx(), answering(WORLD()), connAddr(444));
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(zmqContext(), inprocAddr("gateway"));
+    BlockingClient client = f.newConnBlockingClient(ctx(), inprocAddr("gateway"));
     client.lease();
     int MESSAGE_NUM = 10;
     try {
@@ -267,16 +267,16 @@ public class ServiceTest extends ZmqAbstractTest {
 
     final ServiceFixture f = new ServiceFixture();
     {
-      f.lruRouter(zmqContext(), bindAddr(333), bindAddr(444), f.defaultLruCache());
-      f.workerEmitter(zmqContext(), answering(WORLD()), connAddr(444));
-      f.workerEmitter(zmqContext(), answering(WORLD()), connAddr(444));
-      f.workerEmitter(zmqContext(), answering(WORLD()), connAddr(444));
+      f.lruRouter(ctx(), bindAddr(333), bindAddr(444), f.defaultLruCache());
+      f.workerEmitter(ctx(), answering(WORLD()), connAddr(444));
+      f.workerEmitter(ctx(), answering(WORLD()), connAddr(444));
+      f.workerEmitter(ctx(), answering(WORLD()), connAddr(444));
     }
     f.init();
 
     Runnable client = new Runnable() {
       public void run() {
-        BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(333));
+        BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(333));
         client.lease();
         Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
         for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -337,14 +337,14 @@ public class ServiceTest extends ZmqAbstractTest {
 
     ServiceFixture f = new ServiceFixture();
     {
-      f.lruRouter(zmqContext(), bindAddr(333), bindAddr(444), f.defaultLruCache());
-      f.fairActiveAcceptor(zmqContext(), connAddr(444), bindAddr(555));
-      f.fairActiveAcceptor(zmqContext(), connAddr(555), bindAddr(666));
-      f.workerEmitter(zmqContext(), answering(WORLD()), connAddr(666));
+      f.lruRouter(ctx(), bindAddr(333), bindAddr(444), f.defaultLruCache());
+      f.fairActiveAcceptor(ctx(), connAddr(444), bindAddr(555));
+      f.fairActiveAcceptor(ctx(), connAddr(555), bindAddr(666));
+      f.workerEmitter(ctx(), answering(WORLD()), connAddr(666));
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(333));
+    BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(333));
     client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
@@ -382,11 +382,11 @@ public class ServiceTest extends ZmqAbstractTest {
 
     final ServiceFixture f = new ServiceFixture();
     {
-      f.lruRouter(zmqContext(), bindAddr(333), bindAddr(444), f.matchingLRUCache());
-      f.workerEmitterWithIdentity(zmqContext(), "X", answering(SHIRT()), connAddr(444));
-      f.workerEmitterWithIdentity(zmqContext(), "Y", answering(CARP()), connAddr(444));
-      f.workerEmitterWithIdentity(zmqContext(), "X", answering(SHIRT()), connAddr(444));
-      f.workerEmitterWithIdentity(zmqContext(), "Y", answering(CARP()), connAddr(444));
+      f.lruRouter(ctx(), bindAddr(333), bindAddr(444), f.matchingLRUCache());
+      f.workerEmitterWithIdentity(ctx(), "X", answering(SHIRT()), connAddr(444));
+      f.workerEmitterWithIdentity(ctx(), "Y", answering(CARP()), connAddr(444));
+      f.workerEmitterWithIdentity(ctx(), "X", answering(SHIRT()), connAddr(444));
+      f.workerEmitterWithIdentity(ctx(), "Y", answering(CARP()), connAddr(444));
     }
     f.init();
 
@@ -396,7 +396,7 @@ public class ServiceTest extends ZmqAbstractTest {
         new Runnable() {
           @Override
           public void run() {
-            BlockingClient client = f.newConnBlockingClientWithIdentity(zmqContext(), "X", connAddr(333));
+            BlockingClient client = f.newConnBlockingClientWithIdentity(ctx(), "X", connAddr(333));
             client.lease();
             Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
             for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -418,7 +418,7 @@ public class ServiceTest extends ZmqAbstractTest {
         new Runnable() {
           @Override
           public void run() {
-            BlockingClient client = f.newConnBlockingClientWithIdentity(zmqContext(), "Y", connAddr(333));
+            BlockingClient client = f.newConnBlockingClientWithIdentity(ctx(), "Y", connAddr(333));
             client.lease();
             Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
             for (int i = 0; i < MESSAGE_NUM; i++) {
@@ -470,13 +470,13 @@ public class ServiceTest extends ZmqAbstractTest {
 
     ServiceFixture f = new ServiceFixture();
     {
-      f.fairRouter(zmqContext(), bindAddr(333), bindAddr(444));
-      f.workerAcceptor(zmqContext(), answering(WORLD()), connAddr(444));
-      f.workerAcceptor(zmqContext(), answering(WORLD()), connAddr(444));
+      f.fairRouter(ctx(), bindAddr(333), bindAddr(444));
+      f.workerAcceptor(ctx(), answering(WORLD()), connAddr(444));
+      f.workerAcceptor(ctx(), answering(WORLD()), connAddr(444));
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(333));
+    BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(333));
     client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
@@ -518,14 +518,14 @@ public class ServiceTest extends ZmqAbstractTest {
 
     ServiceFixture f = new ServiceFixture();
     {
-      f.fairRouter(zmqContext(), bindAddr(333), bindAddr(444));
-      f.fairPassiveAcceptor(zmqContext(), connAddr(444), bindAddr(555));
-      f.workerAcceptor(zmqContext(), answering(WORLD()), connAddr(555));
-      f.workerAcceptor(zmqContext(), answering(WORLD()), connAddr(555));
+      f.fairRouter(ctx(), bindAddr(333), bindAddr(444));
+      f.fairPassiveAcceptor(ctx(), connAddr(444), bindAddr(555));
+      f.workerAcceptor(ctx(), answering(WORLD()), connAddr(555));
+      f.workerAcceptor(ctx(), answering(WORLD()), connAddr(555));
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(333));
+    BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(333));
     client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
@@ -567,13 +567,13 @@ public class ServiceTest extends ZmqAbstractTest {
 
     ServiceFixture f = new ServiceFixture();
     {
-      f.fairRouter(zmqContext(), bindAddr(555), bindAddr(666));
-      f.fairRouter(zmqContext(), bindAddr(556), bindAddr(667));
-      f.workerAcceptor(zmqContext(), answering(WORLD()), connAddr(666), connAddr(667));
+      f.fairRouter(ctx(), bindAddr(555), bindAddr(666));
+      f.fairRouter(ctx(), bindAddr(556), bindAddr(667));
+      f.workerAcceptor(ctx(), answering(WORLD()), connAddr(666), connAddr(667));
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(555), connAddr(556));
+    BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(555), connAddr(556));
     client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
@@ -616,10 +616,10 @@ public class ServiceTest extends ZmqAbstractTest {
 
     ServiceFixture f = new ServiceFixture();
     {
-      f.fairRouter(zmqContext(), bindAddr(555), bindAddr(666));
+      f.fairRouter(ctx(), bindAddr(555), bindAddr(666));
       // Create worker connected at all HUBs' backends.
       // NOT: there will be only one LIVE HUB.
-      f.workerAcceptor(zmqContext(), answering(WORLD()), notAvailConnAddr0(), connAddr(666), notAvailConnAddr1());
+      f.workerAcceptor(ctx(), answering(WORLD()), notAvailConnAddr0(), connAddr(666), notAvailConnAddr1());
     }
     f.init();
 
@@ -628,7 +628,7 @@ public class ServiceTest extends ZmqAbstractTest {
     BlockingClient client = BlockingClient.builder()
                                           .withChannelBuilder(
                                               ZmqChannel.builder()
-                                                        .withZmqContext(zmqContext())
+                                                        .withCtx(ctx())
                                                         .ofDEALERType()
                                                         .withProps(Props.builder()
                                                                         .withHwmSend(HWM)
@@ -681,15 +681,15 @@ public class ServiceTest extends ZmqAbstractTest {
 
     ServiceFixture f = new ServiceFixture();
     {
-      f.fairRouter(zmqContext(), bindAddr(333), bindAddr(444));
-      f.fairPassiveAcceptor(zmqContext(), connAddr(444), bindAddr(555));
-      f.fairPassiveAcceptor(zmqContext(), connAddr(555), bindAddr(666));
-      f.fairPassiveAcceptor(zmqContext(), connAddr(666), bindAddr(777));
-      f.workerAcceptor(zmqContext(), answering(WORLD()), connAddr(777));
+      f.fairRouter(ctx(), bindAddr(333), bindAddr(444));
+      f.fairPassiveAcceptor(ctx(), connAddr(444), bindAddr(555));
+      f.fairPassiveAcceptor(ctx(), connAddr(555), bindAddr(666));
+      f.fairPassiveAcceptor(ctx(), connAddr(666), bindAddr(777));
+      f.workerAcceptor(ctx(), answering(WORLD()), connAddr(777));
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(333));
+    BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(333));
     client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
@@ -731,12 +731,12 @@ public class ServiceTest extends ZmqAbstractTest {
 
     ServiceFixture f = new ServiceFixture();
     {
-      f.workerAcceptor(zmqContext(), answering(CARP()), connAddr(222));
-      f.workerAcceptor(zmqContext(), answering(SHIRT()), connAddr(222));
+      f.workerAcceptor(ctx(), answering(CARP()), connAddr(222));
+      f.workerAcceptor(ctx(), answering(SHIRT()), connAddr(222));
     }
     f.init();
 
-    BlockingClient client = f.newBindBlockingClient(zmqContext(), bindAddr(222));
+    BlockingClient client = f.newBindBlockingClient(ctx(), bindAddr(222));
     client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
@@ -776,12 +776,12 @@ public class ServiceTest extends ZmqAbstractTest {
 
     ServiceFixture f = new ServiceFixture();
     {
-      f.workerWellknown(zmqContext(), bindAddr(333), answering(WORLD()));
-      f.workerWellknown(zmqContext(), bindAddr(334), answering(WORLD()));
+      f.workerWellknown(ctx(), bindAddr(333), answering(WORLD()));
+      f.workerWellknown(ctx(), bindAddr(334), answering(WORLD()));
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(zmqContext(), connAddr(333), connAddr(334));
+    BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(333), connAddr(334));
     client.lease();
     try {
       Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
@@ -825,7 +825,7 @@ public class ServiceTest extends ZmqAbstractTest {
 
     // NOTE: this test case relies on HWM defaults settings which come along with every socket.
     // test will send 8 message, hopefully, 8 - is not greater or equal to default HWM settings.
-    BlockingClient client = f.newConnBlockingClient(zmqContext(), notAvailConnAddr0(), notAvailConnAddr1());
+    BlockingClient client = f.newConnBlockingClient(ctx(), notAvailConnAddr0(), notAvailConnAddr1());
     client.lease();
     try {
       int MESSAGE_NUM = 10; // message num being sent is significantly less than default HWM.
@@ -866,7 +866,7 @@ public class ServiceTest extends ZmqAbstractTest {
     int livePort = 333;
     ServiceFixture f = new ServiceFixture();
     {
-      f.workerWellknown(zmqContext(), bindAddr(livePort), answering(WORLD()));
+      f.workerWellknown(ctx(), bindAddr(livePort), answering(WORLD()));
     }
     f.init();
 
@@ -875,7 +875,7 @@ public class ServiceTest extends ZmqAbstractTest {
     BlockingClient client = BlockingClient.builder()
                                           .withChannelBuilder(
                                               ZmqChannel.builder()
-                                                        .withZmqContext(zmqContext())
+                                                        .withCtx(ctx())
                                                         .ofDEALERType()
                                                         .withProps(Props.builder()
                                                                         .withHwmSend(HWM)
@@ -929,10 +929,10 @@ public class ServiceTest extends ZmqAbstractTest {
 
     ServiceFixture f = new ServiceFixture();
     {
-      f.fairRouter(zmqContext(), bindAddr(555), bindAddr(666));
+      f.fairRouter(ctx(), bindAddr(555), bindAddr(666));
       // Create worker connected at all HUBs' backends.
       // NOT: there will be only one LIVE HUB.
-      f.workerAcceptor(zmqContext(), answering(WORLD()), notAvailConnAddr0(), connAddr(666), notAvailConnAddr1());
+      f.workerAcceptor(ctx(), answering(WORLD()), notAvailConnAddr0(), connAddr(666), notAvailConnAddr1());
     }
     f.init();
 
@@ -941,7 +941,7 @@ public class ServiceTest extends ZmqAbstractTest {
     BlockingClient client = BlockingClient.builder()
                                           .withChannelBuilder(
                                               ZmqChannel.builder()
-                                                        .withZmqContext(zmqContext())
+                                                        .withCtx(ctx())
                                                         .ofDEALERType()
                                                         .withProps(Props.builder()
                                                                         .withHwmSend(HWM)
@@ -1001,9 +1001,9 @@ public class ServiceTest extends ZmqAbstractTest {
     int livePort1 = 560;
     int livePort2 = 565;
     {
-      f.workerWellknown(zmqContext(), bindAddr(livePort0), answering(WORLD()));
-      f.workerWellknown(zmqContext(), bindAddr(livePort1), answering(WORLD()));
-      f.workerWellknown(zmqContext(), bindAddr(livePort2), answering(WORLD()));
+      f.workerWellknown(ctx(), bindAddr(livePort0), answering(WORLD()));
+      f.workerWellknown(ctx(), bindAddr(livePort1), answering(WORLD()));
+      f.workerWellknown(ctx(), bindAddr(livePort2), answering(WORLD()));
     }
     f.init();
 
@@ -1011,7 +1011,7 @@ public class ServiceTest extends ZmqAbstractTest {
     BlockingClient client = BlockingClient.builder()
                                           .withChannelBuilder(
                                               ZmqChannel.builder()
-                                                        .withZmqContext(zmqContext())
+                                                        .withCtx(ctx())
                                                         .ofDEALERType()
                                                         .withProps(Props.builder()
                                                                         .withHwmSend(HWM)

@@ -96,13 +96,13 @@ public final class LruRouter extends ZmqAbstractProxy {
   @Override
   public void init() {
     _frontend = ZmqChannel.builder()
-                          .withZmqContext(zmqContext)
+                          .withCtx(ctx)
                           .ofROUTERType()
                           .withProps(frontendProps)
                           .build();
 
     _backend = ZmqChannel.builder()
-                         .withZmqContext(zmqContext)
+                         .withCtx(ctx)
                          .ofROUTERType()
                          .withProps(backendProps)
                          .build();

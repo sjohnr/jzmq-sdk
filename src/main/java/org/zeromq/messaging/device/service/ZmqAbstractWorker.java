@@ -36,8 +36,8 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractRunnableContext {
   public static abstract class Builder<B extends Builder, T extends ZmqAbstractWorker>
       extends ZmqAbstractRunnableContext.Builder<B, T> {
 
-    protected Builder(T _target) {
-      super(_target);
+    protected Builder(T target) {
+      super(target);
     }
 
     public final B withProps(Props props) {

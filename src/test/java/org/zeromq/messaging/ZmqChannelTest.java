@@ -37,7 +37,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     LOG.info("Test inproc:// connection behavior: connect first and bind second => exception.");
 
     ZmqChannel.builder()
-              .withZmqContext(zmqContext())
+              .withCtx(ctx())
               .ofDEALERType()
               .withProps(Props.builder()
                               .withConnectAddress(inprocAddr("service"))
@@ -45,7 +45,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
               .build();
 
     ZmqChannel.builder()
-              .withZmqContext(zmqContext())
+              .withCtx(ctx())
               .ofDEALERType()
               .withProps(Props.builder()
                               .withBindAddress(inprocAddr("service"))
@@ -58,7 +58,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     LOG.info("Test inproc:// connection behavior: bind first and connect second => good.");
 
     ZmqChannel.builder()
-              .withZmqContext(zmqContext())
+              .withCtx(ctx())
               .ofDEALERType()
               .withProps(Props.builder()
                               .withBindAddress(inprocAddr("service"))
@@ -66,7 +66,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
               .build();
 
     ZmqChannel.builder()
-              .withZmqContext(zmqContext())
+              .withCtx(ctx())
               .ofDEALERType()
               .withProps(Props.builder()
                               .withConnectAddress(inprocAddr("service"))
@@ -79,7 +79,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     LOG.info("Test inproc:// connection behavior: bind first and then connect several times.");
 
     ZmqChannel.builder()
-              .withZmqContext(zmqContext())
+              .withCtx(ctx())
               .ofDEALERType()
               .withProps(Props.builder()
                               .withBindAddress(inprocAddr("service"))
@@ -87,7 +87,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
               .build();
 
     ZmqChannel.builder()
-              .withZmqContext(zmqContext())
+              .withCtx(ctx())
               .ofDEALERType()
               .withProps(Props.builder()
                               .withConnectAddress(inprocAddr("service"))
@@ -103,7 +103,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     LOG.info("Test edge settings.");
 
     ZmqChannel req = ZmqChannel.builder()
-                               .withZmqContext(zmqContext())
+                               .withCtx(ctx())
                                .ofDEALERType()
                                .withProps(Props.builder()
                                                .withHwmRecv(0)
@@ -131,7 +131,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     LOG.info("Test edge settings.");
 
     ZmqChannel req = ZmqChannel.builder()
-                               .withZmqContext(zmqContext())
+                               .withCtx(ctx())
                                .ofDEALERType()
                                .withProps(Props.builder()
                                                .withHwmRecv(1)
@@ -164,7 +164,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     LOG.info("Test wrong attempts to use channel.");
 
     ZmqChannel rep = ZmqChannel.builder()
-                               .withZmqContext(zmqContext())
+                               .withCtx(ctx())
                                .ofROUTERType()
                                .withProps(Props.builder()
                                                .withBindAddress(bindAddr(6633))
@@ -188,7 +188,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     {
       rep.destroy();
       rep = ZmqChannel.builder()
-                      .withZmqContext(zmqContext())
+                      .withCtx(ctx())
                       .ofROUTERType()
                       .withProps(Props.builder()
                                       .withBindAddress(bindAddr(6633))
@@ -227,7 +227,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     LOG.info("Test poller operations on connected channel.");
 
     ZmqChannel client = ZmqChannel.builder()
-                                  .withZmqContext(zmqContext())
+                                  .withCtx(ctx())
                                   .ofDEALERType()
                                   .withProps(Props.builder()
                                                   .withWaitSend(0)
@@ -237,7 +237,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                   .build();
 
     ZmqChannel server = ZmqChannel.builder()
-                                  .withZmqContext(zmqContext())
+                                  .withCtx(ctx())
                                   .ofROUTERType()
                                   .withProps(Props.builder()
                                                   .withWaitSend(0)

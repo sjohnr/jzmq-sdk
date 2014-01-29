@@ -52,8 +52,8 @@ public final class ZmqChannel implements HasDestroy {
     private Builder() {
     }
 
-    public Builder withZmqContext(ZmqContext zmqContext) {
-      _target.zmqContext = zmqContext;
+    public Builder withCtx(ZmqContext zmqContext) {
+      _target.ctx = zmqContext;
       return this;
     }
 
@@ -104,7 +104,7 @@ public final class ZmqChannel implements HasDestroy {
 
     @Override
     public void checkInvariant() {
-      if (_target.zmqContext == null) {
+      if (_target.ctx == null) {
         throw ZmqException.fatal();
       }
       switch (_target.socketType) {
@@ -193,7 +193,7 @@ public final class ZmqChannel implements HasDestroy {
 
     /** @return connected and/or bound {@link ZMQ.Socket} object. */
     ZMQ.Socket newSocket() {
-      ZMQ.Socket socket = _target.zmqContext.newSocket(_target.socketType);
+      ZMQ.Socket socket = _target.ctx.newSocket(_target.socketType);
 
       {
         // set high water marks.
@@ -322,7 +322,7 @@ public final class ZmqChannel implements HasDestroy {
     }
   }
 
-  private ZmqContext zmqContext;
+  private ZmqContext ctx;
   private int socketType = -1;
   private Props props;
 
@@ -346,7 +346,7 @@ public final class ZmqChannel implements HasDestroy {
   @Override
   public void destroy() {
     unregister();
-    zmqContext.closeSocket(_socket);
+    ctx.closeSocket(_socket);
     _socket = null; // invalidates socket.
   }
 

@@ -40,7 +40,7 @@ class ServiceFixture extends BaseFixture {
         ZmqRunnable.builder()
                    .withRunnableContext(
                        WorkerAnonymEmitter.builder()
-                                          .withZmqContext(zmqContext)
+                                          .withCtx(zmqContext)
                                           .withProps(Props.builder()
                                                           .withConnectAddresses(asList(connectAddresses))
                                                           .build())
@@ -60,7 +60,7 @@ class ServiceFixture extends BaseFixture {
         ZmqRunnable.builder()
                    .withRunnableContext(
                        WorkerAnonymEmitter.builder()
-                                          .withZmqContext(zmqContext)
+                                          .withCtx(zmqContext)
                                           .withProps(Props.builder()
                                                           .withSocketIdPrefix(id)
                                                           .withConnectAddresses(asList(connectAddresses))
@@ -80,7 +80,7 @@ class ServiceFixture extends BaseFixture {
         ZmqRunnable.builder()
                    .withRunnableContext(
                        WorkerAnonymAcceptor.builder()
-                                           .withZmqContext(zmqContext)
+                                           .withCtx(zmqContext)
                                            .withProps(Props.builder()
                                                            .withConnectAddresses(asList(connectAddresses))
                                                            .build())
@@ -98,7 +98,7 @@ class ServiceFixture extends BaseFixture {
         ZmqRunnable.builder()
                    .withRunnableContext(
                        WorkerWellknown.builder()
-                                      .withZmqContext(zmqContext)
+                                      .withCtx(zmqContext)
                                       .withProps(Props.builder()
                                                       .withBindAddress(bindAddress)
                                                       .build())
@@ -117,7 +117,7 @@ class ServiceFixture extends BaseFixture {
         ZmqRunnable.builder()
                    .withRunnableContext(
                        LruRouter.builder()
-                                .withZmqContext(zmqContext)
+                                .withCtx(zmqContext)
                                 .withSocketIdentityStorage(lruCache)
                                 .withFrontendProps(Props.builder()
                                                         .withBindAddress(frontendAddress)
@@ -138,7 +138,7 @@ class ServiceFixture extends BaseFixture {
         ZmqRunnable.builder()
                    .withRunnableContext(
                        FairRouter.builder()
-                                 .withZmqContext(zmqContext)
+                                 .withCtx(zmqContext)
                                  .withFrontendProps(Props.builder()
                                                          .withBindAddress(frontendAddress)
                                                          .build())
@@ -158,7 +158,7 @@ class ServiceFixture extends BaseFixture {
         ZmqRunnable.builder()
                    .withRunnableContext(
                        FairActiveAcceptor.builder()
-                                         .withZmqContext(zmqContext)
+                                         .withCtx(zmqContext)
                                          .withFrontendProps(Props.builder()
                                                                  .withConnectAddress(frontendAddress)
                                                                  .build())
@@ -178,7 +178,7 @@ class ServiceFixture extends BaseFixture {
         ZmqRunnable.builder()
                    .withRunnableContext(
                        FairPassiveAcceptor.builder()
-                                          .withZmqContext(zmqContext)
+                                          .withCtx(zmqContext)
                                           .withFrontendProps(Props.builder()
                                                                   .withConnectAddress(frontendAddress)
                                                                   .build())
@@ -198,7 +198,7 @@ class ServiceFixture extends BaseFixture {
         ZmqRunnable.builder()
                    .withRunnableContext(
                        FairEmitter.builder()
-                                  .withZmqContext(zmqContext)
+                                  .withCtx(zmqContext)
                                   .withFrontendProps(Props.builder()
                                                           .withBindAddress(frontendAddress)
                                                           .build())
@@ -263,7 +263,7 @@ class ServiceFixture extends BaseFixture {
     BlockingClient target = BlockingClient.builder()
                                           .withChannelBuilder(
                                               ZmqChannel.builder()
-                                                        .withZmqContext(zmqContext)
+                                                        .withCtx(zmqContext)
                                                         .ofDEALERType()
                                                         .withProps(Props.builder()
                                                                         .withBindAddress(bindAddress)
@@ -278,7 +278,7 @@ class ServiceFixture extends BaseFixture {
     BlockingClient target =
         BlockingClient.builder()
                       .withChannelBuilder(ZmqChannel.builder()
-                                                    .withZmqContext(zmqContext)
+                                                    .withCtx(zmqContext)
                                                     .ofDEALERType()
                                                     .withProps(Props.builder()
                                                                     .withConnectAddresses(asList(connAddresses))
@@ -294,7 +294,7 @@ class ServiceFixture extends BaseFixture {
     BlockingClient target = BlockingClient.builder()
                                           .withChannelBuilder(
                                               ZmqChannel.builder()
-                                                        .withZmqContext(zmqContext)
+                                                        .withCtx(zmqContext)
                                                         .ofDEALERType()
                                                         .withProps(Props.builder()
                                                                         .withConnectAddresses(asList(connAddresses))

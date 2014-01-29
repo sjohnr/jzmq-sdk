@@ -37,22 +37,22 @@ public final class Chat extends ZmqAbstractRunnableContext {
       super(new Chat());
     }
 
-    public Builder withLocalPublisherProps(Props localPublisherProps) {
+    public Builder withFrontendPubProps(Props localPublisherProps) {
       _target.localPublisherProps = localPublisherProps;
       return this;
     }
 
-    public Builder withClusterPublisherProps(Props clusterPublisherProps) {
+    public Builder withClusterPubProps(Props clusterPublisherProps) {
       _target.clusterPublisherProps = clusterPublisherProps;
       return this;
     }
 
-    public Builder withLocalSubscriberProps(Props localSubscriberProps) {
+    public Builder withFrontendSubProps(Props localSubscriberProps) {
       _target.localSubscriberProps = localSubscriberProps;
       return this;
     }
 
-    public Builder withClusterSubscriberProps(Props clusterSubscriberProps) {
+    public Builder withClusterSubProps(Props clusterSubscriberProps) {
       _target.clusterSubscriberProps = clusterSubscriberProps;
       return this;
     }
@@ -138,25 +138,25 @@ public final class Chat extends ZmqAbstractRunnableContext {
     }
 
     reg(_localPublisher = ZmqChannel.builder()
-                                    .withZmqContext(zmqContext)
+                                    .withCtx(ctx)
                                     .ofXSUBType()
                                     .withProps(localPublisherProps)
                                     .build());
 
     reg(_clusterPublisher = ZmqChannel.builder()
-                                      .withZmqContext(zmqContext)
+                                      .withCtx(ctx)
                                       .ofXPUBType()
                                       .withProps(clusterPublisherProps)
                                       .build());
 
     reg(_localSubscriber = ZmqChannel.builder()
-                                     .withZmqContext(zmqContext)
+                                     .withCtx(ctx)
                                      .ofXPUBType()
                                      .withProps(localSubscriberProps)
                                      .build());
 
     reg(_clusterSubscriber = ZmqChannel.builder()
-                                       .withZmqContext(zmqContext)
+                                       .withCtx(ctx)
                                        .ofXSUBType()
                                        .withProps(clusterSubscriberProps)
                                        .build());

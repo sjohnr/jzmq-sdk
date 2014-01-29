@@ -65,7 +65,7 @@ public final class WorkerAnonymEmitter extends ZmqAbstractWorker {
     _pingStrategy = new DoPing();
 
     _channel = ZmqChannel.builder()
-                         .withZmqContext(zmqContext)
+                         .withCtx(ctx)
                          .ofDEALERType()
                          .withProps(props)
                          .build();
