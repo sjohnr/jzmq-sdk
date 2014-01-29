@@ -211,4 +211,8 @@ public final class ZmqMessage {
   public boolean isUnsubscribe() {
     return extendedPubSubFlag == BYTE_UNSUB;
   }
+
+  public byte extendedPubSubFlag() {
+    return extendedPubSubFlag;
+  }
 }

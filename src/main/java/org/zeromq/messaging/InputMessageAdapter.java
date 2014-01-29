@@ -25,6 +25,9 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.support.ObjectAdapter;
 import org.zeromq.support.ObjectBuilder;
 
+import java.util.Arrays;
+
+import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
 import static org.zeromq.support.ZmqUtils.isDivFrame;
 import static org.zeromq.support.ZmqUtils.isEmptyFrame;
 
@@ -67,8 +70,12 @@ class InputMessageAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
 
     @Override
     public void checkInvariant() {
-      // no-op.
-      // TODO -- add validation.
+      if (_target.awareOfExtendedPubSub && _target.expectIdentities) {
+        throw ZmqException.fatal();
+      }
+      if (_target.awareOfExtendedPubSub && !_target.awareOfTopicFrame) {
+        throw ZmqException.fatal();
+      }
     }
 
     @Override
@@ -99,7 +106,12 @@ class InputMessageAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
       ZmqMessage.Builder builder = ZmqMessage.builder();
 
       // -- if this is XPUB or XSUB then handle frames accordingly.
-      // TODO -- implement.
+      if (awareOfExtendedPubSub) {
+        byte[] buf = frames.poll();
+        builder.withExtendedPubSubFlag(buf[0]);
+        builder.withTopic(buf.length > 1 ? Arrays.copyOfRange(buf, 1, buf.length) : EMPTY_FRAME);
+        return builder.build();
+      }
 
       // --- topic
 

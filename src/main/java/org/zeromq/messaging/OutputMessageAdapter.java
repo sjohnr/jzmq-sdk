@@ -24,6 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.support.ObjectAdapter;
 import org.zeromq.support.ObjectBuilder;
+import org.zeromq.support.ZmqUtils;
+
+import java.util.Arrays;
 
 import static org.zeromq.messaging.ZmqMessage.DIV_FRAME;
 import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
@@ -78,7 +81,15 @@ class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
       if (_target.awareOfDEALERType && !_target.expectIdentities) {
         throw ZmqException.fatal();
       }
-      // TODO -- add validation.
+      if (_target.awareOfExtendedPubSub && _target.awareOfDEALERType) {
+        throw ZmqException.fatal();
+      }
+      if (_target.awareOfExtendedPubSub && _target.expectIdentities) {
+        throw ZmqException.fatal();
+      }
+      if (_target.awareOfExtendedPubSub && !_target.awareOfTopicFrame) {
+        throw ZmqException.fatal();
+      }
     }
 
     @Override
@@ -110,7 +121,12 @@ class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
       ZmqFrames target = new ZmqFrames();
 
       // -- if this is XPUB or XSUB then handle message accordingly.
-      // TODO -- implement.
+      if (awareOfExtendedPubSub) {
+        byte[] flag = {message.extendedPubSubFlag()};
+        byte[] topic = message.topic();
+        target.add(ZmqUtils.mergeBytes(Arrays.asList(flag, topic)));
+        return target;
+      }
 
       // --- topic
 

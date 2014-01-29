@@ -23,6 +23,7 @@ package org.zeromq.messaging;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeromq.support.ZmqUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,6 +33,8 @@ import java.util.List;
 import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.zeromq.messaging.ZmqMessage.BYTE_SUB;
+import static org.zeromq.messaging.ZmqMessage.BYTE_UNSUB;
 import static org.zeromq.messaging.ZmqMessage.DIV_FRAME;
 import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
 
@@ -250,6 +253,58 @@ public class InputOutputMessageAdapterTest {
     assertEq(message, input.convert(frames));
   }
 
+  @Test
+  public void t5() {
+    ZmqMessage message = ZmqMessage.builder()
+                                   .withTopic(topic)
+                                   .withExtendedPubSubFlag(BYTE_SUB)
+                                   .build();
+
+    OutputMessageAdapter output = OutputMessageAdapter.builder()
+                                                      .awareOfTopicFrame()
+                                                      .awareOfExtendedPubSub()
+                                                      .build();
+
+    ZmqFrames frames = output.convert(message);
+    Iterator<byte[]> framesIter = frames.iterator();
+
+    assertNextFrame(ZmqUtils.mergeBytes(Arrays.asList(new byte[]{BYTE_SUB}, topic)), framesIter);
+    assert !framesIter.hasNext();
+
+    InputMessageAdapter input = InputMessageAdapter.builder()
+                                                   .awareOfTopicFrame()
+                                                   .awareOfExtendedPubSub()
+                                                   .build();
+
+    assertEq(message, input.convert(frames));
+  }
+
+  @Test
+  public void t6() {
+    ZmqMessage message = ZmqMessage.builder()
+                                   .withTopic(EMPTY_FRAME)
+                                   .withExtendedPubSubFlag(BYTE_UNSUB)
+                                   .build();
+
+    OutputMessageAdapter output = OutputMessageAdapter.builder()
+                                                      .awareOfTopicFrame()
+                                                      .awareOfExtendedPubSub()
+                                                      .build();
+
+    ZmqFrames frames = output.convert(message);
+    Iterator<byte[]> framesIter = frames.iterator();
+
+    assertNextFrame(ZmqUtils.mergeBytes(Arrays.asList(new byte[]{BYTE_UNSUB}, EMPTY_FRAME)), framesIter);
+    assert !framesIter.hasNext();
+
+    InputMessageAdapter input = InputMessageAdapter.builder()
+                                                   .awareOfTopicFrame()
+                                                   .awareOfExtendedPubSub()
+                                                   .build();
+
+    assertEq(message, input.convert(frames));
+  }
+
   private void assertNextFrame(byte[] frame, Iterator<byte[]> it) {
     assertTrue(Arrays.equals(frame, it.next()));
   }
@@ -261,6 +316,7 @@ public class InputOutputMessageAdapterTest {
   private void assertEq(ZmqMessage a, ZmqMessage b) {
     assert a != b;
     assertEq(a.topic(), b.topic());
+    assertEquals(a.extendedPubSubFlag(), b.extendedPubSubFlag());
     assertEq(a.payload(), b.payload());
 
     List<byte[]> a_identities = new ArrayList<byte[]>(a.identityFrames());
