@@ -23,6 +23,8 @@ package org.zeromq.messaging;
 import org.junit.After;
 import org.junit.Before;
 
+import java.util.concurrent.TimeUnit;
+
 import static junit.framework.Assert.assertEquals;
 
 public abstract class ZmqAbstractTest {
@@ -85,5 +87,9 @@ public abstract class ZmqAbstractTest {
 
   public static String inprocAddr(String addr) {
     return "inproc://" + addr;
+  }
+
+  public static void waitSec() throws InterruptedException {
+    TimeUnit.SECONDS.sleep(1);
   }
 }

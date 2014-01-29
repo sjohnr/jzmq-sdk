@@ -28,9 +28,10 @@ import org.zeromq.support.HasInit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -67,7 +68,7 @@ public final class ZmqThreadPool implements HasInit, HasDestroy {
   private List<ZmqRunnable> runnables = new ArrayList<ZmqRunnable>();
 
   private CountDownLatch _destroyLatch;
-  private ExecutorService _executor;
+  private ThreadPoolExecutor _executor;
 
   //// CONSTRUCTORS
 
@@ -78,13 +79,27 @@ public final class ZmqThreadPool implements HasInit, HasDestroy {
 
   public static ZmqThreadPool newCachedDaemonThreadPool() {
     ZmqThreadPool target = new ZmqThreadPool();
-    target._executor = Executors.newCachedThreadPool(DAEMON_THREAD_FACTORY);
+    target._executor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors(),
+                                              Integer.MAX_VALUE,
+                                              60L,
+                                              TimeUnit.SECONDS,
+                                              new SynchronousQueue<Runnable>(),
+                                              DAEMON_THREAD_FACTORY);
+    int i = target._executor.prestartAllCoreThreads();
+    LOG.debug("Started {} core zmq-threads.", i);
     return target;
   }
 
   public static ZmqThreadPool newCachedNonDaemonThreadPool() {
     ZmqThreadPool target = new ZmqThreadPool();
-    target._executor = Executors.newCachedThreadPool(NON_DAEMON_THREAD_FACTORY);
+    target._executor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors(),
+                                              Integer.MAX_VALUE,
+                                              60L,
+                                              TimeUnit.SECONDS,
+                                              new SynchronousQueue<Runnable>(),
+                                              NON_DAEMON_THREAD_FACTORY);
+    int i = target._executor.prestartAllCoreThreads();
+    LOG.debug("Started {} core zmq-threads.", i);
     return target;
   }
 

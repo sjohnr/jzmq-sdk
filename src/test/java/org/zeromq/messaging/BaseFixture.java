@@ -30,29 +30,29 @@ import java.util.List;
 
 public class BaseFixture implements HasInit, HasDestroy {
 
-  private final List<HasDestroy> _d = new ArrayList<HasDestroy>();
-  private final ZmqThreadPool _t = ZmqThreadPool.newCachedDaemonThreadPool();
+  private final List<HasDestroy> _destroyables = new ArrayList<HasDestroy>();
+  private final ZmqThreadPool _threadPool = ZmqThreadPool.newCachedDaemonThreadPool();
 
   @Override
   public final void init() {
-    _t.init();
+    _threadPool.init();
   }
 
   @Override
   public final void destroy() {
-    _t.destroy();
-    for (HasDestroy i : _d) {
+    _threadPool.destroy();
+    for (HasDestroy i : _destroyables) {
       i.destroy();
     }
   }
 
   public final void with(HasDestroy d) {
     assert d != null;
-    _d.add(d);
+    _destroyables.add(d);
   }
 
   public final void with(ZmqRunnable r) {
     assert r != null;
-    _t.withRunnable(r);
+    _threadPool.withRunnable(r);
   }
 }

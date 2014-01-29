@@ -22,7 +22,7 @@ public class ChatFixture extends BaseFixture {
                    .withRunnableContext(
                        Chat.builder()
                            .withCtx(ctx)
-                           .withPollTimeout(10)
+                           .withPollTimeout(100)
                            .withFrontendPubProps(Props.builder().withBindAddress(frontendPub).build())
                            .withClusterPubProps(Props.builder().withBindAddress(clusterPub).build())
                            .withFrontendSubProps(Props.builder().withBindAddress(frontendSub).build())

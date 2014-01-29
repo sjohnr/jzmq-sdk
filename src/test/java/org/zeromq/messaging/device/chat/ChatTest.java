@@ -6,22 +6,17 @@ import org.zeromq.messaging.ZmqAbstractTest;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqMessage;
 
-import java.util.concurrent.TimeUnit;
-
 public class ChatTest extends ZmqAbstractTest {
 
   @Test
   public void t0() throws InterruptedException {
     ChatFixture f = new ChatFixture(ctx());
 
-    int frontendPub = 3030;
-    int frontendSub = 4040;
-    int clusterPub = 3035;
+    f.chat(inprocAddr("p>>"),
+           inprocAddr("p>>>>"),
+           inprocAddr("s<<"),
+           inprocAddr("p>>>>"));
 
-    f.chat(bindAddr(frontendPub), // -->>
-           bindAddr(clusterPub),  // -->>>
-           bindAddr(frontendSub), // <<--
-           connAddr(clusterPub)); // <<<<--
     f.init();
 
     try {
@@ -29,7 +24,7 @@ public class ChatTest extends ZmqAbstractTest {
                                  .withCtx(ctx())
                                  .PUB()
                                  .withProps(Props.builder()
-                                                 .withConnAddress(connAddr(frontendPub))
+                                                 .withConnAddress(inprocAddr("p>>"))
                                                  .build())
                                  .build();
 
@@ -37,18 +32,17 @@ public class ChatTest extends ZmqAbstractTest {
                                  .withCtx(ctx())
                                  .SUB()
                                  .withProps(Props.builder()
-                                                 .withConnAddress(connAddr(frontendSub))
+                                                 .withConnAddress(inprocAddr("s<<"))
                                                  .build())
                                  .build();
 
-      TimeUnit.SECONDS.sleep(1);
-
       byte[] topic = "xxx".getBytes();
-      ZmqMessage message = ZmqMessage.builder(HELLO()).withTopic(topic).build();
       sub.subscribe(topic);
-      pub.send(message);
 
-      TimeUnit.SECONDS.sleep(1);
+      waitSec(); // wait a second.
+
+      pub.send(ZmqMessage.builder(HELLO()).withTopic(topic).build());
+      assertPayload("hello", sub.recv());
     }
     finally {
       f.destroy();
