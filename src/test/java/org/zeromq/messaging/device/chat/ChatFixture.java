@@ -24,19 +24,19 @@ public class ChatFixture extends BaseFixture {
                            .withCtx(ctx)
                            .withFrontendPubProps(
                                Props.builder()
-                                    .withBindAddress(frontendPub)
+                                    .withBindAddress(frontendPub) // XSUB
                                     .build())
                            .withClusterPubProps(
                                Props.builder()
-                                    .withBindAddress(clusterPub)
+                                    .withBindAddress(clusterPub) // XPUB
                                     .build())
                            .withFrontendSubProps(
                                Props.builder()
-                                    .withBindAddress(frontendSub)
+                                    .withBindAddress(frontendSub) // XPUB
                                     .build())
                            .withClusterSubProps(
                                Props.builder()
-                                    .withConnectAddress(clusterSub)
+                                    .withConnectAddress(clusterSub) // XSUB
                                     .build())
                            .build()
                    )

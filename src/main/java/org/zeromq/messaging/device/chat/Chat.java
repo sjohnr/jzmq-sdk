@@ -37,31 +37,31 @@ public final class Chat extends ZmqAbstractRunnableContext {
       super(new Chat());
     }
 
-    public Builder withFrontendPubProps(Props localPublisherProps) {
-      _target.localPublisherProps = localPublisherProps;
+    public Builder withFrontendPubProps(Props frontendPubProps) {
+      _target.setFrontendPubProps(frontendPubProps);
       return this;
     }
 
-    public Builder withClusterPubProps(Props clusterPublisherProps) {
-      _target.clusterPublisherProps = clusterPublisherProps;
+    public Builder withClusterPubProps(Props clusterPubProps) {
+      _target.setClusterPubProps(clusterPubProps);
       return this;
     }
 
-    public Builder withFrontendSubProps(Props localSubscriberProps) {
-      _target.localSubscriberProps = localSubscriberProps;
+    public Builder withFrontendSubProps(Props frontendSubProps) {
+      _target.setFrontendSubProps(frontendSubProps);
       return this;
     }
 
-    public Builder withClusterSubProps(Props clusterSubscriberProps) {
-      _target.clusterSubscriberProps = clusterSubscriberProps;
+    public Builder withClusterSubProps(Props clusterSubProps) {
+      _target.setClusterSubProps(clusterSubProps);
       return this;
     }
   }
 
-  private Props localPublisherProps;
-  private Props clusterSubscriberProps;
-  private Props localSubscriberProps;
-  private Props clusterPublisherProps;
+  private Props frontendPubProps;
+  private Props clusterSubProps;
+  private Props frontendSubProps;
+  private Props clusterPubProps;
 
   /**
    * XSUB -- for serving local multithreaded publishers:
@@ -106,59 +106,59 @@ public final class Chat extends ZmqAbstractRunnableContext {
     return new Builder();
   }
 
-  public void setLocalPublisherProps(Props localPublisherProps) {
-    this.localPublisherProps = localPublisherProps;
+  public void setFrontendPubProps(Props frontendPubProps) {
+    this.frontendPubProps = frontendPubProps;
   }
 
-  public void setClusterPublisherProps(Props clusterPublisherProps) {
-    this.clusterPublisherProps = clusterPublisherProps;
+  public void setClusterPubProps(Props clusterPubProps) {
+    this.clusterPubProps = clusterPubProps;
   }
 
-  public void setLocalSubscriberProps(Props localSubscriberProps) {
-    this.localSubscriberProps = localSubscriberProps;
+  public void setFrontendSubProps(Props frontendSubProps) {
+    this.frontendSubProps = frontendSubProps;
   }
 
-  public void setClusterSubscriberProps(Props clusterSubscriberProps) {
-    this.clusterSubscriberProps = clusterSubscriberProps;
+  public void setClusterSubProps(Props clusterSubProps) {
+    this.clusterSubProps = clusterSubProps;
   }
 
   @Override
   public void init() {
-    if (localPublisherProps == null) {
+    if (frontendPubProps == null) {
       throw ZmqException.fatal();
     }
-    if (clusterPublisherProps == null) {
+    if (clusterPubProps == null) {
       throw ZmqException.fatal();
     }
-    if (localSubscriberProps == null) {
+    if (frontendSubProps == null) {
       throw ZmqException.fatal();
     }
-    if (clusterSubscriberProps == null) {
+    if (clusterSubProps == null) {
       throw ZmqException.fatal();
     }
 
     reg(_localPublisher = ZmqChannel.builder()
                                     .withCtx(ctx)
                                     .ofXSUBType()
-                                    .withProps(localPublisherProps)
+                                    .withProps(frontendPubProps)
                                     .build());
 
     reg(_clusterPublisher = ZmqChannel.builder()
                                       .withCtx(ctx)
                                       .ofXPUBType()
-                                      .withProps(clusterPublisherProps)
+                                      .withProps(clusterPubProps)
                                       .build());
 
     reg(_localSubscriber = ZmqChannel.builder()
                                      .withCtx(ctx)
                                      .ofXPUBType()
-                                     .withProps(localSubscriberProps)
+                                     .withProps(frontendSubProps)
                                      .build());
 
     reg(_clusterSubscriber = ZmqChannel.builder()
                                        .withCtx(ctx)
                                        .ofXSUBType()
-                                       .withProps(clusterSubscriberProps)
+                                       .withProps(clusterSubProps)
                                        .build());
 
     _localPublisher.watchRecv(_poller);
