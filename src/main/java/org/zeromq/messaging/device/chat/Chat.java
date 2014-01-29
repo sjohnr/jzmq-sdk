@@ -137,31 +137,29 @@ public final class Chat extends ZmqAbstractRunnableContext {
       throw ZmqException.fatal();
     }
 
-    register(_localPublisher = ZmqChannel.builder()
-                                         .withZmqContext(zmqContext)
-                                         .ofXSUBType()
-                                         .withProps(localPublisherProps)
-                                         .build());
+    reg(_localPublisher = ZmqChannel.builder()
+                                    .withZmqContext(zmqContext)
+                                    .ofXSUBType()
+                                    .withProps(localPublisherProps)
+                                    .build());
 
-    register(_clusterPublisher = ZmqChannel.builder()
-                                            .withZmqContext(zmqContext)
-                                            .ofXPUBType()
-                                            .withProps(clusterPublisherProps)
-                                            .build());
+    reg(_clusterPublisher = ZmqChannel.builder()
+                                      .withZmqContext(zmqContext)
+                                      .ofXPUBType()
+                                      .withProps(clusterPublisherProps)
+                                      .build());
 
-    register(_localSubscriber = ZmqChannel.builder()
-                                          .withZmqContext(zmqContext)
-                                          .ofXPUBType()
-                                          .withProps(localSubscriberProps)
-                                          .build());
+    reg(_localSubscriber = ZmqChannel.builder()
+                                     .withZmqContext(zmqContext)
+                                     .ofXPUBType()
+                                     .withProps(localSubscriberProps)
+                                     .build());
 
-    register(_clusterSubscriber = ZmqChannel.builder()
-                                           .withZmqContext(zmqContext)
-                                           .ofXSUBType()
-                                           .withProps(clusterSubscriberProps)
-                                           .build());
-
-    _poller = zmqContext.newPoller(4);
+    reg(_clusterSubscriber = ZmqChannel.builder()
+                                       .withZmqContext(zmqContext)
+                                       .ofXSUBType()
+                                       .withProps(clusterSubscriberProps)
+                                       .build());
 
     _localPublisher.watchRecv(_poller);
     _clusterPublisher.watchRecv(_poller);
@@ -170,7 +168,9 @@ public final class Chat extends ZmqAbstractRunnableContext {
   }
 
   @Override
-  public void exec() {
+  public void execute() {
+    super.execute();
+
     if (_localPublisher.canRecv()) {
       _clusterPublisher.send(_localPublisher.recv());
       LOG.trace("Handle --> traffic: local publisher(s) send message to the cluster.");

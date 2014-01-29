@@ -37,14 +37,8 @@ public class ZmqThreadPoolTest {
   }
 
   static class ZmqRunnableContextPrototype implements ZmqRunnableContext {
-
     @Override
-    public void block() {
-      // no-op.
-    }
-
-    @Override
-    public void exec() {
+    public void execute() {
       // no-op.
     }
 
@@ -126,7 +120,7 @@ public class ZmqThreadPoolTest {
                       .withExceptionHandler(new InterruptingExceptionHandler())
                       .withRunnableContext(new ZmqRunnableContextPrototype() {
                         @Override
-                        public void block() {
+                        public void execute() {
                           try {
                             Thread.sleep(Long.MAX_VALUE);
                           }
@@ -144,7 +138,7 @@ public class ZmqThreadPoolTest {
                       .withExceptionHandler(new InterruptingExceptionHandler())
                       .withRunnableContext(new ZmqRunnableContextPrototype() {
                         @Override
-                        public void exec() {
+                        public void execute() {
                           throw new UnsupportedOperationException();
                         }
                       })

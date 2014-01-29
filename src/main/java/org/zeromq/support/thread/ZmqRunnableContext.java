@@ -25,7 +25,5 @@ import org.zeromq.support.HasInit;
 
 public interface ZmqRunnableContext extends HasInit, HasDestroy {
 
-  void block();
-
-  void exec();
+  void execute();
 }

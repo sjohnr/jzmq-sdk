@@ -69,10 +69,10 @@ public abstract class ZmqAbstractRunnableContext implements ZmqRunnableContext {
   }
 
   protected ZmqContext zmqContext;
-  protected long pollTimeout = DEFAULT_POLL_TIMEOUT;
-  protected List<ZmqChannel> channels = new ArrayList<ZmqChannel>();
+  private long pollTimeout = DEFAULT_POLL_TIMEOUT;
+  private List<ZmqChannel> channels = new ArrayList<ZmqChannel>();
 
-  protected ZMQ.Poller _poller;
+  protected ZMQ.Poller _poller = new ZMQ.Poller(1);
 
   //// CONSTRUCTOR
 
@@ -90,21 +90,18 @@ public abstract class ZmqAbstractRunnableContext implements ZmqRunnableContext {
   }
 
   @Override
-  public final void block() {
-    if (_poller == null) {
-      throw ZmqException.fatal();
-    }
+  public void execute() {
     _poller.poll(pollTimeout);
   }
 
   @Override
-  public void destroy() {
+  public final void destroy() {
     for (ZmqChannel channel : channels) {
       channel.destroy();
     }
   }
 
-  protected final void register(ZmqChannel channel) {
+  protected final void reg(ZmqChannel channel) {
     if (channel == null) {
       throw ZmqException.fatal();
     }

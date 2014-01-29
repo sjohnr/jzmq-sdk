@@ -89,13 +89,14 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractRunnableContext {
     if (_channel == null) {
       throw ZmqException.fatal();
     }
-    _poller = zmqContext.newPoller(1);
     _channel.watchRecv(_poller);
     _pingStrategyForLogging = _pingStrategy.getClass().getSimpleName();
   }
 
   @Override
-  public final void exec() {
+  public final void execute() {
+    super.execute();
+
     if (!_channel.canRecv()) {
       LOG.debug("No incoming requests. Delegating to {}.", _pingStrategyForLogging);
       _pingStrategy.ping(_channel);
@@ -127,13 +128,6 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractRunnableContext {
     }
     else {
       _pingStrategy.ping(_channel);
-    }
-  }
-
-  @Override
-  public final void destroy() {
-    if (_channel != null) {
-      _channel.destroy();
     }
   }
 }

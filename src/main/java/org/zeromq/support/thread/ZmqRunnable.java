@@ -128,11 +128,7 @@ public final class ZmqRunnable implements Runnable {
       // here we go ...
       while (!Thread.currentThread().isInterrupted()) {
         try {
-          runnableContext.block();
-          if (Thread.currentThread().isInterrupted()) {
-            break;
-          }
-          runnableContext.exec();
+          runnableContext.execute();
         }
         catch (Exception e) {
           // catch exception using mechanism of chained exception handlers.

@@ -150,13 +150,6 @@ public final class ZmqContext implements HasInit, HasDestroy {
     return socket;
   }
 
-  public synchronized ZMQ.Poller newPoller(int sockNum) {
-    if (!_accessible) {
-      throw ZmqException.contextNotAccessible();
-    }
-    return new ZMQ.Poller(sockNum);
-  }
-
   public synchronized void closeSocket(ZMQ.Socket socket) {
     if (socket == null) {
       return;

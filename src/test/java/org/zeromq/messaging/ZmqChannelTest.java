@@ -114,7 +114,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                                .build())
                                .build();
 
-    ZMQ.Poller p = zmqContext().newPoller(1);
+    ZMQ.Poller p = new ZMQ.Poller(1);
     req.watchSendRecv(p);
 
     p.poll(100);
@@ -142,7 +142,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                                .build())
                                .build();
 
-    ZMQ.Poller p = zmqContext().newPoller(1);
+    ZMQ.Poller p = new ZMQ.Poller(1);
     req.watchSendRecv(p);
 
     p.poll(100);
@@ -171,12 +171,12 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                                .build())
                                .build();
 
-    // try register channel twice.
+    // try reg channel twice.
     {
-      ZMQ.Poller poller = zmqContext().newPoller(1);
-      rep.watchSendRecv(poller); // register once.
+      ZMQ.Poller poller = new ZMQ.Poller(1);
+      rep.watchSendRecv(poller); // reg once.
       try {
-        rep.watchSendRecv(poller); // register twice.
+        rep.watchSendRecv(poller); // reg twice.
         fail();
       }
       catch (ZmqException e) {
@@ -184,7 +184,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
       }
     }
 
-    // try again with more sophisticated case: use channel for a while and then register it.
+    // try again with more sophisticated case: use channel for a while and then reg it.
     {
       rep.destroy();
       rep = ZmqChannel.builder()
@@ -196,12 +196,12 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                       .build();
 
       // use channel functions ...
-      rep.watchSendRecv(zmqContext().newPoller(1));
+      rep.watchSendRecv(new ZMQ.Poller(1));
       assert !rep.canRecv();
       assert !rep.canSend();
-      // register again and check that this fails.
+      // reg again and check that this fails.
       try {
-        rep.watchSendRecv(zmqContext().newPoller(1));
+        rep.watchSendRecv(new ZMQ.Poller(1));
         fail();
       }
       catch (ZmqException e) {
@@ -246,10 +246,10 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                                   .build())
                                   .build();
 
-    ZMQ.Poller clientPoller = zmqContext().newPoller(1);
+    ZMQ.Poller clientPoller = new ZMQ.Poller(1);
     client.watchRecv(clientPoller);
 
-    ZMQ.Poller serverPoller = zmqContext().newPoller(1);
+    ZMQ.Poller serverPoller = new ZMQ.Poller(1);
     server.watchRecv(serverPoller);
 
     int timeout = 10;

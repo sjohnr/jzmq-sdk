@@ -111,7 +111,9 @@ public final class LruRouter extends ZmqAbstractProxy {
   }
 
   @Override
-  public void exec() {
+  public void execute() {
+    super.execute();
+
     // ==== handle backend traffic first ====
     if (_backend.canRecv()) {
       ZmqMessage message = _backend.recv();
