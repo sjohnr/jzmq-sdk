@@ -66,7 +66,7 @@ public final class WorkerAnonymAcceptor extends ZmqAbstractWorker {
 
     _channel = ZmqChannel.builder()
                          .withCtx(ctx)
-                         .ofROUTERType()
+                         .ROUTER()
                          .withProps(props)
                          .build();
 

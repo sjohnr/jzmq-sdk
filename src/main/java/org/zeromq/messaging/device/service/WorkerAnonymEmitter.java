@@ -66,7 +66,7 @@ public final class WorkerAnonymEmitter extends ZmqAbstractWorker {
 
     _channel = ZmqChannel.builder()
                          .withCtx(ctx)
-                         .ofDEALERType()
+                         .DEALERT()
                          .withProps(props)
                          .build();
 

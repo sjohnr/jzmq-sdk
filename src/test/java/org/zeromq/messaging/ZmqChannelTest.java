@@ -38,15 +38,15 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
     ZmqChannel.builder()
               .withCtx(ctx())
-              .ofDEALERType()
+              .DEALERT()
               .withProps(Props.builder()
-                              .withConnectAddress(inprocAddr("service"))
+                              .withConnAddress(inprocAddr("service"))
                               .build())
               .build();
 
     ZmqChannel.builder()
               .withCtx(ctx())
-              .ofDEALERType()
+              .DEALERT()
               .withProps(Props.builder()
                               .withBindAddress(inprocAddr("service"))
                               .build())
@@ -59,7 +59,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
     ZmqChannel.builder()
               .withCtx(ctx())
-              .ofDEALERType()
+              .DEALERT()
               .withProps(Props.builder()
                               .withBindAddress(inprocAddr("service"))
                               .build())
@@ -67,9 +67,9 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
     ZmqChannel.builder()
               .withCtx(ctx())
-              .ofDEALERType()
+              .DEALERT()
               .withProps(Props.builder()
-                              .withConnectAddress(inprocAddr("service"))
+                              .withConnAddress(inprocAddr("service"))
                               .build())
               .build();
   }
@@ -80,7 +80,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
     ZmqChannel.builder()
               .withCtx(ctx())
-              .ofDEALERType()
+              .DEALERT()
               .withProps(Props.builder()
                               .withBindAddress(inprocAddr("service"))
                               .build())
@@ -88,12 +88,12 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
     ZmqChannel.builder()
               .withCtx(ctx())
-              .ofDEALERType()
+              .DEALERT()
               .withProps(Props.builder()
-                              .withConnectAddress(inprocAddr("service"))
+                              .withConnAddress(inprocAddr("service"))
                               .build())
               .withProps(Props.builder()
-                              .withConnectAddress(inprocAddr("service-noabc"))
+                              .withConnAddress(inprocAddr("service-noabc"))
                               .build())
               .build();
   }
@@ -104,13 +104,13 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
     ZmqChannel req = ZmqChannel.builder()
                                .withCtx(ctx())
-                               .ofDEALERType()
+                               .DEALERT()
                                .withProps(Props.builder()
                                                .withHwmRecv(0)
                                                .withHwmSend(0)
                                                .withWaitSend(-1)
                                                .withWaitRecv(1)
-                                               .withConnectAddress(connAddr(4466))
+                                               .withConnAddress(connAddr(4466))
                                                .build())
                                .build();
 
@@ -132,13 +132,13 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
     ZmqChannel req = ZmqChannel.builder()
                                .withCtx(ctx())
-                               .ofDEALERType()
+                               .DEALERT()
                                .withProps(Props.builder()
                                                .withHwmRecv(1)
                                                .withHwmSend(1)
                                                .withWaitSend(0)
                                                .withWaitRecv(0)
-                                               .withConnectAddress(connAddr(4466))
+                                               .withConnAddress(connAddr(4466))
                                                .build())
                                .build();
 
@@ -165,7 +165,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
     ZmqChannel rep = ZmqChannel.builder()
                                .withCtx(ctx())
-                               .ofROUTERType()
+                               .ROUTER()
                                .withProps(Props.builder()
                                                .withBindAddress(bindAddr(6633))
                                                .build())
@@ -189,7 +189,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
       rep.destroy();
       rep = ZmqChannel.builder()
                       .withCtx(ctx())
-                      .ofROUTERType()
+                      .ROUTER()
                       .withProps(Props.builder()
                                       .withBindAddress(bindAddr(6633))
                                       .build())
@@ -228,17 +228,17 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
     ZmqChannel client = ZmqChannel.builder()
                                   .withCtx(ctx())
-                                  .ofDEALERType()
+                                  .DEALERT()
                                   .withProps(Props.builder()
                                                   .withWaitSend(0)
                                                   .withWaitRecv(100)
-                                                  .withConnectAddress(connAddr(6677))
+                                                  .withConnAddress(connAddr(6677))
                                                   .build())
                                   .build();
 
     ZmqChannel server = ZmqChannel.builder()
                                   .withCtx(ctx())
-                                  .ofROUTERType()
+                                  .ROUTER()
                                   .withProps(Props.builder()
                                                   .withWaitSend(0)
                                                   .withWaitRecv(100)

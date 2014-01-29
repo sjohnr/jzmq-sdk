@@ -71,13 +71,13 @@ public final class FairPassiveAcceptor extends ZmqAbstractFairService {
   public void init() {
     _frontend = ZmqChannel.builder()
                           .withCtx(ctx)
-                          .ofROUTERType()
+                          .ROUTER()
                           .withProps(frontendProps)
                           .build();
 
     _backend = ZmqChannel.builder()
                          .withCtx(ctx)
-                         .ofDEALERType()
+                         .DEALERT()
                          .withProps(backendProps)
                          .build();
 

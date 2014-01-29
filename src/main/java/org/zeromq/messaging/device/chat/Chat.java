@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.messaging.Props;
 import org.zeromq.messaging.ZmqChannel;
-import org.zeromq.messaging.ZmqException;
+import org.zeromq.messaging.ZmqMessage;
 import org.zeromq.messaging.device.ZmqAbstractRunnableContext;
 
 public final class Chat extends ZmqAbstractRunnableContext {
@@ -59,46 +59,46 @@ public final class Chat extends ZmqAbstractRunnableContext {
   }
 
   private Props frontendPubProps;
-  private Props clusterSubProps;
-  private Props frontendSubProps;
   private Props clusterPubProps;
+  private Props frontendSubProps;
+  private Props clusterSubProps;
 
   /**
-   * XSUB -- for serving local multithreaded publishers:
+   * XSUB -- for serving connecting publishers:
    * <pre>
-   *   thread PUB --->
-   *   thread PUB ---> L -->
-   *   thread PUB --->
+   *       byte[] <--      <--conn-- PUB
+   *                  XSUB <--conn-- PUB
+   *    sub/unsub -->      <--conn-- PUB
    * </pre>
    */
-  private ZmqChannel _localPublisher;
+  private ZmqChannel _frontendPub;
   /**
    * XPUB -- for serving cluster wide subscribers:
    * <pre>
-   *         <--- cluster SUB
-   *   --> C <--- cluster SUB
-   *         <--- cluster SUB
+   *      byte[] -->      <--conn-- cluster XSUB
+   *                 XPUB <--conn-- cluster XSUB
+   *   sub/unsub <--      <--conn-- cluster XSUB
    * </pre>
    */
-  private ZmqChannel _clusterPublisher;
+  private ZmqChannel _clusterPub;
   /**
-   * XPUB -- for serving local multithreaded subscribers:
+   * XPUB -- for serving connecting subscribers:
    * <pre>
-   *  thread SUB <---
-   *  thread SUB <--- L -->
-   *  thread SUB <---
+   *    sub/unsub <--      <--conn-- SUB
+   *                  XPUB <--conn-- SUB
+   *       byte[] -->      <--conn-- SUB
    * </pre>
    */
-  private ZmqChannel _localSubscriber;
+  private ZmqChannel _frontendSub;
   /**
    * XSUB -- for serving cluster wide publishers:
    * <pre>
-   *        ---> cluster PUB
-   *  <-- C ---> cluster PUB
-   *        ---> cluster PUB
+   *      byte[] <--      --conn--> cluster XPUB
+   *                 XSUB --conn--> cluster XPUB
+   *   sub/unsub -->      --conn--> cluster XPUB
    * </pre>
    */
-  private ZmqChannel _clusterSubscriber;
+  private ZmqChannel _clusterSub;
 
   //// METHDOS
 
@@ -124,56 +124,67 @@ public final class Chat extends ZmqAbstractRunnableContext {
 
   @Override
   public void init() {
-    reg(_localPublisher = ZmqChannel.builder()
-                                    .withCtx(ctx)
-                                    .ofXSUBType()
-                                    .withProps(frontendPubProps)
-                                    .build());
+    reg(_frontendPub = ZmqChannel.builder()
+                                 .withCtx(ctx)
+                                 .XSUB()
+                                 .withProps(frontendPubProps)
+                                 .build());
 
-    reg(_clusterPublisher = ZmqChannel.builder()
-                                      .withCtx(ctx)
-                                      .ofXPUBType()
-                                      .withProps(clusterPubProps)
-                                      .build());
+    reg(_clusterPub = ZmqChannel.builder()
+                                .withCtx(ctx)
+                                .XPUB()
+                                .withProps(clusterPubProps)
+                                .build());
 
-    reg(_localSubscriber = ZmqChannel.builder()
-                                     .withCtx(ctx)
-                                     .ofXPUBType()
-                                     .withProps(frontendSubProps)
-                                     .build());
+    reg(_frontendSub = ZmqChannel.builder()
+                                 .withCtx(ctx)
+                                 .XPUB()
+                                 .withProps(frontendSubProps)
+                                 .build());
 
-    reg(_clusterSubscriber = ZmqChannel.builder()
-                                       .withCtx(ctx)
-                                       .ofXSUBType()
-                                       .withProps(clusterSubProps)
-                                       .build());
+    reg(_clusterSub = ZmqChannel.builder()
+                                .withCtx(ctx)
+                                .XSUB()
+                                .withProps(clusterSubProps)
+                                .build());
 
-    _localPublisher.watchRecv(_poller);
-    _clusterPublisher.watchRecv(_poller);
-    _localSubscriber.watchRecv(_poller);
-    _clusterSubscriber.watchRecv(_poller);
+    _frontendPub.watchRecv(_poller);
+    _clusterPub.watchRecv(_poller);
+    _frontendSub.watchRecv(_poller);
+    _clusterSub.watchRecv(_poller);
   }
 
   @Override
   public void execute() {
     super.execute();
 
-    if (_localPublisher.canRecv()) {
-      _clusterPublisher.send(_localPublisher.recv());
-      LOG.trace("Handle --> traffic: local publisher(s) send message to the cluster.");
+    if (_frontendPub.canRecv()) {
+      _clusterPub.send(_frontendPub.recv());
+      LOG.debug("Message: local --> cluster.");
     }
-    if (_clusterSubscriber.canRecv()) {
-      _localSubscriber.send(_clusterSubscriber.recv());
-      LOG.trace("Handle <-- traffic: cluster wide publisher(s) send message to this socket.");
+    if (_clusterPub.canRecv()) {
+      ZmqMessage message = _clusterPub.recv();
+      _frontendPub.send(message);
+      if (message.isSubscribe()) {
+        LOG.debug("Subscribe: local <-- cluster.");
+      }
+      else if (message.isUnsubscribe()) {
+        LOG.debug("Unsubsribe: local <-- cluster.");
+      }
     }
-
-    if (_localSubscriber.canRecv()) {
-      _clusterSubscriber.send(_localSubscriber.recv());
-      LOG.trace("Handle --> subscriptions: server local subscribers, forward their subscriptions.");
+    if (_clusterSub.canRecv()) {
+      _frontendSub.send(_clusterSub.recv());
+      LOG.debug("Message: local <-- cluster.");
     }
-    if (_clusterPublisher.canRecv()) {
-      _localPublisher.send(_clusterPublisher.recv());
-      LOG.trace("Handle <-- subscriptions: serve cluster subscribers, forward their subscriptions.");
+    if (_frontendSub.canRecv()) {
+      ZmqMessage message = _frontendSub.recv();
+      _clusterSub.send(message);
+      if (message.isSubscribe()) {
+        LOG.debug("Subscribe: local --> cluster.");
+      }
+      else if (message.isUnsubscribe()) {
+        LOG.debug("Unsubsribe: local --> cluster.");
+      }
     }
   }
 }

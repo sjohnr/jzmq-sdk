@@ -70,7 +70,7 @@ public final class LruCache implements ZmqSocketIdentityStorage {
 
     long identityHash = ZmqUtils.makeHash(backendIdentities);
     _identityCache.put(identityHash, backendIdentities);
-    LOG.trace("++ socket_identity={}.", identityHash);
+    LOG.debug("++ socket_identity={}.", identityHash);
   }
 
   @Override
@@ -100,7 +100,7 @@ public final class LruCache implements ZmqSocketIdentityStorage {
 
     if (targetIdentityHash != null) {
       _identityCache.invalidate(targetIdentityHash);
-      LOG.trace("-- socket_identity={}.", targetIdentityHash);
+      LOG.debug("-- socket_identity={}.", targetIdentityHash);
       return targetIdentity;
     }
 

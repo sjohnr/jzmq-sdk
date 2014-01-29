@@ -34,14 +34,14 @@ public final class Props {
       return this;
     }
 
-    public Builder withConnectAddress(String address) {
+    public Builder withConnAddress(String address) {
       _target.connectAddresses.add(address);
       return this;
     }
 
-    public Builder withConnectAddresses(Iterable<String> addresses) {
+    public Builder withConnAddresses(Iterable<String> addresses) {
       for (String address : addresses) {
-        withConnectAddress(address);
+        withConnAddress(address);
       }
       return this;
     }

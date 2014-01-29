@@ -16,28 +16,17 @@ public class ChatFixture extends BaseFixture {
   void chat(String frontendPub,
             String clusterPub,
             String frontendSub,
-            String clusterSub) {
+            String clusterPubConnAddr) {
     with(
         ZmqRunnable.builder()
                    .withRunnableContext(
                        Chat.builder()
                            .withCtx(ctx)
-                           .withFrontendPubProps(
-                               Props.builder()
-                                    .withBindAddress(frontendPub) // XSUB
-                                    .build())
-                           .withClusterPubProps(
-                               Props.builder()
-                                    .withBindAddress(clusterPub) // XPUB
-                                    .build())
-                           .withFrontendSubProps(
-                               Props.builder()
-                                    .withBindAddress(frontendSub) // XPUB
-                                    .build())
-                           .withClusterSubProps(
-                               Props.builder()
-                                    .withConnectAddress(clusterSub) // XSUB
-                                    .build())
+                           .withPollTimeout(10)
+                           .withFrontendPubProps(Props.builder().withBindAddress(frontendPub).build())
+                           .withClusterPubProps(Props.builder().withBindAddress(clusterPub).build())
+                           .withFrontendSubProps(Props.builder().withBindAddress(frontendSub).build())
+                           .withClusterSubProps(Props.builder().withConnAddress(clusterPubConnAddr).build())
                            .build()
                    )
                    .build()

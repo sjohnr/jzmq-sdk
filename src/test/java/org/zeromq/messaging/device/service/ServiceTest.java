@@ -629,12 +629,12 @@ public class ServiceTest extends ZmqAbstractTest {
                                           .withChannelBuilder(
                                               ZmqChannel.builder()
                                                         .withCtx(ctx())
-                                                        .ofDEALERType()
+                                                        .DEALERT()
                                                         .withProps(Props.builder()
                                                                         .withHwmSend(HWM)
-                                                                        .withConnectAddress(notAvailConnAddr0())
-                                                                        .withConnectAddress(connAddr(555))
-                                                                        .withConnectAddress(notAvailConnAddr1())
+                                                                        .withConnAddress(notAvailConnAddr0())
+                                                                        .withConnAddress(connAddr(555))
+                                                                        .withConnAddress(notAvailConnAddr1())
                                                                         .build())
                                           )
                                           .build();
@@ -876,12 +876,12 @@ public class ServiceTest extends ZmqAbstractTest {
                                           .withChannelBuilder(
                                               ZmqChannel.builder()
                                                         .withCtx(ctx())
-                                                        .ofDEALERType()
+                                                        .DEALERT()
                                                         .withProps(Props.builder()
                                                                         .withHwmSend(HWM)
-                                                                        .withConnectAddress(notAvailConnAddr0())
-                                                                        .withConnectAddress(connAddr(livePort))
-                                                                        .withConnectAddress(notAvailConnAddr1())
+                                                                        .withConnAddress(notAvailConnAddr0())
+                                                                        .withConnAddress(connAddr(livePort))
+                                                                        .withConnAddress(notAvailConnAddr1())
                                                                         .build()))
                                           .build();
     client.lease();
@@ -942,14 +942,14 @@ public class ServiceTest extends ZmqAbstractTest {
                                           .withChannelBuilder(
                                               ZmqChannel.builder()
                                                         .withCtx(ctx())
-                                                        .ofDEALERType()
+                                                        .DEALERT()
                                                         .withProps(Props.builder()
                                                                         .withHwmSend(HWM)
                                                                         .withWaitRecv(10)
                                                                         .withWaitSend(10)
-                                                                        .withConnectAddress(connAddr(555))
-                                                                        .withConnectAddress(notAvailConnAddr0())
-                                                                        .withConnectAddress(notAvailConnAddr1())
+                                                                        .withConnAddress(connAddr(555))
+                                                                        .withConnAddress(notAvailConnAddr0())
+                                                                        .withConnAddress(notAvailConnAddr1())
                                                                         .build()))
                                           .build();
     client.lease();
@@ -1012,14 +1012,14 @@ public class ServiceTest extends ZmqAbstractTest {
                                           .withChannelBuilder(
                                               ZmqChannel.builder()
                                                         .withCtx(ctx())
-                                                        .ofDEALERType()
+                                                        .DEALERT()
                                                         .withProps(Props.builder()
                                                                         .withHwmSend(HWM)
-                                                                        .withConnectAddress(connAddr(livePort0))
-                                                                        .withConnectAddress(notAvailConnAddr0())
-                                                                        .withConnectAddress(connAddr(livePort1))
-                                                                        .withConnectAddress(notAvailConnAddr1())
-                                                                        .withConnectAddress(connAddr(livePort2))
+                                                                        .withConnAddress(connAddr(livePort0))
+                                                                        .withConnAddress(notAvailConnAddr0())
+                                                                        .withConnAddress(connAddr(livePort1))
+                                                                        .withConnAddress(notAvailConnAddr1())
+                                                                        .withConnAddress(connAddr(livePort2))
                                                                         .build()))
                                           .build();
     client.lease();

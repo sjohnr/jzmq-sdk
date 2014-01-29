@@ -57,42 +57,42 @@ public final class ZmqChannel implements HasDestroy {
       return this;
     }
 
-    public Builder ofDEALERType() {
+    public Builder DEALERT() {
       _target.socketType = ZMQ.DEALER;
       return this;
     }
 
-    public Builder ofROUTERType() {
+    public Builder ROUTER() {
       _target.socketType = ZMQ.ROUTER;
       return this;
     }
 
-    public Builder ofPUBType() {
+    public Builder PUB() {
       _target.socketType = ZMQ.PUB;
       return this;
     }
 
-    public Builder ofSUBType() {
+    public Builder SUB() {
       _target.socketType = ZMQ.SUB;
       return this;
     }
 
-    public Builder ofXPUBType() {
+    public Builder XPUB() {
       _target.socketType = ZMQ.XPUB;
       return this;
     }
 
-    public Builder ofXSUBType() {
+    public Builder XSUB() {
       _target.socketType = ZMQ.XSUB;
       return this;
     }
 
-    public Builder ofPUSHType() {
+    public Builder PUSH() {
       _target.socketType = ZMQ.PUSH;
       return this;
     }
 
-    public Builder ofPULLType() {
+    public Builder PULL() {
       _target.socketType = ZMQ.PULL;
       return this;
     }
@@ -105,6 +105,9 @@ public final class ZmqChannel implements HasDestroy {
     @Override
     public void checkInvariant() {
       if (_target.ctx == null) {
+        throw ZmqException.fatal();
+      }
+      if (_target.props == null) {
         throw ZmqException.fatal();
       }
       switch (_target.socketType) {
@@ -120,9 +123,6 @@ public final class ZmqChannel implements HasDestroy {
         default:
           throw ZmqException.fatal();
       }
-      if (_target.props == null) {
-        throw ZmqException.fatal();
-      }
     }
 
     @Override
@@ -130,60 +130,28 @@ public final class ZmqChannel implements HasDestroy {
       checkInvariant();
 
       if (_target.socketType == ZMQ.ROUTER) {
-        _target._inputAdapter = InputMessageAdapter.builder()
-                                                   .expectIdentities()
-                                                   .build();
-        _target._outputAdapter = OutputMessageAdapter.builder()
-                                                     .expectIdentities()
-                                                     .build();
+        _target._inputAdapter = InputMessageAdapter.builder().expectIdentities().build();
+        _target._outputAdapter = OutputMessageAdapter.builder().expectIdentities().build();
       }
-
       if (_target.socketType == ZMQ.DEALER) {
-        _target._inputAdapter = InputMessageAdapter.builder()
-                                                   .expectIdentities()
-                                                   .build();
-        _target._outputAdapter = OutputMessageAdapter.builder()
-                                                     .awareOfDEALERType()
-                                                     .expectIdentities()
-                                                     .build();
+        _target._inputAdapter = InputMessageAdapter.builder().expectIdentities().build();
+        _target._outputAdapter = OutputMessageAdapter.builder().awareOfDEALERType().expectIdentities().build();
       }
-
       if (_target.socketType == ZMQ.PUB || _target.socketType == ZMQ.PUSH) {
         _target._inputAdapter = null;
-        _target._outputAdapter = OutputMessageAdapter.builder()
-                                                     .awareOfTopicFrame()
-                                                     .expectIdentities()
-                                                     .build();
+        _target._outputAdapter = OutputMessageAdapter.builder().awareOfTopicFrame().expectIdentities().build();
       }
-
       if (_target.socketType == ZMQ.SUB || _target.socketType == ZMQ.PULL) {
         _target._outputAdapter = null;
-        _target._inputAdapter = InputMessageAdapter.builder()
-                                                   .awareOfTopicFrame()
-                                                   .expectIdentities()
-                                                   .build();
+        _target._inputAdapter = InputMessageAdapter.builder().awareOfTopicFrame().expectIdentities().build();
       }
-
       if (_target.socketType == ZMQ.XPUB) {
-        _target._inputAdapter = InputMessageAdapter.builder()
-                                                   .awareOfTopicFrame()
-                                                   .awareOfExtendedPubSub()
-                                                   .build();
-        _target._outputAdapter = OutputMessageAdapter.builder()
-                                                     .awareOfTopicFrame()
-                                                     .expectIdentities()
-                                                     .build();
+        _target._inputAdapter = InputMessageAdapter.builder().awareOfTopicFrame().awareOfExtendedPubSub().build();
+        _target._outputAdapter = OutputMessageAdapter.builder().awareOfTopicFrame().expectIdentities().build();
       }
-
       if (_target.socketType == ZMQ.XSUB) {
-        _target._inputAdapter = InputMessageAdapter.builder()
-                                                   .awareOfTopicFrame()
-                                                   .expectIdentities()
-                                                   .build();
-        _target._outputAdapter = OutputMessageAdapter.builder()
-                                                     .awareOfTopicFrame()
-                                                     .awareOfExtendedPubSub()
-                                                     .build();
+        _target._inputAdapter = InputMessageAdapter.builder().awareOfTopicFrame().expectIdentities().build();
+        _target._outputAdapter = OutputMessageAdapter.builder().awareOfTopicFrame().awareOfExtendedPubSub().build();
       }
 
       _target._socket = newSocket();

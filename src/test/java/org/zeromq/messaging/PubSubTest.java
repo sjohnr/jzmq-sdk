@@ -41,7 +41,7 @@ public class PubSubTest extends ZmqAbstractTest {
     ZmqChannel newPublisher() {
       return ZmqChannel.builder()
                        .withCtx(ctx)
-                       .ofPUBType()
+                       .PUB()
                        .withProps(Props.builder()
                                        .withBindAddress(inprocAddr("p"))
                                        .build())
@@ -51,9 +51,9 @@ public class PubSubTest extends ZmqAbstractTest {
     ZmqChannel newSubscriber() {
       return ZmqChannel.builder()
                        .withCtx(ctx)
-                       .ofSUBType()
+                       .SUB()
                        .withProps(Props.builder()
-                                       .withConnectAddress(inprocAddr("p"))
+                                       .withConnAddress(inprocAddr("p"))
                                        .build())
                        .build();
     }
