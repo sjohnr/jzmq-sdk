@@ -39,6 +39,8 @@ public class ChatTest extends ZmqAbstractTest {
 
       pub.send(ZmqMessage.builder(HELLO()).withTopic(topic).build());
       assertPayload("hello", sub.recv());
+
+      assert sub.recv() == null;
     }
     finally {
       f.destroy();
@@ -97,6 +99,60 @@ public class ChatTest extends ZmqAbstractTest {
 
       assertPayload("shirt", galaListens.recv());
       assertPayload("carp", alenkaListens.recv());
+
+      assert galaListens.recv() == null;
+      assert alenkaListens.recv() == null;
+    }
+    finally {
+      f.destroy();
+    }
+  }
+
+  @Test
+  public void t2() throws InterruptedException {
+    ChatFixture f = new ChatFixture(ctx());
+
+    f.chat(inprocAddr("p>>"),
+           inprocAddr("p>>>>"),
+           inprocAddr("s<<"),
+           inprocAddr("p>>>>"));
+
+    f.init();
+
+    try {
+      ZmqChannel pub = ZmqChannel.PUB(ctx())
+                                 .withProps(Props.builder()
+                                                 .withConnAddress(inprocAddr("p>>"))
+                                                 .build())
+                                 .build();
+
+      ZmqChannel sub = ZmqChannel.SUB(ctx())
+                                 .withProps(Props.builder()
+                                                 .withConnAddress(inprocAddr("s<<"))
+                                                 .build())
+                                 .build();
+
+      byte[] topic = "xxx".getBytes();
+
+      sub.subscribe(topic); // subscribe first time.
+      sub.subscribe(topic); // subscribe second time.
+
+      waitSec(); // wait a second.
+
+      pub.send(ZmqMessage.builder(HELLO()).withTopic(topic).build());
+      assertPayload("hello", sub.recv());
+
+      // unsubscribe first time.
+      sub.unsubscribe(topic);
+      // ensure that you still get message since one subscription remains.
+      pub.send(ZmqMessage.builder(HELLO()).withTopic(topic).build());
+      assertPayload("hello", sub.recv());
+
+      // unsubscribe last time.
+      sub.unsubscribe(topic);
+      // ensure that you will not receive a message since all subscriptions are unsubscribed.
+      pub.send(ZmqMessage.builder(HELLO()).withTopic(topic).build());
+      assert sub.recv() == null;
     }
     finally {
       f.destroy();

@@ -24,7 +24,6 @@ import org.junit.Test;
 
 import java.util.Arrays;
 
-import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -114,8 +113,8 @@ public class ZmqMessageTest {
   public void t3() {
     ZmqMessage message = ZmqMessage.builder().build();
 
-    assertNull(message.topic());
-    assertNull(message.payload());
+    assertEq(EMPTY_FRAME, message.topic());
+    assertEq(EMPTY_FRAME, message.payload());
     assertEquals(0, message.identityFrames().size());
     assertArrayEquals(EMPTY_FRAME, message.headersAsBinary());
   }

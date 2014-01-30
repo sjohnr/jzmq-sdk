@@ -55,11 +55,6 @@ public final class ZmqChannel implements HasDestroy {
       _target.ctx = ctx;
     }
 
-    public Builder withCtx(ZmqContext ctx) {
-      _target.ctx = ctx;
-      return this;
-    }
-
     public Builder withProps(Props props) {
       _target.props = props;
       return this;
@@ -117,13 +112,13 @@ public final class ZmqChannel implements HasDestroy {
         _target._outputAdapter = OutputMessageAdapter.builder().awareOfTopicFrame().awareOfExtendedPubSub().build();
       }
 
-      _target._socket = newSocket();
+      _target._socket = createSocket();
 
       return _target;
     }
 
     /** @return connected and/or bound {@link ZMQ.Socket} object. */
-    ZMQ.Socket newSocket() {
+    ZMQ.Socket createSocket() {
       ZMQ.Socket socket = _target.ctx.newSocket(_target.socketType);
 
       {
@@ -381,6 +376,28 @@ public final class ZmqChannel implements HasDestroy {
   public void unsubscribe(byte[] topic) {
     assertSocketAlive();
     _socket.unsubscribe(topic);
+  }
+
+  /**
+   * Set XPUB_VERBOSE flag. Send duplicate subscriptions/unsubscriptions
+   * on XPUB/SUB connection.
+   * <p/>
+   * <b>NOTE: this setting only makes sense on XPUB socket.</b>
+   */
+  public void setExtendedPubSubVerbose() {
+    assertSocketAlive();
+    _socket.setXpubVerbose(true);
+  }
+
+  /**
+   * Unset XPUB_VERBOSE flag. Send duplicate subscriptions/unsubscriptions
+   * on XPUB/SUB connection.
+   * <p/>
+   * <b>NOTE: this setting only makes sense on XPUB socket.</b>
+   */
+  public void unsetExtendedPubSubVerbose() {
+    assertSocketAlive();
+    _socket.setXpubVerbose(false);
   }
 
   /** Registers internal {@link #_socket} on given poller instance. */

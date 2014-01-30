@@ -149,6 +149,10 @@ public final class Chat extends ZmqAbstractRunnableContext {
     reg(_frontendSub = ZmqChannel.XPUB(ctx).withProps(frontendSubProps).build());
     reg(_clusterSub = ZmqChannel.XSUB(ctx).withProps(clusterSubProps).build());
 
+    // By default, unconditionally, Chat is set to handle duplicate subscriptions/unsubscriptions.
+    _clusterPub.setExtendedPubSubVerbose();
+    _frontendSub.setExtendedPubSubVerbose();
+
     _frontendPub.watchRecv(_poller);
     _clusterPub.watchRecv(_poller);
     _frontendSub.watchRecv(_poller);

@@ -20,7 +20,6 @@
 
 package org.zeromq.messaging;
 
-import org.zeromq.support.HasInvariant;
 import org.zeromq.support.ObjectBuilder;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -34,7 +33,7 @@ public final class ZmqMessage {
   public static final byte BYTE_SUB = 1; // denotes subscribe request.
   public static final byte BYTE_UNSUB = 0; // denotes unsubscribe request.
 
-  public static final class Builder implements ObjectBuilder<ZmqMessage>, HasInvariant {
+  public static final class Builder implements ObjectBuilder<ZmqMessage> {
 
     private ZmqMessage _target = new ZmqMessage();
 
@@ -49,16 +48,7 @@ public final class ZmqMessage {
     }
 
     @Override
-    public void checkInvariant() {
-      if (_target.extendedPubSubFlag != -1) {
-        // check that topic is present when XPUB/XSUB  flag  is set.
-        checkArgument(_target.topic != null);
-      }
-    }
-
-    @Override
     public ZmqMessage build() {
-      checkInvariant();
       return _target;
     }
 
@@ -106,7 +96,7 @@ public final class ZmqMessage {
    * <p/>
    * <b>NOTE: this field is optional.</b>
    */
-  private byte[] topic;
+  private byte[] topic = EMPTY_FRAME;
   /**
    * ZMQ' socket peer_identity container.
    * <p/>
@@ -146,7 +136,7 @@ public final class ZmqMessage {
    * <p/>
    * <b>NOTE: this field is optional.</b>
    */
-  private byte[] payload;
+  private byte[] payload = EMPTY_FRAME;
   /**
    * Byte denoting whether this is SUBSCRIBE message or UNSUBSCRIBE one. It's only make
    * sense in the context of XPUB or XSUB.
