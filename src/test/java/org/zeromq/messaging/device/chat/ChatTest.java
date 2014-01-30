@@ -44,4 +44,62 @@ public class ChatTest extends ZmqAbstractTest {
       f.destroy();
     }
   }
+
+  @Test
+  public void t1() throws InterruptedException {
+    ChatFixture f = new ChatFixture(ctx());
+
+    f.chat(inprocAddr("gala>>"),
+           bindAddr(4040),
+           inprocAddr("gala<<"),
+           connAddr(5050));
+
+    f.chat(inprocAddr("alenka>>"),
+           bindAddr(5050),
+           inprocAddr("alenka<<"),
+           connAddr(4040));
+
+    f.init();
+
+    try {
+      ZmqChannel galaSays = ZmqChannel.PUB(ctx())
+                                      .withProps(Props.builder()
+                                                      .withConnAddress(inprocAddr("gala>>"))
+                                                      .build())
+                                      .build();
+
+      ZmqChannel galaListens = ZmqChannel.SUB(ctx())
+                                         .withProps(Props.builder()
+                                                         .withConnAddress(inprocAddr("gala<<"))
+                                                         .build())
+                                         .build();
+
+      ZmqChannel alenkaSays = ZmqChannel.PUB(ctx())
+                                        .withProps(Props.builder()
+                                                        .withConnAddress(inprocAddr("alenka>>"))
+                                                        .build())
+                                        .build();
+
+      ZmqChannel alenkaListens = ZmqChannel.SUB(ctx())
+                                           .withProps(Props.builder()
+                                                           .withConnAddress(inprocAddr("alenka<<"))
+                                                           .build())
+                                           .build();
+
+      byte[] topic = "xxx".getBytes();
+      galaListens.subscribe(topic);
+      alenkaListens.subscribe(topic);
+
+      waitSec(); // wait a second.
+
+      galaSays.send(ZmqMessage.builder(CARP()).withTopic(topic).build());
+      alenkaSays.send(ZmqMessage.builder(SHIRT()).withTopic(topic).build());
+
+      assertPayload("shirt", galaListens.recv());
+      assertPayload("carp", alenkaListens.recv());
+    }
+    finally {
+      f.destroy();
+    }
+  }
 }
