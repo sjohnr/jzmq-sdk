@@ -49,51 +49,13 @@ public final class ZmqChannel implements HasDestroy {
 
     private final ZmqChannel _target = new ZmqChannel();
 
-    private Builder() {
+    private Builder(int socketType, ZmqContext ctx) {
+      _target.socketType = socketType;
+      _target.ctx = ctx;
     }
 
     public Builder withCtx(ZmqContext ctx) {
       _target.ctx = ctx;
-      return this;
-    }
-
-    public Builder DEALERT() {
-      _target.socketType = ZMQ.DEALER;
-      return this;
-    }
-
-    public Builder ROUTER() {
-      _target.socketType = ZMQ.ROUTER;
-      return this;
-    }
-
-    public Builder PUB() {
-      _target.socketType = ZMQ.PUB;
-      return this;
-    }
-
-    public Builder SUB() {
-      _target.socketType = ZMQ.SUB;
-      return this;
-    }
-
-    public Builder XPUB() {
-      _target.socketType = ZMQ.XPUB;
-      return this;
-    }
-
-    public Builder XSUB() {
-      _target.socketType = ZMQ.XSUB;
-      return this;
-    }
-
-    public Builder PUSH() {
-      _target.socketType = ZMQ.PUSH;
-      return this;
-    }
-
-    public Builder PULL() {
-      _target.socketType = ZMQ.PULL;
       return this;
     }
 
@@ -307,8 +269,36 @@ public final class ZmqChannel implements HasDestroy {
 
   //// METHODS
 
-  public static Builder builder() {
-    return new Builder();
+  public static Builder DEALER(ZmqContext ctx) {
+    return new Builder(ZMQ.DEALER, ctx);
+  }
+
+  public static Builder ROUTER(ZmqContext ctx) {
+    return new Builder(ZMQ.ROUTER, ctx);
+  }
+
+  public static Builder PUB(ZmqContext ctx) {
+    return new Builder(ZMQ.PUB, ctx);
+  }
+
+  public static Builder SUB(ZmqContext ctx) {
+    return new Builder(ZMQ.SUB, ctx);
+  }
+
+  public static Builder XPUB(ZmqContext ctx) {
+    return new Builder(ZMQ.XPUB, ctx);
+  }
+
+  public static Builder XSUB(ZmqContext ctx) {
+    return new Builder(ZMQ.XSUB, ctx);
+  }
+
+  public static Builder PUSH(ZmqContext ctx) {
+    return new Builder(ZMQ.PUSH, ctx);
+  }
+
+  public static Builder PULL(ZmqContext ctx) {
+    return new Builder(ZMQ.PULL, ctx);
   }
 
   @Override

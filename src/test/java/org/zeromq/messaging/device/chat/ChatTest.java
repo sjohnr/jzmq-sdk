@@ -20,17 +20,13 @@ public class ChatTest extends ZmqAbstractTest {
     f.init();
 
     try {
-      ZmqChannel pub = ZmqChannel.builder()
-                                 .withCtx(ctx())
-                                 .PUB()
+      ZmqChannel pub = ZmqChannel.PUB(ctx())
                                  .withProps(Props.builder()
                                                  .withConnAddress(inprocAddr("p>>"))
                                                  .build())
                                  .build();
 
-      ZmqChannel sub = ZmqChannel.builder()
-                                 .withCtx(ctx())
-                                 .SUB()
+      ZmqChannel sub = ZmqChannel.SUB(ctx())
                                  .withProps(Props.builder()
                                                  .withConnAddress(inprocAddr("s<<"))
                                                  .build())

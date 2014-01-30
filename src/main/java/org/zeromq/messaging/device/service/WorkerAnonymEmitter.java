@@ -63,12 +63,7 @@ public final class WorkerAnonymEmitter extends ZmqAbstractWorker {
   @Override
   public void init() {
     _pingStrategy = new DoPing();
-
-    _channel = ZmqChannel.builder()
-                         .withCtx(ctx)
-                         .DEALERT()
-                         .withProps(props)
-                         .build();
+    reg(_channel = ZmqChannel.DEALER(ctx).withProps(props).build());
 
     super.init();
   }

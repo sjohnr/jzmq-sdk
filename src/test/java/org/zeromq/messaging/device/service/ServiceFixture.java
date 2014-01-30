@@ -262,9 +262,7 @@ class ServiceFixture extends BaseFixture {
   BlockingClient newBindBlockingClient(ZmqContext ctx, String bindAddress) {
     BlockingClient target = BlockingClient.builder()
                                           .withChannelBuilder(
-                                              ZmqChannel.builder()
-                                                        .withCtx(ctx)
-                                                        .DEALERT()
+                                              ZmqChannel.DEALER(ctx)
                                                         .withProps(Props.builder()
                                                                         .withBindAddress(bindAddress)
                                                                         .build()))
@@ -277,9 +275,7 @@ class ServiceFixture extends BaseFixture {
   BlockingClient newConnBlockingClient(ZmqContext ctx, String... connAddresses) {
     BlockingClient target =
         BlockingClient.builder()
-                      .withChannelBuilder(ZmqChannel.builder()
-                                                    .withCtx(ctx)
-                                                    .DEALERT()
+                      .withChannelBuilder(ZmqChannel.DEALER(ctx)
                                                     .withProps(Props.builder()
                                                                     .withConnAddresses(asList(connAddresses))
                                                                     .build()))
@@ -293,9 +289,7 @@ class ServiceFixture extends BaseFixture {
                                                    String... connAddresses) {
     BlockingClient target = BlockingClient.builder()
                                           .withChannelBuilder(
-                                              ZmqChannel.builder()
-                                                        .withCtx(ctx)
-                                                        .DEALERT()
+                                              ZmqChannel.DEALER(ctx)
                                                         .withProps(Props.builder()
                                                                         .withConnAddresses(asList(connAddresses))
                                                                         .withSocketIdPrefix(identityPrefix)

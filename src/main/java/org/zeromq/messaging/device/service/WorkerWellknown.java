@@ -63,12 +63,7 @@ public final class WorkerWellknown extends ZmqAbstractWorker {
   @Override
   public void init() {
     _pingStrategy = new DontPing();
-
-    _channel = ZmqChannel.builder()
-                         .withCtx(ctx)
-                         .ROUTER()
-                         .withProps(props)
-                         .build();
+    reg(_channel = ZmqChannel.ROUTER(ctx).withProps(props).build());
 
     super.init();
   }

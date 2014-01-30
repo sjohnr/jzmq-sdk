@@ -69,17 +69,8 @@ public final class FairRouter extends ZmqAbstractFairService {
 
   @Override
   public void init() {
-    _frontend = ZmqChannel.builder()
-                          .withCtx(ctx)
-                          .ROUTER()
-                          .withProps(frontendProps)
-                          .build();
-
-    _backend = ZmqChannel.builder()
-                         .withCtx(ctx)
-                         .DEALERT()
-                         .withProps(backendProps)
-                         .build();
+    reg(_frontend = ZmqChannel.ROUTER(ctx).withProps(frontendProps).build());
+    reg(_backend = ZmqChannel.DEALER(ctx).withProps(backendProps).build());
 
     super.init();
   }

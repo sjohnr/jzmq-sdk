@@ -69,17 +69,8 @@ public final class FairActiveAcceptor extends ZmqAbstractFairService {
 
   @Override
   public void init() {
-    _frontend = ZmqChannel.builder()
-                          .withCtx(ctx)
-                          .DEALERT()
-                          .withProps(frontendProps)
-                          .build();
-
-    _backend = ZmqChannel.builder()
-                         .withCtx(ctx)
-                         .ROUTER()
-                         .withProps(backendProps)
-                         .build();
+    reg(_frontend = ZmqChannel.DEALER(ctx).withProps(frontendProps).build());
+    reg(_backend = ZmqChannel.ROUTER(ctx).withProps(backendProps).build());
 
     super.init();
   }

@@ -627,9 +627,7 @@ public class ServiceTest extends ZmqAbstractTest {
     int NUM_OF_NOTAVAIL = 2;
     BlockingClient client = BlockingClient.builder()
                                           .withChannelBuilder(
-                                              ZmqChannel.builder()
-                                                        .withCtx(ctx())
-                                                        .DEALERT()
+                                              ZmqChannel.DEALER(ctx())
                                                         .withProps(Props.builder()
                                                                         .withHwmSend(HWM)
                                                                         .withConnAddress(notAvailConnAddr0())
@@ -874,9 +872,7 @@ public class ServiceTest extends ZmqAbstractTest {
     int NUM_OF_NOTAVAIL = 2;
     BlockingClient client = BlockingClient.builder()
                                           .withChannelBuilder(
-                                              ZmqChannel.builder()
-                                                        .withCtx(ctx())
-                                                        .DEALERT()
+                                              ZmqChannel.DEALER(ctx())
                                                         .withProps(Props.builder()
                                                                         .withHwmSend(HWM)
                                                                         .withConnAddress(notAvailConnAddr0())
@@ -940,9 +936,7 @@ public class ServiceTest extends ZmqAbstractTest {
     int NUM_OF_NOTAVAIL = 2;
     BlockingClient client = BlockingClient.builder()
                                           .withChannelBuilder(
-                                              ZmqChannel.builder()
-                                                        .withCtx(ctx())
-                                                        .DEALERT()
+                                              ZmqChannel.DEALER(ctx())
                                                         .withProps(Props.builder()
                                                                         .withHwmSend(HWM)
                                                                         .withWaitRecv(10)
@@ -1010,9 +1004,7 @@ public class ServiceTest extends ZmqAbstractTest {
     int HWM = 1;
     BlockingClient client = BlockingClient.builder()
                                           .withChannelBuilder(
-                                              ZmqChannel.builder()
-                                                        .withCtx(ctx())
-                                                        .DEALERT()
+                                              ZmqChannel.DEALER(ctx())
                                                         .withProps(Props.builder()
                                                                         .withHwmSend(HWM)
                                                                         .withConnAddress(connAddr(livePort0))

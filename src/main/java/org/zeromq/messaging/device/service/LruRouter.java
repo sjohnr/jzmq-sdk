@@ -95,17 +95,8 @@ public final class LruRouter extends ZmqAbstractProxy {
 
   @Override
   public void init() {
-    _frontend = ZmqChannel.builder()
-                          .withCtx(ctx)
-                          .ROUTER()
-                          .withProps(frontendProps)
-                          .build();
-
-    _backend = ZmqChannel.builder()
-                         .withCtx(ctx)
-                         .ROUTER()
-                         .withProps(backendProps)
-                         .build();
+    _frontend = ZmqChannel.ROUTER(ctx).withProps(frontendProps).build();
+    _backend = ZmqChannel.ROUTER(ctx).withProps(backendProps).build();
 
     super.init();
   }

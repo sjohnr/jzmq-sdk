@@ -124,29 +124,10 @@ public final class Chat extends ZmqAbstractRunnableContext {
 
   @Override
   public void init() {
-    reg(_frontendPub = ZmqChannel.builder()
-                                 .withCtx(ctx)
-                                 .XSUB()
-                                 .withProps(frontendPubProps)
-                                 .build());
-
-    reg(_clusterPub = ZmqChannel.builder()
-                                .withCtx(ctx)
-                                .XPUB()
-                                .withProps(clusterPubProps)
-                                .build());
-
-    reg(_frontendSub = ZmqChannel.builder()
-                                 .withCtx(ctx)
-                                 .XPUB()
-                                 .withProps(frontendSubProps)
-                                 .build());
-
-    reg(_clusterSub = ZmqChannel.builder()
-                                .withCtx(ctx)
-                                .XSUB()
-                                .withProps(clusterSubProps)
-                                .build());
+    reg(_frontendPub = ZmqChannel.XSUB(ctx).withProps(frontendPubProps).build());
+    reg(_clusterPub = ZmqChannel.XPUB(ctx).withProps(clusterPubProps).build());
+    reg(_frontendSub = ZmqChannel.XPUB(ctx).withProps(frontendSubProps).build());
+    reg(_clusterSub = ZmqChannel.XSUB(ctx).withProps(clusterSubProps).build());
 
     _frontendPub.watchRecv(_poller);
     _clusterPub.watchRecv(_poller);
