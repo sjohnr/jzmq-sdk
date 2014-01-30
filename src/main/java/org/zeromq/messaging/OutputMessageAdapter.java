@@ -22,6 +22,7 @@ package org.zeromq.messaging;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeromq.support.HasInvariant;
 import org.zeromq.support.ObjectAdapter;
 import org.zeromq.support.ObjectBuilder;
 import org.zeromq.support.ZmqUtils;
@@ -46,7 +47,7 @@ class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
 
   private static final Logger LOG = LoggerFactory.getLogger(OutputMessageAdapter.class);
 
-  public static class Builder implements ObjectBuilder<OutputMessageAdapter> {
+  public static class Builder implements ObjectBuilder<OutputMessageAdapter>, HasInvariant {
 
     private final OutputMessageAdapter _target = new OutputMessageAdapter();
 

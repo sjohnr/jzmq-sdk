@@ -24,13 +24,14 @@ import org.zeromq.ZMQ;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqContext;
 import org.zeromq.messaging.ZmqException;
+import org.zeromq.support.HasInvariant;
 import org.zeromq.support.ObjectBuilder;
 import org.zeromq.support.thread.ZmqRunnableContext;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class ZmqAbstractRunnableContext implements ZmqRunnableContext {
+public abstract class ZmqAbstractRunnableContext implements ZmqRunnableContext, HasInvariant {
 
   private static final long DEFAULT_POLL_TIMEOUT = 1000;
 
@@ -55,15 +56,8 @@ public abstract class ZmqAbstractRunnableContext implements ZmqRunnableContext {
     }
 
     @Override
-    public void checkInvariant() {
-      if (_target.ctx == null) {
-        throw ZmqException.fatal();
-      }
-    }
-
-    @Override
     public final T build() {
-      checkInvariant();
+      _target.checkInvariant();
       return _target;
     }
   }
@@ -87,6 +81,13 @@ public abstract class ZmqAbstractRunnableContext implements ZmqRunnableContext {
 
   public final void setPollTimeout(long pollTimeout) {
     this.pollTimeout = pollTimeout;
+  }
+
+  @Override
+  public void checkInvariant() {
+    if (ctx == null) {
+      throw ZmqException.fatal();
+    }
   }
 
   @Override

@@ -43,17 +43,6 @@ public abstract class ZmqAbstractProxy extends ZmqAbstractRunnableContext {
       _target.backendProps = props;
       return (B) this;
     }
-
-    @Override
-    public void checkInvariant() {
-      super.checkInvariant();
-      if (_target.frontendProps == null) {
-        throw ZmqException.fatal();
-      }
-      if (_target.backendProps == null) {
-        throw ZmqException.fatal();
-      }
-    }
   }
 
   protected Props frontendProps;
@@ -75,6 +64,17 @@ public abstract class ZmqAbstractProxy extends ZmqAbstractRunnableContext {
 
   public final void setBackendProps(Props backendProps) {
     this.backendProps = backendProps;
+  }
+
+  @Override
+  public void checkInvariant() {
+    super.checkInvariant();
+    if (frontendProps == null) {
+      throw ZmqException.fatal();
+    }
+    if (backendProps == null) {
+      throw ZmqException.fatal();
+    }
   }
 
   @Override

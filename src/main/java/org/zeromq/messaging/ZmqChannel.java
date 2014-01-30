@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
 import org.zeromq.support.HasDestroy;
+import org.zeromq.support.HasInvariant;
 import org.zeromq.support.ObjectAdapter;
 import org.zeromq.support.ObjectBuilder;
 
@@ -45,7 +46,7 @@ public final class ZmqChannel implements HasDestroy {
 
   private static final Logger LOG = LoggerFactory.getLogger(ZmqChannel.class);
 
-  public static final class Builder implements ObjectBuilder<ZmqChannel> {
+  public static final class Builder implements ObjectBuilder<ZmqChannel>, HasInvariant {
 
     private final ZmqChannel _target = new ZmqChannel();
 

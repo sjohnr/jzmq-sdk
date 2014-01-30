@@ -32,20 +32,8 @@ import org.zeromq.messaging.ZmqException;
 public final class WorkerAnonymEmitter extends ZmqAbstractWorker {
 
   public static class Builder extends ZmqAbstractWorker.Builder<Builder, WorkerAnonymEmitter> {
-
     private Builder() {
       super(new WorkerAnonymEmitter());
-    }
-
-    @Override
-    public void checkInvariant() {
-      super.checkInvariant();
-      if (_target.props.getConnectAddresses().isEmpty()) {
-        throw ZmqException.fatal();
-      }
-      if (!_target.props.getBindAddresses().isEmpty()) {
-        throw ZmqException.fatal();
-      }
     }
   }
 
@@ -61,7 +49,20 @@ public final class WorkerAnonymEmitter extends ZmqAbstractWorker {
   }
 
   @Override
+  public void checkInvariant() {
+    super.checkInvariant();
+    if (props.getConnectAddresses().isEmpty()) {
+      throw ZmqException.fatal();
+    }
+    if (!props.getBindAddresses().isEmpty()) {
+      throw ZmqException.fatal();
+    }
+  }
+
+  @Override
   public void init() {
+    checkInvariant();
+
     _pingStrategy = new DoPing();
     reg(_channel = ZmqChannel.DEALER(ctx).withProps(props).build());
 

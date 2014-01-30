@@ -27,6 +27,7 @@ import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
 import org.zeromq.support.HasDestroy;
+import org.zeromq.support.HasInvariant;
 import org.zeromq.support.ObjectBuilder;
 import org.zeromq.support.pool.Lease;
 import org.zeromq.support.pool.ObjectPool;
@@ -41,7 +42,7 @@ public final class BlockingClient implements HasDestroy {
 
   private static final long DEFAULT_RETRY_TIMEOUT = 3000; // timeout before give up and returning null.
 
-  public static final class Builder implements ObjectBuilder<BlockingClient> {
+  public static final class Builder implements ObjectBuilder<BlockingClient>, HasInvariant {
 
     private final BlockingClient _target = new BlockingClient();
 
@@ -77,11 +78,6 @@ public final class BlockingClient implements HasDestroy {
     public BlockingClient build() {
       checkInvariant();
       ObjectBuilder<Client> clientBuilder = new ObjectBuilder<Client>() {
-        @Override
-        public void checkInvariant() {
-          // no-op.
-        }
-
         @Override
         public Client build() {
           return new Client(_target.channelBuilder.build(),
@@ -266,11 +262,6 @@ public final class BlockingClient implements HasDestroy {
   private ZmqChannel.Builder channelBuilder;
   private long retryTimeout = DEFAULT_RETRY_TIMEOUT;
   private ObjectBuilder<Long> corrIdProvider = new ObjectBuilder<Long>() {
-    @Override
-    public void checkInvariant() {
-      // no-op.
-    }
-
     @Override
     public Long build() {
       return UUID.randomUUID().getMostSignificantBits(); // default UUID :|

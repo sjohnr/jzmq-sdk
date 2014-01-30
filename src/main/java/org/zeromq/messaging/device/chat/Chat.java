@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.messaging.Props;
 import org.zeromq.messaging.ZmqChannel;
+import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
 import org.zeromq.messaging.device.ZmqAbstractRunnableContext;
 
@@ -123,7 +124,26 @@ public final class Chat extends ZmqAbstractRunnableContext {
   }
 
   @Override
+  public void checkInvariant() {
+    super.checkInvariant();
+    if (frontendPubProps.getBindAddresses().isEmpty()) {
+      throw ZmqException.fatal();
+    }
+    if (clusterPubProps.getBindAddresses().isEmpty()) {
+      throw ZmqException.fatal();
+    }
+    if (frontendSubProps.getBindAddresses().isEmpty()) {
+      throw ZmqException.fatal();
+    }
+    if (clusterSubProps.getConnectAddresses().isEmpty()) {
+      throw ZmqException.fatal();
+    }
+  }
+
+  @Override
   public void init() {
+    checkInvariant();
+
     reg(_frontendPub = ZmqChannel.XSUB(ctx).withProps(frontendPubProps).build());
     reg(_clusterPub = ZmqChannel.XPUB(ctx).withProps(clusterPubProps).build());
     reg(_frontendSub = ZmqChannel.XPUB(ctx).withProps(frontendSubProps).build());

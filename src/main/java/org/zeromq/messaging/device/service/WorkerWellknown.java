@@ -32,20 +32,8 @@ import org.zeromq.messaging.ZmqException;
 public final class WorkerWellknown extends ZmqAbstractWorker {
 
   public static class Builder extends ZmqAbstractWorker.Builder<Builder, WorkerWellknown> {
-
     private Builder() {
       super(new WorkerWellknown());
-    }
-
-    @Override
-    public void checkInvariant() {
-      super.checkInvariant();
-      if (_target.props.getBindAddresses().isEmpty()) {
-        throw ZmqException.fatal();
-      }
-      if (!_target.props.getConnectAddresses().isEmpty()) {
-        throw ZmqException.fatal();
-      }
     }
   }
 
@@ -61,7 +49,20 @@ public final class WorkerWellknown extends ZmqAbstractWorker {
   }
 
   @Override
+  public void checkInvariant() {
+    super.checkInvariant();
+    if (props.getBindAddresses().isEmpty()) {
+      throw ZmqException.fatal();
+    }
+    if (!props.getConnectAddresses().isEmpty()) {
+      throw ZmqException.fatal();
+    }
+  }
+
+  @Override
   public void init() {
+    checkInvariant();
+
     _pingStrategy = new DontPing();
     reg(_channel = ZmqChannel.ROUTER(ctx).withProps(props).build());
 

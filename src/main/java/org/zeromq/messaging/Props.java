@@ -87,15 +87,7 @@ public final class Props {
     }
 
     @Override
-    public void checkInvariant() {
-      if (_target.bindAddresses.isEmpty() && _target.connectAddresses.isEmpty()) {
-        throw ZmqException.fatal();
-      }
-    }
-
-    @Override
     public Props build() {
-      checkInvariant();
       return _target;
     }
   }

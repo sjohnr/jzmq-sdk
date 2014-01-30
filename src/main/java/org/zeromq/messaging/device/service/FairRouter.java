@@ -33,26 +33,8 @@ import org.zeromq.messaging.device.ZmqAbstractProxy;
 public final class FairRouter extends ZmqAbstractFairService {
 
   public static class Builder extends ZmqAbstractProxy.Builder<Builder, FairRouter> {
-
     private Builder() {
       super(new FairRouter());
-    }
-
-    @Override
-    public void checkInvariant() {
-      super.checkInvariant();
-      if (_target.frontendProps.getBindAddresses().isEmpty()) {
-        throw ZmqException.fatal();
-      }
-      if (_target.backendProps.getBindAddresses().isEmpty()) {
-        throw ZmqException.fatal();
-      }
-      if (!_target.frontendProps.getConnectAddresses().isEmpty()) {
-        throw ZmqException.fatal();
-      }
-      if (!_target.backendProps.getConnectAddresses().isEmpty()) {
-        throw ZmqException.fatal();
-      }
     }
   }
 
@@ -68,7 +50,26 @@ public final class FairRouter extends ZmqAbstractFairService {
   }
 
   @Override
+  public void checkInvariant() {
+    super.checkInvariant();
+    if (frontendProps.getBindAddresses().isEmpty()) {
+      throw ZmqException.fatal();
+    }
+    if (backendProps.getBindAddresses().isEmpty()) {
+      throw ZmqException.fatal();
+    }
+    if (!frontendProps.getConnectAddresses().isEmpty()) {
+      throw ZmqException.fatal();
+    }
+    if (!backendProps.getConnectAddresses().isEmpty()) {
+      throw ZmqException.fatal();
+    }
+  }
+
+  @Override
   public void init() {
+    checkInvariant();
+
     reg(_frontend = ZmqChannel.ROUTER(ctx).withProps(frontendProps).build());
     reg(_backend = ZmqChannel.DEALER(ctx).withProps(backendProps).build());
 

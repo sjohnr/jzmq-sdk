@@ -49,16 +49,6 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractRunnableContext {
       _target.setMessageProcessor(messageProcessor);
       return (B) this;
     }
-
-    public void checkInvariant() {
-      super.checkInvariant();
-      if (_target.props == null) {
-        throw ZmqException.fatal();
-      }
-      if (_target.messageProcessor == null) {
-        throw ZmqException.fatal();
-      }
-    }
   }
 
   protected Props props;
@@ -75,13 +65,23 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractRunnableContext {
 
   //// METHODS
 
-
   public final void setProps(Props props) {
     this.props = props;
   }
 
   public final void setMessageProcessor(ZmqMessageProcessor messageProcessor) {
     this.messageProcessor = messageProcessor;
+  }
+
+  @Override
+  public void checkInvariant() {
+    super.checkInvariant();
+    if (props == null) {
+      throw ZmqException.fatal();
+    }
+    if (messageProcessor == null) {
+      throw ZmqException.fatal();
+    }
   }
 
   @Override

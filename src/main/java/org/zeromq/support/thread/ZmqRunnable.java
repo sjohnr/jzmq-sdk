@@ -23,6 +23,7 @@ package org.zeromq.support.thread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.messaging.ZmqException;
+import org.zeromq.support.HasInvariant;
 import org.zeromq.support.ObjectBuilder;
 import org.zeromq.support.exception.AbstractExceptionHandlerInTheChain;
 import org.zeromq.support.exception.ExceptionHandler;
@@ -44,7 +45,7 @@ public final class ZmqRunnable implements Runnable {
                         .withNext(new InterruptedExceptionHandler()
                                       .withNext(new LoggingExceptionHandler())));
 
-  public static class Builder implements ObjectBuilder<ZmqRunnable> {
+  public static class Builder implements ObjectBuilder<ZmqRunnable>, HasInvariant {
 
     private final ZmqRunnable _target = new ZmqRunnable();
 

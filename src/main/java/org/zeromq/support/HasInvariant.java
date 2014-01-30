@@ -20,8 +20,8 @@
 
 package org.zeromq.support;
 
-/** Abstraction around object-creation. */
-public interface ObjectBuilder<T> {
+/** Abstraction around object-invariant. */
+public interface HasInvariant {
 
-  T build();
+  void checkInvariant();
 }

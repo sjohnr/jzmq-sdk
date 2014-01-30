@@ -41,11 +41,6 @@ public class SimpleObjectPoolTest {
     private int c = 0;
 
     @Override
-    public void checkInvariant() {
-      // no-op.
-    }
-
-    @Override
     public String build() {
       return "cool" + (++c);
     }

@@ -20,6 +20,7 @@
 
 package org.zeromq.messaging;
 
+import org.zeromq.support.HasInvariant;
 import org.zeromq.support.ObjectBuilder;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -33,7 +34,7 @@ public final class ZmqMessage {
   public static final byte BYTE_SUB = 1; // denotes subscribe request.
   public static final byte BYTE_UNSUB = 0; // denotes unsubscribe request.
 
-  public static final class Builder implements ObjectBuilder<ZmqMessage> {
+  public static final class Builder implements ObjectBuilder<ZmqMessage>, HasInvariant {
 
     private ZmqMessage _target = new ZmqMessage();
 

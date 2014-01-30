@@ -54,26 +54,6 @@ public final class LruRouter extends ZmqAbstractProxy {
       _target.setSocketIdentityStorage(socketIdentityStorage);
       return this;
     }
-
-    @Override
-    public void checkInvariant() {
-      super.checkInvariant();
-      if (_target.socketIdentityStorage == null) {
-        throw ZmqException.fatal();
-      }
-      if (_target.frontendProps.getBindAddresses().isEmpty()) {
-        throw ZmqException.fatal();
-      }
-      if (_target.backendProps.getBindAddresses().isEmpty()) {
-        throw ZmqException.fatal();
-      }
-      if (!_target.frontendProps.getConnectAddresses().isEmpty()) {
-        throw ZmqException.fatal();
-      }
-      if (!_target.backendProps.getConnectAddresses().isEmpty()) {
-        throw ZmqException.fatal();
-      }
-    }
   }
 
   private ZmqSocketIdentityStorage socketIdentityStorage = new LruCache();
@@ -94,7 +74,29 @@ public final class LruRouter extends ZmqAbstractProxy {
   }
 
   @Override
+  public void checkInvariant() {
+    super.checkInvariant();
+    if (socketIdentityStorage == null) {
+      throw ZmqException.fatal();
+    }
+    if (frontendProps.getBindAddresses().isEmpty()) {
+      throw ZmqException.fatal();
+    }
+    if (backendProps.getBindAddresses().isEmpty()) {
+      throw ZmqException.fatal();
+    }
+    if (!frontendProps.getConnectAddresses().isEmpty()) {
+      throw ZmqException.fatal();
+    }
+    if (!backendProps.getConnectAddresses().isEmpty()) {
+      throw ZmqException.fatal();
+    }
+  }
+
+  @Override
   public void init() {
+    checkInvariant();
+
     _frontend = ZmqChannel.ROUTER(ctx).withProps(frontendProps).build();
     _backend = ZmqChannel.ROUTER(ctx).withProps(backendProps).build();
 
