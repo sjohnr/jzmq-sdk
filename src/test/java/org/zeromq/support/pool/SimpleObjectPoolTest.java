@@ -147,19 +147,6 @@ public class SimpleObjectPoolTest {
     assert pool.size() <= 8;
   }
 
-  @Test
-  public void t5() {
-    SimpleObjectPool<String> pool = new SimpleObjectPool<String>(testStrBuilder);
-
-    assertThat(pool.capacity(), is(SimpleObjectPool.DEFAULT_CAPACITY));
-    assertThat(pool.size(), is(0));
-
-    pool.init();
-
-    assertThat(pool.capacity(), is(SimpleObjectPool.DEFAULT_CAPACITY));
-    assertThat(pool.size(), is(SimpleObjectPool.DEFAULT_CAPACITY));
-  }
-
   private Thread leaseReleaseFast(final CountDownLatch l,
                                   final int iterNum,
                                   final SimpleObjectPool<String> pool,

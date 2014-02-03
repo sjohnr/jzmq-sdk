@@ -23,8 +23,6 @@ package org.zeromq.support.pool;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.support.ObjectBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -140,21 +138,6 @@ public final class SimpleObjectPool<T> implements ObjectPool<T> {
       lease = new LeaseImpl<T>(this, oid, objectBuilder.build());
     }
     return lease;
-  }
-
-  @Override
-  public void init() {
-    if (_initCalled) {
-      throw ZmqException.fatal();
-    }
-    _initCalled = true;
-    List<Lease<T>> l = new ArrayList<Lease<T>>(capacity);
-    for (int i = 0; i < capacity; i++) {
-      l.add(lease());
-    }
-    for (Lease<T> lease : l) {
-      lease.release();
-    }
   }
 
   @Override
