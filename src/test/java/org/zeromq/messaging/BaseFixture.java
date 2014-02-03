@@ -22,8 +22,8 @@ package org.zeromq.messaging;
 
 import org.zeromq.support.HasDestroy;
 import org.zeromq.support.HasInit;
+import org.zeromq.support.thread.ThreadPool;
 import org.zeromq.support.thread.ZmqRunnable;
-import org.zeromq.support.thread.ZmqThreadPool;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +31,7 @@ import java.util.List;
 public class BaseFixture implements HasInit, HasDestroy {
 
   private final List<HasDestroy> _destroyables = new ArrayList<HasDestroy>();
-  private final ZmqThreadPool _threadPool = ZmqThreadPool.newCachedDaemonThreadPool();
+  private final ThreadPool _threadPool = ThreadPool.newCachedDaemonThreadPool();
 
   @Override
   public final void init() {

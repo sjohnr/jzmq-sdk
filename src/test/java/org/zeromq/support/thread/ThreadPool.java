@@ -34,36 +34,11 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * ThreadPool wrapper abstraction. Works only with {@link ZmqRunnable}.
- * Overall this class is aimed to provide graceful shutdown for
- * submitted tasks.
- */
-public final class ZmqThreadPool implements HasInit, HasDestroy {
+public final class ThreadPool implements HasInit, HasDestroy {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ZmqThreadPool.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ThreadPool.class);
 
   private static AtomicInteger _threadNum = new AtomicInteger();
-
-  private static final ThreadFactory DAEMON_THREAD_FACTORY = new ThreadFactory() {
-    @Override
-    public Thread newThread(Runnable r) {
-      Thread t = new Thread(r);
-      t.setDaemon(true);
-      t.setName("zmq-daemon-" + _threadNum.incrementAndGet());
-      return t;
-    }
-  };
-
-  private static final ThreadFactory NON_DAEMON_THREAD_FACTORY = new ThreadFactory() {
-    @Override
-    public Thread newThread(Runnable r) {
-      Thread t = new Thread(r);
-      t.setDaemon(false);
-      t.setName("zmq-" + _threadNum.incrementAndGet());
-      return t;
-    }
-  };
 
   private List<ZmqRunnable> runnables = new ArrayList<ZmqRunnable>();
 
@@ -72,54 +47,41 @@ public final class ZmqThreadPool implements HasInit, HasDestroy {
 
   //// CONSTRUCTORS
 
-  private ZmqThreadPool() {
+  private ThreadPool() {
   }
 
   //// METHODS
 
-  public static ZmqThreadPool newCachedDaemonThreadPool() {
-    ZmqThreadPool target = new ZmqThreadPool();
+  public static ThreadPool newCachedDaemonThreadPool() {
+    ThreadPool target = new ThreadPool();
     target._executor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors(),
                                               Integer.MAX_VALUE,
                                               60L,
                                               TimeUnit.SECONDS,
                                               new SynchronousQueue<Runnable>(),
-                                              DAEMON_THREAD_FACTORY);
+                                              new ThreadFactory() {
+                                                @Override
+                                                public Thread newThread(Runnable r) {
+                                                  Thread t = new Thread(r);
+                                                  t.setDaemon(true);
+                                                  t.setName("zmq-daemon-" + _threadNum.incrementAndGet());
+                                                  return t;
+                                                }
+                                              });
     int i = target._executor.prestartAllCoreThreads();
     LOG.debug("Started {} core zmq-threads.", i);
     return target;
   }
 
-  public static ZmqThreadPool newCachedNonDaemonThreadPool() {
-    ZmqThreadPool target = new ZmqThreadPool();
-    target._executor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors(),
-                                              Integer.MAX_VALUE,
-                                              60L,
-                                              TimeUnit.SECONDS,
-                                              new SynchronousQueue<Runnable>(),
-                                              NON_DAEMON_THREAD_FACTORY);
-    int i = target._executor.prestartAllCoreThreads();
-    LOG.debug("Started {} core zmq-threads.", i);
-    return target;
-  }
-
-  public ZmqThreadPool withRunnable(ZmqRunnable runnable) {
+  public ThreadPool withRunnable(ZmqRunnable runnable) {
     this.runnables.add(runnable);
     return this;
-  }
-
-  public void blockOnMe() {
-    try {
-      _destroyLatch.await();
-    }
-    catch (InterruptedException ignore) {
-    }
   }
 
   @Override
   public void init() {
     if (runnables.isEmpty()) {
-      LOG.warn("ZmqThreadPool is empty!");
+      LOG.warn("ThreadPool is empty!");
       return;
     }
     _destroyLatch = new CountDownLatch(runnables.size());
