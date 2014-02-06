@@ -52,16 +52,16 @@ public final class FairActiveAcceptor extends ZmqAbstractFairService {
   @Override
   public void checkInvariant() {
     super.checkInvariant();
-    if (!frontendProps.getBind().isEmpty()) {
+    if (!frontendProps.bindAddr().isEmpty()) {
       throw ZmqException.fatal();
     }
-    if (backendProps.getBind().isEmpty()) {
+    if (backendProps.bindAddr().isEmpty()) {
       throw ZmqException.fatal();
     }
-    if (frontendProps.getConnect().isEmpty()) {
+    if (frontendProps.connectAddr().isEmpty()) {
       throw ZmqException.fatal();
     }
-    if (!backendProps.getConnect().isEmpty()) {
+    if (!backendProps.connectAddr().isEmpty()) {
       throw ZmqException.fatal();
     }
   }

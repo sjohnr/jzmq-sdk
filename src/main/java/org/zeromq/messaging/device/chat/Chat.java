@@ -126,16 +126,16 @@ public final class Chat extends ZmqAbstractRunnableContext {
   @Override
   public void checkInvariant() {
     super.checkInvariant();
-    if (frontendPubProps.getBind().isEmpty()) {
+    if (frontendPubProps.bindAddr().isEmpty()) {
       throw ZmqException.fatal();
     }
-    if (clusterPubProps.getBind().isEmpty()) {
+    if (clusterPubProps.bindAddr().isEmpty()) {
       throw ZmqException.fatal();
     }
-    if (frontendSubProps.getBind().isEmpty()) {
+    if (frontendSubProps.bindAddr().isEmpty()) {
       throw ZmqException.fatal();
     }
-    if (clusterSubProps.getConnect().isEmpty()) {
+    if (clusterSubProps.connectAddr().isEmpty()) {
       throw ZmqException.fatal();
     }
   }

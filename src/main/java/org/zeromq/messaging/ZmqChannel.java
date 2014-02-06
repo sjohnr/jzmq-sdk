@@ -123,26 +123,26 @@ public final class ZmqChannel implements HasDestroy {
 
       {
         // set high water marks.
-        socket.setSndHWM(_target.props.getHwmSend());
-        socket.setRcvHWM(_target.props.getHwmRecv());
+        socket.setSndHWM(_target.props.hwmSend());
+        socket.setRcvHWM(_target.props.hwmRecv());
 
         // set socket .send()/.recv() timeout.
-        socket.setSendTimeOut(_target.props.getTimeoutSend());
-        socket.setReceiveTimeOut(_target.props.getTimeoutRecv());
+        socket.setSendTimeOut(_target.props.timeoutSend());
+        socket.setReceiveTimeOut(_target.props.timeoutRecv());
 
         // setting LINGER to zero -- don't block on socket.close().
-        socket.setLinger(_target.props.getLinger());
+        socket.setLinger(_target.props.linger());
 
         // set socket identity: provided socket_prefix plus UUID long.
         setupIdentity(socket);
 
         // set reconnect settings.
-        socket.setReconnectIVL(_target.props.getReconnectInterval());
-        socket.setReconnectIVLMax(_target.props.getReconnectIntervalMax());
+        socket.setReconnectIVL(_target.props.reconnectInterval());
+        socket.setReconnectIVLMax(_target.props.reconnectIntervalMax());
       }
 
       // ... bind().
-      for (String addr : _target.props.getBind()) {
+      for (String addr : _target.props.bindAddr()) {
         try {
           socket.bind(addr);
         }
@@ -153,7 +153,7 @@ public final class ZmqChannel implements HasDestroy {
       }
 
       // ... connect().
-      for (String addr : _target.props.getConnect()) {
+      for (String addr : _target.props.connectAddr()) {
         // check if this is inproc: address.
         if (addr.startsWith("inproc://")) {
           long timer = System.currentTimeMillis();
@@ -195,8 +195,8 @@ public final class ZmqChannel implements HasDestroy {
       opts.put("hwm_send", socket.getSndHWM());
       opts.put("hwm_recv", socket.getRcvHWM());
       opts.put("linger", socket.getLinger());
-      opts.put("bind_addr", _target.props.getBind());
-      opts.put("connect_addr", _target.props.getConnect());
+      opts.put("bind_addr", _target.props.bindAddr());
+      opts.put("connect_addr", _target.props.connectAddr());
       opts.put("timeout_send", socket.getSendTimeOut());
       opts.put("timeout_recv", socket.getReceiveTimeOut());
       opts.put("reconn_intrvl", socket.getReconnectIVL());
@@ -206,10 +206,10 @@ public final class ZmqChannel implements HasDestroy {
     }
 
     void setupIdentity(ZMQ.Socket socket) {
-      if (_target.props.getSocketIdPrefix() != null) {
+      if (_target.props.socketIdPrefix() != null) {
         byte[] delimiter = "#".getBytes();
         byte[] uuid = longAsBytes(UUID.randomUUID().getMostSignificantBits());
-        byte[] identity = mergeBytes(ImmutableList.of(_target.props.getSocketIdPrefix().getBytes(), delimiter, uuid));
+        byte[] identity = mergeBytes(ImmutableList.of(_target.props.socketIdPrefix().getBytes(), delimiter, uuid));
         socket.setIdentity(identity);
       }
     }

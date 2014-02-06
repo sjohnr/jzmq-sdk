@@ -43,26 +43,26 @@ public final class Props {
     private Builder() {
     }
 
-    public Builder withBind(String address) {
-      _target.setBind(address);
+    public Builder withBindAddr(String address) {
+      _target.setBindAddr(address);
       return this;
     }
 
-    public Builder withBind(Iterable<String> addresses) {
+    public Builder withBindAddr(Iterable<String> addresses) {
       for (String address : addresses) {
-        withBind(address);
+        withBindAddr(address);
       }
       return this;
     }
 
-    public Builder withConnect(String address) {
-      _target.setConnect(address);
+    public Builder withConnectAddr(String address) {
+      _target.setConnectAddr(address);
       return this;
     }
 
-    public Builder withConnect(Iterable<String> addresses) {
+    public Builder withConnectAddr(Iterable<String> addresses) {
       for (String address : addresses) {
-        withConnect(address);
+        withConnectAddr(address);
       }
       return this;
     }
@@ -113,8 +113,8 @@ public final class Props {
     }
   }
 
-  private List<String> bindAddresses = new ArrayList<String>();
-  private List<String> connectAddresses = new ArrayList<String>();
+  private List<String> bindAddr = new ArrayList<String>();
+  private List<String> connectAddr = new ArrayList<String>();
   private long hwmSend = DEFAULT_HWM_SEND;
   private long hwmRecv = DEFAULT_HWM_RECV;
   private String socketIdPrefix;
@@ -135,20 +135,20 @@ public final class Props {
     return new Builder();
   }
 
-  public void setBind(String bindAddresses) {
-    for (String addr : bindAddresses.split("[\\s\\t\\n,]+")) {
+  public void setBindAddr(String bindAddr) {
+    for (String addr : bindAddr.split("[\\s\\t\\n,]+")) {
       addr = addr.trim();
       if (!Strings.isNullOrEmpty(addr)) {
-        this.bindAddresses.add(addr);
+        this.bindAddr.add(addr);
       }
     }
   }
 
-  public void setConnect(String connectAddresses) {
-    for (String addr : connectAddresses.split("[\\s\\t\\n,]+")) {
+  public void setConnectAddr(String connectAddr) {
+    for (String addr : connectAddr.split("[\\s\\t\\n,]+")) {
       addr = addr.trim();
       if (!Strings.isNullOrEmpty(addr)) {
-        this.connectAddresses.add(addr);
+        this.connectAddr.add(addr);
       }
     }
   }
@@ -185,43 +185,43 @@ public final class Props {
     this.reconnectIntervalMax = reconnectIntervalMax;
   }
 
-  public List<String> getBind() {
-    return bindAddresses;
+  public List<String> bindAddr() {
+    return bindAddr;
   }
 
-  public List<String> getConnect() {
-    return connectAddresses;
+  public List<String> connectAddr() {
+    return connectAddr;
   }
 
-  public long getHwmSend() {
+  public long hwmSend() {
     return hwmSend;
   }
 
-  public long getHwmRecv() {
+  public long hwmRecv() {
     return hwmRecv;
   }
 
-  public String getSocketIdPrefix() {
+  public String socketIdPrefix() {
     return socketIdPrefix;
   }
 
-  public long getLinger() {
+  public long linger() {
     return linger;
   }
 
-  public int getTimeoutSend() {
+  public int timeoutSend() {
     return timeoutSend;
   }
 
-  public int getTimeoutRecv() {
+  public int timeoutRecv() {
     return timeoutRecv;
   }
 
-  public long getReconnectInterval() {
+  public long reconnectInterval() {
     return reconnectInterval;
   }
 
-  public long getReconnectIntervalMax() {
+  public long reconnectIntervalMax() {
     return reconnectIntervalMax;
   }
 }

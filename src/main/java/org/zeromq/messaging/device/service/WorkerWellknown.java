@@ -51,10 +51,10 @@ public final class WorkerWellknown extends ZmqAbstractWorker {
   @Override
   public void checkInvariant() {
     super.checkInvariant();
-    if (props.getBind().isEmpty()) {
+    if (props.bindAddr().isEmpty()) {
       throw ZmqException.fatal();
     }
-    if (!props.getConnect().isEmpty()) {
+    if (!props.connectAddr().isEmpty()) {
       throw ZmqException.fatal();
     }
   }

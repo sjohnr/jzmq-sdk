@@ -42,13 +42,13 @@ public class ChatTest extends ZmqAbstractTest {
     try {
       ZmqChannel pub = ZmqChannel.PUB(ctx())
                                  .withProps(Props.builder()
-                                                 .withConnect(inprocAddr("p>>"))
+                                                 .withConnectAddr(inprocAddr("p>>"))
                                                  .build())
                                  .build();
 
       ZmqChannel sub = ZmqChannel.SUB(ctx())
                                  .withProps(Props.builder()
-                                                 .withConnect(inprocAddr("s<<"))
+                                                 .withConnectAddr(inprocAddr("s<<"))
                                                  .build())
                                  .build();
 
@@ -86,25 +86,25 @@ public class ChatTest extends ZmqAbstractTest {
     try {
       ZmqChannel galaSays = ZmqChannel.PUB(ctx())
                                       .withProps(Props.builder()
-                                                      .withConnect(inprocAddr("gala>>"))
+                                                      .withConnectAddr(inprocAddr("gala>>"))
                                                       .build())
                                       .build();
 
       ZmqChannel galaListens = ZmqChannel.SUB(ctx())
                                          .withProps(Props.builder()
-                                                         .withConnect(inprocAddr("gala<<"))
+                                                         .withConnectAddr(inprocAddr("gala<<"))
                                                          .build())
                                          .build();
 
       ZmqChannel alenkaSays = ZmqChannel.PUB(ctx())
                                         .withProps(Props.builder()
-                                                        .withConnect(inprocAddr("alenka>>"))
+                                                        .withConnectAddr(inprocAddr("alenka>>"))
                                                         .build())
                                         .build();
 
       ZmqChannel alenkaListens = ZmqChannel.SUB(ctx())
                                            .withProps(Props.builder()
-                                                           .withConnect(inprocAddr("alenka<<"))
+                                                           .withConnectAddr(inprocAddr("alenka<<"))
                                                            .build())
                                            .build();
 
@@ -142,13 +142,13 @@ public class ChatTest extends ZmqAbstractTest {
     try {
       ZmqChannel pub = ZmqChannel.PUB(ctx())
                                  .withProps(Props.builder()
-                                                 .withConnect(inprocAddr("p>>"))
+                                                 .withConnectAddr(inprocAddr("p>>"))
                                                  .build())
                                  .build();
 
       ZmqChannel sub = ZmqChannel.SUB(ctx())
                                  .withProps(Props.builder()
-                                                 .withConnect(inprocAddr("s<<"))
+                                                 .withConnectAddr(inprocAddr("s<<"))
                                                  .build())
                                  .build();
 
