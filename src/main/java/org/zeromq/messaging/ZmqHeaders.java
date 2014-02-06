@@ -37,18 +37,17 @@ import static org.zeromq.support.ZmqUtils.isDivFrame;
 import static org.zeromq.support.ZmqUtils.isEmptyFrame;
 
 /**
- * Map data structure aimed to provide <i>generic headers</i>:
+ * Map data structure for <i>generic headers</i>:
  * <pre>
  *   header_id_0  [header_value_0]
  *   ...
  *   header_id_m  [header_value_m]
  * </pre>
- * Where header -id/-value are strings. Wire format is JSON.
+ * Where header {@code .._id .._value} are strings. Wire format is JSON.
  */
 @SuppressWarnings("unchecked")
 public class ZmqHeaders<T extends ZmqHeaders> {
 
-  /** Internal mapping between header id and its content. */
   private final LinkedHashMap<String, String> _map = new LinkedHashMap();
 
   //// METHODS
@@ -62,11 +61,9 @@ public class ZmqHeaders<T extends ZmqHeaders> {
     if (isEmptyFrame(headers)) {
       return (T) this;
     }
-
     if (isDivFrame(headers)) {
       throw ZmqException.wrongHeader();
     }
-
     try {
       JsonFactory jf = new JsonFactory();
       JsonParser p = jf.createParser(headers);
@@ -110,46 +107,46 @@ public class ZmqHeaders<T extends ZmqHeaders> {
     return (T) this;
   }
 
-  public final T set(String headerId, String headerContent) {
-    checkArgument(!isNullOrEmpty(headerId));
-    checkArgument(!isNullOrEmpty(headerContent));
-    _map.put(headerId, headerContent);
+  public final T set(String k, String v) {
+    checkArgument(!isNullOrEmpty(k));
+    checkArgument(v != null);
+    _map.put(k, v);
     return (T) this;
   }
 
-  public final T set(String headerId, Number headerContent) {
-    checkArgument(!isNullOrEmpty(headerId));
-    checkArgument(headerContent != null);
-    _map.put(headerId, headerContent.toString());
+  public final T set(String k, Number v) {
+    checkArgument(!isNullOrEmpty(k));
+    checkArgument(v != null);
+    _map.put(k, v.toString());
     return (T) this;
   }
 
   /**
-   * @param id header id.
+   * @param k header id.
    * @return removed header content. <b>Null if there's no header by given id.</b>
    */
-  public final String remove(String id) {
-    return _map.remove(id);
+  public final String remove(String k) {
+    return _map.remove(k);
   }
 
   /**
-   * @param id header id.
+   * @param k header id.
    * @return header content. <b>Null if there's no header by given id.</b>
    */
-  public final String getHeaderOrNull(String id) {
-    return _map.get(id);
+  public final String getHeaderOrNull(String k) {
+    return _map.get(k);
   }
 
   /**
-   * @param id header id.
+   * @param k header id.
    * @return header content. <b>Never null.</b>
    */
-  public final String getHeaderOrException(String id) {
-    String h = getHeaderOrNull(id);
-    if (h == null) {
+  public final String getHeaderOrException(String k) {
+    String header = getHeaderOrNull(k);
+    if (header == null) {
       throw ZmqException.headerIsNotSet();
     }
-    return h;
+    return header;
   }
 
   /**

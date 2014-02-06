@@ -104,13 +104,6 @@ public class ZmqHeadersTest {
     }
 
     try {
-      new ZmqHeaders().set("x", "");
-      fail();
-    }
-    catch (IllegalArgumentException e) {
-    }
-
-    try {
       new ZmqHeaders().copy("{\"0\":[]}".getBytes());
       fail();
     }
