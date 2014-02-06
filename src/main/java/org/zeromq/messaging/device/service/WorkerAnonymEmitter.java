@@ -51,10 +51,10 @@ public final class WorkerAnonymEmitter extends ZmqAbstractWorker {
   @Override
   public void checkInvariant() {
     super.checkInvariant();
-    if (props.getConnectAddresses().isEmpty()) {
+    if (props.getConnect().isEmpty()) {
       throw ZmqException.fatal();
     }
-    if (!props.getBindAddresses().isEmpty()) {
+    if (!props.getBind().isEmpty()) {
       throw ZmqException.fatal();
     }
   }

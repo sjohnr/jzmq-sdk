@@ -1,5 +1,26 @@
+/*
+ * Copyright (c) 2012 artem.vysochyn@gmail.com
+ * Copyright (c) 2013 Other contributors as noted in the AUTHORS file
+ *
+ * jzmq-sdk is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * jzmq-sdk is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * jzmq-sdk became possible because of jzmq binding and zmq library itself.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.zeromq.messaging;
 
+import com.google.common.base.Strings;
 import org.zeromq.support.ObjectBuilder;
 
 import java.util.ArrayList;
@@ -22,26 +43,26 @@ public final class Props {
     private Builder() {
     }
 
-    public Builder withBindAddress(String address) {
-      _target.bindAddresses.add(address);
+    public Builder withBind(String address) {
+      _target.setBind(address);
       return this;
     }
 
-    public Builder withBindAddresses(Iterable<String> addresses) {
+    public Builder withBind(Iterable<String> addresses) {
       for (String address : addresses) {
-        withBindAddress(address);
+        withBind(address);
       }
       return this;
     }
 
-    public Builder withConnAddress(String address) {
-      _target.connectAddresses.add(address);
+    public Builder withConnect(String address) {
+      _target.setConnect(address);
       return this;
     }
 
-    public Builder withConnAddresses(Iterable<String> addresses) {
+    public Builder withConnect(Iterable<String> addresses) {
       for (String address : addresses) {
-        withConnAddress(address);
+        withConnect(address);
       }
       return this;
     }
@@ -114,12 +135,22 @@ public final class Props {
     return new Builder();
   }
 
-  public void setBindAddresses(List<String> bindAddresses) {
-    this.bindAddresses = bindAddresses;
+  public void setBind(String bindAddresses) {
+    for (String addr : bindAddresses.split("[\\s\\t\\n,]+")) {
+      addr = addr.trim();
+      if (!Strings.isNullOrEmpty(addr)) {
+        this.bindAddresses.add(addr);
+      }
+    }
   }
 
-  public void setConnectAddresses(List<String> connectAddresses) {
-    this.connectAddresses = connectAddresses;
+  public void setConnect(String connectAddresses) {
+    for (String addr : connectAddresses.split("[\\s\\t\\n,]+")) {
+      addr = addr.trim();
+      if (!Strings.isNullOrEmpty(addr)) {
+        this.connectAddresses.add(addr);
+      }
+    }
   }
 
   public void setHwmSend(long hwmSend) {
@@ -154,11 +185,11 @@ public final class Props {
     this.reconnectIntervalMax = reconnectIntervalMax;
   }
 
-  public List<String> getBindAddresses() {
+  public List<String> getBind() {
     return bindAddresses;
   }
 
-  public List<String> getConnectAddresses() {
+  public List<String> getConnect() {
     return connectAddresses;
   }
 

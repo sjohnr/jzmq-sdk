@@ -142,7 +142,7 @@ public final class ZmqChannel implements HasDestroy {
       }
 
       // ... bind().
-      for (String addr : _target.props.getBindAddresses()) {
+      for (String addr : _target.props.getBind()) {
         try {
           socket.bind(addr);
         }
@@ -153,7 +153,7 @@ public final class ZmqChannel implements HasDestroy {
       }
 
       // ... connect().
-      for (String addr : _target.props.getConnectAddresses()) {
+      for (String addr : _target.props.getConnect()) {
         // check if this is inproc: address.
         if (addr.startsWith("inproc://")) {
           long timer = System.currentTimeMillis();
@@ -195,8 +195,8 @@ public final class ZmqChannel implements HasDestroy {
       opts.put("hwm_send", socket.getSndHWM());
       opts.put("hwm_recv", socket.getRcvHWM());
       opts.put("linger", socket.getLinger());
-      opts.put("bind_addr", _target.props.getBindAddresses());
-      opts.put("connect_addr", _target.props.getConnectAddresses());
+      opts.put("bind_addr", _target.props.getBind());
+      opts.put("connect_addr", _target.props.getConnect());
       opts.put("timeout_send", socket.getSendTimeOut());
       opts.put("timeout_recv", socket.getReceiveTimeOut());
       opts.put("reconn_intrvl", socket.getReconnectIVL());

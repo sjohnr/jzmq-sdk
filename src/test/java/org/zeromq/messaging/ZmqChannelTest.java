@@ -38,13 +38,13 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
     ZmqChannel.DEALER(ctx())
               .withProps(Props.builder()
-                              .withConnAddress(inprocAddr("service"))
+                              .withConnect(inprocAddr("service"))
                               .build())
               .build();
 
     ZmqChannel.DEALER(ctx())
               .withProps(Props.builder()
-                              .withBindAddress(inprocAddr("service"))
+                              .withBind(inprocAddr("service"))
                               .build())
               .build();
   }
@@ -55,13 +55,13 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
     ZmqChannel.DEALER(ctx())
               .withProps(Props.builder()
-                              .withBindAddress(inprocAddr("service"))
+                              .withBind(inprocAddr("service"))
                               .build())
               .build();
 
     ZmqChannel.DEALER(ctx())
               .withProps(Props.builder()
-                              .withConnAddress(inprocAddr("service"))
+                              .withConnect(inprocAddr("service"))
                               .build())
               .build();
   }
@@ -72,16 +72,16 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
     ZmqChannel.DEALER(ctx())
               .withProps(Props.builder()
-                              .withBindAddress(inprocAddr("service"))
+                              .withBind(inprocAddr("service"))
                               .build())
               .build();
 
     ZmqChannel.DEALER(ctx())
               .withProps(Props.builder()
-                              .withConnAddress(inprocAddr("service"))
+                              .withConnect(inprocAddr("service"))
                               .build())
               .withProps(Props.builder()
-                              .withConnAddress(inprocAddr("service-noabc"))
+                              .withConnect(inprocAddr("service-noabc"))
                               .build())
               .build();
   }
@@ -96,7 +96,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                                .withHwmSend(0)
                                                .withWaitSend(-1)
                                                .withWaitRecv(1)
-                                               .withConnAddress(connAddr(4466))
+                                               .withConnect(connAddr(4466))
                                                .build())
                                .build();
 
@@ -122,7 +122,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                                .withHwmSend(1)
                                                .withWaitSend(0)
                                                .withWaitRecv(0)
-                                               .withConnAddress(connAddr(4466))
+                                               .withConnect(connAddr(4466))
                                                .build())
                                .build();
 
@@ -149,7 +149,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
     ZmqChannel rep = ZmqChannel.ROUTER(ctx())
                                .withProps(Props.builder()
-                                               .withBindAddress(bindAddr(6633))
+                                               .withBind(bindAddr(6633))
                                                .build())
                                .build();
 
@@ -171,7 +171,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
       rep.destroy();
       rep = ZmqChannel.ROUTER(ctx())
                       .withProps(Props.builder()
-                                      .withBindAddress(bindAddr(6633))
+                                      .withBind(bindAddr(6633))
                                       .build())
                       .build();
 
@@ -210,7 +210,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                   .withProps(Props.builder()
                                                   .withWaitSend(0)
                                                   .withWaitRecv(100)
-                                                  .withConnAddress(connAddr(6677))
+                                                  .withConnect(connAddr(6677))
                                                   .build())
                                   .build();
 
@@ -218,7 +218,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                   .withProps(Props.builder()
                                                   .withWaitSend(0)
                                                   .withWaitRecv(100)
-                                                  .withBindAddress(bindAddr(6677))
+                                                  .withBind(bindAddr(6677))
                                                   .build())
                                   .build();
 

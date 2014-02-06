@@ -1,3 +1,23 @@
+/*
+ * Copyright (c) 2012 artem.vysochyn@gmail.com
+ * Copyright (c) 2013 Other contributors as noted in the AUTHORS file
+ *
+ * jzmq-sdk is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * jzmq-sdk is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * jzmq-sdk became possible because of jzmq binding and zmq library itself.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.zeromq.messaging.device.chat;
 
 import org.junit.Test;
@@ -22,13 +42,13 @@ public class ChatTest extends ZmqAbstractTest {
     try {
       ZmqChannel pub = ZmqChannel.PUB(ctx())
                                  .withProps(Props.builder()
-                                                 .withConnAddress(inprocAddr("p>>"))
+                                                 .withConnect(inprocAddr("p>>"))
                                                  .build())
                                  .build();
 
       ZmqChannel sub = ZmqChannel.SUB(ctx())
                                  .withProps(Props.builder()
-                                                 .withConnAddress(inprocAddr("s<<"))
+                                                 .withConnect(inprocAddr("s<<"))
                                                  .build())
                                  .build();
 
@@ -66,25 +86,25 @@ public class ChatTest extends ZmqAbstractTest {
     try {
       ZmqChannel galaSays = ZmqChannel.PUB(ctx())
                                       .withProps(Props.builder()
-                                                      .withConnAddress(inprocAddr("gala>>"))
+                                                      .withConnect(inprocAddr("gala>>"))
                                                       .build())
                                       .build();
 
       ZmqChannel galaListens = ZmqChannel.SUB(ctx())
                                          .withProps(Props.builder()
-                                                         .withConnAddress(inprocAddr("gala<<"))
+                                                         .withConnect(inprocAddr("gala<<"))
                                                          .build())
                                          .build();
 
       ZmqChannel alenkaSays = ZmqChannel.PUB(ctx())
                                         .withProps(Props.builder()
-                                                        .withConnAddress(inprocAddr("alenka>>"))
+                                                        .withConnect(inprocAddr("alenka>>"))
                                                         .build())
                                         .build();
 
       ZmqChannel alenkaListens = ZmqChannel.SUB(ctx())
                                            .withProps(Props.builder()
-                                                           .withConnAddress(inprocAddr("alenka<<"))
+                                                           .withConnect(inprocAddr("alenka<<"))
                                                            .build())
                                            .build();
 
@@ -122,13 +142,13 @@ public class ChatTest extends ZmqAbstractTest {
     try {
       ZmqChannel pub = ZmqChannel.PUB(ctx())
                                  .withProps(Props.builder()
-                                                 .withConnAddress(inprocAddr("p>>"))
+                                                 .withConnect(inprocAddr("p>>"))
                                                  .build())
                                  .build();
 
       ZmqChannel sub = ZmqChannel.SUB(ctx())
                                  .withProps(Props.builder()
-                                                 .withConnAddress(inprocAddr("s<<"))
+                                                 .withConnect(inprocAddr("s<<"))
                                                  .build())
                                  .build();
 

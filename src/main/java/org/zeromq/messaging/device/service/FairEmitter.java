@@ -52,16 +52,16 @@ public final class FairEmitter extends ZmqAbstractFairService {
   @Override
   public void checkInvariant() {
     super.checkInvariant();
-    if (frontendProps.getBindAddresses().isEmpty()) {
+    if (frontendProps.getBind().isEmpty()) {
       throw ZmqException.fatal();
     }
-    if (!backendProps.getBindAddresses().isEmpty()) {
+    if (!backendProps.getBind().isEmpty()) {
       throw ZmqException.fatal();
     }
-    if (!frontendProps.getConnectAddresses().isEmpty()) {
+    if (!frontendProps.getConnect().isEmpty()) {
       throw ZmqException.fatal();
     }
-    if (backendProps.getConnectAddresses().isEmpty()) {
+    if (backendProps.getConnect().isEmpty()) {
       throw ZmqException.fatal();
     }
   }
