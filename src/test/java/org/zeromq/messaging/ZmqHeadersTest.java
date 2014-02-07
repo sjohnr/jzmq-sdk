@@ -110,14 +110,6 @@ public class ZmqHeadersTest {
     catch (ZmqException e) {
       assert e.errorCode() == WRONG_HEADER;
     }
-
-    try {
-      new ZmqHeaders().copy("{\"0\":[\"\"]}".getBytes());
-      fail();
-    }
-    catch (ZmqException e) {
-      assert e.errorCode() == WRONG_HEADER;
-    }
   }
 
   @Test
@@ -133,5 +125,20 @@ public class ZmqHeadersTest {
         .copy(new ZmqHeaders().set("c", "y"));
 
     assertArrayEquals("{\"a\":[\"x\"],\"b\":[\"b\"],\"c\":[\"y\"]}".getBytes(), copy.asBinary());
+  }
+
+  @Test
+  public void t6() {
+    ZmqHeaders headers = new ZmqHeaders().set("a", "A")
+                                         .set("b", "B")
+                                         .set("c", "C");
+
+    assertArrayEquals("{\"a\":[\"A\"],\"b\":[\"B\"],\"c\":[\"C\"]}".getBytes(), headers.asBinary());
+
+    ZmqHeaders copy = headers.copy("{\"a\":[\"\"]}".getBytes())
+                             .copy(new ZmqHeaders().set("b", ""))
+                             .copy("{\"c\":[\"\"]}".getBytes());
+
+    assertArrayEquals("{\"a\":[\"\"],\"b\":[\"\"],\"c\":[\"\"]}".getBytes(), copy.asBinary());
   }
 }

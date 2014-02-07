@@ -83,7 +83,7 @@ public class ZmqHeaders<T extends ZmqHeaders> {
               break;
             case VALUE_STRING:
               String text = p.getText();
-              if (isNullOrEmpty(text)) {
+              if (text == null) {
                 throw ZmqException.wrongHeader();
               }
               headerContent.add(text);
