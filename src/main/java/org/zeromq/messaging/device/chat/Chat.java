@@ -164,32 +164,48 @@ public final class Chat extends ZmqAbstractRunnableContext {
     super.execute();
 
     if (_frontendPub.canRecv()) {
-      _clusterPub.send(_frontendPub.recv());
-      LOG.debug("Message: local --> cluster.");
+      ZmqMessage message = _frontendPub.recv();
+      _clusterPub.send(message);
+      logMessage("local --> cluster", message);
     }
     if (_clusterPub.canRecv()) {
       ZmqMessage message = _clusterPub.recv();
       _frontendPub.send(message);
       if (message.isSubscribe()) {
-        LOG.debug("Subscribe: local <-- cluster.");
+        logSubscribe("local <-- cluster", message.topic());
       }
       else if (message.isUnsubscribe()) {
-        LOG.debug("Unsubsribe: local <-- cluster.");
+        logUnsubscribe("local <-- cluster", message.topic());
       }
     }
     if (_clusterSub.canRecv()) {
-      _frontendSub.send(_clusterSub.recv());
-      LOG.debug("Message: local <-- cluster.");
+      ZmqMessage message = _clusterSub.recv();
+      _frontendSub.send(message);
+      logMessage("local <-- cluster", message);
     }
     if (_frontendSub.canRecv()) {
       ZmqMessage message = _frontendSub.recv();
       _clusterSub.send(message);
       if (message.isSubscribe()) {
-        LOG.debug("Subscribe: local --> cluster.");
+        logSubscribe("local --> cluster", message.topic());
       }
       else if (message.isUnsubscribe()) {
-        LOG.debug("Unsubsribe: local --> cluster.");
+        logUnsubscribe("local --> cluster", message.topic());
       }
     }
+  }
+
+  private void logMessage(String direction, ZmqMessage message) {
+    byte[] topic = message.topic();
+    byte[] payload = message.payload();
+    LOG.debug("Message: {} (topic={} bytes, payload={} bytes).", direction, topic.length, payload.length);
+  }
+
+  private void logSubscribe(String direction, byte[] topic) {
+    LOG.debug("Subscribe: {} (topic={} bytes).", direction, topic.length);
+  }
+
+  private void logUnsubscribe(String direction, byte[] topic) {
+    LOG.debug("Unsubscribe: {} (topic={} bytes).", direction, topic.length);
   }
 }
