@@ -52,16 +52,16 @@ public final class FairRouter extends ZmqAbstractFairService {
   @Override
   public void checkInvariant() {
     super.checkInvariant();
-    if (frontendProps.bindAddr().isEmpty()) {
+    if (frontendProps.bindAddr() == null) {
       throw ZmqException.fatal();
     }
-    if (backendProps.bindAddr().isEmpty()) {
+    if (backendProps.bindAddr() == null) {
       throw ZmqException.fatal();
     }
-    if (!frontendProps.connectAddr().isEmpty()) {
+    if (frontendProps.connectAddr() != null) {
       throw ZmqException.fatal();
     }
-    if (!backendProps.connectAddr().isEmpty()) {
+    if (backendProps.connectAddr() != null) {
       throw ZmqException.fatal();
     }
   }
