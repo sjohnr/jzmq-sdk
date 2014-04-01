@@ -68,42 +68,42 @@ public final class Props {
     }
 
     public Builder withHwmSend(long hwm) {
-      _target.hwmSend = hwm;
+      _target.setHwmSend(hwm);
       return this;
     }
 
     public Builder withHwmRecv(long hwm) {
-      _target.hwmRecv = hwm;
+      _target.setHwmRecv(hwm);
       return this;
     }
 
     public Builder withSocketIdPrefix(String socketIdPrefix) {
-      _target.socketIdPrefix = socketIdPrefix;
+      _target.setSocketIdPrefix(socketIdPrefix);
       return this;
     }
 
     public Builder withLinger(long linger) {
-      _target.linger = linger;
+      _target.setLinger(linger);
       return this;
     }
 
     public Builder withWaitSend(int timeout) {
-      _target.timeoutSend = timeout;
+      _target.setTimeoutSend(timeout);
       return this;
     }
 
     public Builder withWaitRecv(int timeout) {
-      _target.timeoutRecv = timeout;
+      _target.setTimeoutRecv(timeout);
       return this;
     }
 
     public Builder withReconnectInterval(long reconnectInterval) {
-      _target.reconnectInterval = reconnectInterval;
+      _target.setReconnectInterval(reconnectInterval);
       return this;
     }
 
     public Builder withReconnectIntervalMax(long reconnectIntervalMax) {
-      _target.reconnectIntervalMax = reconnectIntervalMax;
+      _target.setReconnectIntervalMax(reconnectIntervalMax);
       return this;
     }
 

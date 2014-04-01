@@ -27,14 +27,14 @@ import org.zeromq.messaging.ZmqHeaders;
  * <pre>
  *   ServiceHeaders.MsgType -- PING/RETRY.
  *   ServiceHeaders.MsgNumOfHops -- the number of hops for message.
- *   ServiceHeaders.MsgCorrId -- correlation id for call.
+ *   ServiceHeaders.MsgCid -- correlation id for call.
  * </pre>
  */
 public final class ServiceHeaders extends ZmqHeaders<ServiceHeaders> {
 
   public static final String HEADER_MSG_TYPE = "ServiceHeaders.MsgType";
   public static final String HEADER_MSG_NUM_OF_HOPS = "ServiceHeaders.MsgNumOfHops";
-  public static final String HEADER_CORRELATION_ID = "ServiceHeaders.MsgCorrId";
+  public static final String HEADER_CID = "ServiceHeaders.MsgCid";
 
   private static final String PING = "PING";
   private static final String RETRY = "RETRY";
@@ -77,12 +77,12 @@ public final class ServiceHeaders extends ZmqHeaders<ServiceHeaders> {
     return Integer.valueOf(getHeaderOrException(HEADER_MSG_NUM_OF_HOPS));
   }
 
-  public ServiceHeaders setCorrId(long id) {
-    set(HEADER_CORRELATION_ID, id);
+  public ServiceHeaders setCid(long cid) {
+    set(HEADER_CID, cid);
     return this;
   }
 
-  public Long getCorrId() {
-    return Long.valueOf(getHeaderOrException(HEADER_CORRELATION_ID));
+  public long getCid() {
+    return Long.valueOf(getHeaderOrException(HEADER_CID));
   }
 }

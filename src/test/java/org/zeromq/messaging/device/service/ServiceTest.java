@@ -26,11 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.Checker;
 import org.zeromq.messaging.Props;
 import org.zeromq.messaging.ZmqAbstractTest;
-import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqMessage;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -64,23 +60,21 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(333));
-    client.lease();
+    ZmqCaller caller = f.newConnectingCaller(ctx(), connAddr(333));
     int MESSAGE_NUM = 10;
     try {
       for (int i = 0; i < MESSAGE_NUM; i++) {
-        assert client.send(HELLO());
+        caller.send(HELLO());
       }
-      assert client.recv() == null;
+      assert caller.recv() == null;
     }
     finally {
-      client.release();
       f.destroy();
     }
   }
 
   @Test
-  public void t1() {
+  public void t1() throws InterruptedException {
     LOG.info(
         "\n" +
         "******************************************************** \n" +
@@ -103,26 +97,25 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(333));
-    client.lease();
+    waitSec();
+
+    ZmqCaller caller = f.newConnectingCaller(ctx(), connAddr(333));
     try {
-      Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
+      int replies = 0;
       for (int i = 0; i < MESSAGE_NUM; i++) {
-        assert client.send(HELLO());
-        ZmqMessage reply = client.recv();
-        assertPayload("world", reply);
-        replies.add(reply);
+        caller.send(HELLO());
+        assertPayload("world", caller.recv());
+        replies++;
       }
-      assertEquals(MESSAGE_NUM, replies.size());
+      assertEquals(MESSAGE_NUM, replies);
     }
     finally {
-      client.release();
       f.destroy();
     }
   }
 
   @Test
-  public void t2() {
+  public void t2() throws InterruptedException {
     LOG.info(
         "\n" +
         "******************************************************** \n" +
@@ -146,26 +139,25 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(333));
-    client.lease();
+    waitSec();
+
+    ZmqCaller caller = f.newConnectingCaller(ctx(), connAddr(333));
     try {
-      Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
+      int replies = 0;
       for (int i = 0; i < MESSAGE_NUM; i++) {
-        assert client.send(HELLO());
-        ZmqMessage reply = client.recv();
-        assertPayload("world", reply);
-        replies.add(reply);
+        caller.send(HELLO());
+        assertPayload("world", caller.recv());
+        replies++;
       }
-      assertEquals(MESSAGE_NUM, replies.size());
+      assertEquals(MESSAGE_NUM, replies);
     }
     finally {
-      client.release();
       f.destroy();
     }
   }
 
   @Test
-  public void t3() {
+  public void t3() throws InterruptedException {
     LOG.info(
         "\n" +
         "*************************************************************** \n" +
@@ -189,22 +181,22 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(333));
-    client.lease();
+    waitSec();
+
+    ZmqCaller caller = f.newConnectingCaller(ctx(), connAddr(333));
     try {
       for (int i = 0; i < MESSAGE_NUM; i++) {
-        assert client.send(HELLO());
+        caller.send(HELLO());
       }
-      assert client.recv() == null;
+      assert caller.recv() == null;
     }
     finally {
-      client.release();
       f.destroy();
     }
   }
 
   @Test
-  public void t4() {
+  public void t4() throws InterruptedException {
     LOG.info(
         "\n" +
         "******************************************************************************************* \n" +
@@ -229,17 +221,17 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(ctx(), inprocAddr("gateway"));
-    client.lease();
+    waitSec();
+
+    ZmqCaller caller = f.newConnectingCaller(ctx(), inprocAddr("gateway"));
     int MESSAGE_NUM = 10;
     try {
       for (int i = 0; i < MESSAGE_NUM; i++) {
-        assert client.send(HELLO());
+        caller.send(HELLO());
       }
-      assert client.recv() == null;
+      assert caller.recv() == null;
     }
     finally {
-      client.release();
       f.destroy();
     }
   }
@@ -274,35 +266,34 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    Runnable client = new Runnable() {
+    waitSec();
+
+    Runnable callerTemplate = new Runnable() {
       public void run() {
-        BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(333));
-        client.lease();
-        Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
+        ZmqCaller caller = f.newConnectingCaller(ctx(), connAddr(333));
+        int replies = 0;
         for (int i = 0; i < MESSAGE_NUM; i++) {
-          assert client.send(HELLO());
-          ZmqMessage reply = client.recv();
-          assertPayload("world", reply);
-          replies.add(reply);
+          caller.send(HELLO());
+          assertPayload("world", caller.recv());
+          replies++;
         }
-        client.release();
-        assertEquals(MESSAGE_NUM, replies.size());
+        assertEquals(MESSAGE_NUM, replies);
       }
     };
 
     Checker checker = new Checker();
 
-    Thread t0 = new Thread(client);
+    Thread t0 = new Thread(callerTemplate);
     t0.setUncaughtExceptionHandler(checker);
     t0.setDaemon(true);
     t0.start();
 
-    Thread t1 = new Thread(client);
+    Thread t1 = new Thread(callerTemplate);
     t1.setUncaughtExceptionHandler(checker);
     t1.setDaemon(true);
     t1.start();
 
-    Thread t2 = new Thread(client);
+    Thread t2 = new Thread(callerTemplate);
     t2.setUncaughtExceptionHandler(checker);
     t2.setDaemon(true);
     t2.start();
@@ -319,7 +310,7 @@ public class ServiceTest extends ZmqAbstractTest {
   }
 
   @Test
-  public void t6() {
+  public void t6() throws InterruptedException {
     LOG.info(
         "\n" +
         "********************************************************************************************** \n" +
@@ -344,20 +335,19 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(333));
-    client.lease();
+    waitSec();
+
+    ZmqCaller caller = f.newConnectingCaller(ctx(), connAddr(333));
     try {
-      Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
+      int replies = 0;
       for (int i = 0; i < MESSAGE_NUM; i++) {
-        assert client.send(HELLO());
-        ZmqMessage reply = client.recv();
-        assertPayload("world", reply);
-        replies.add(reply);
+        caller.send(HELLO());
+        assertPayload("world", caller.recv());
+        replies++;
       }
-      assertEquals(MESSAGE_NUM, replies.size());
+      assertEquals(MESSAGE_NUM, replies);
     }
     finally {
-      client.release();
       f.destroy();
     }
   }
@@ -383,12 +373,14 @@ public class ServiceTest extends ZmqAbstractTest {
     final ServiceFixture f = new ServiceFixture();
     {
       f.lruRouter(ctx(), bindAddr(333), bindAddr(444), f.matchingLRUCache());
-      f.workerEmitterWithIdentity(ctx(), "X", answering(SHIRT()), connAddr(444));
-      f.workerEmitterWithIdentity(ctx(), "Y", answering(CARP()), connAddr(444));
-      f.workerEmitterWithIdentity(ctx(), "X", answering(SHIRT()), connAddr(444));
-      f.workerEmitterWithIdentity(ctx(), "Y", answering(CARP()), connAddr(444));
+      f.workerEmitterWithId(ctx(), "X", answering(SHIRT()), connAddr(444));
+      f.workerEmitterWithId(ctx(), "Y", answering(CARP()), connAddr(444));
+      f.workerEmitterWithId(ctx(), "X", answering(SHIRT()), connAddr(444));
+      f.workerEmitterWithId(ctx(), "Y", answering(CARP()), connAddr(444));
     }
     f.init();
+
+    waitSec();
 
     Checker checker = new Checker();
 
@@ -396,17 +388,14 @@ public class ServiceTest extends ZmqAbstractTest {
         new Runnable() {
           @Override
           public void run() {
-            BlockingClient client = f.newConnBlockingClientWithIdentity(ctx(), "X", connAddr(333));
-            client.lease();
-            Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
+            ZmqCaller caller = f.newConnectingCallerWithId(ctx(), "X", connAddr(333));
+            int replies = 0;
             for (int i = 0; i < MESSAGE_NUM; i++) {
-              assert client.send(HELLO());
-              ZmqMessage reply = client.recv();
-              assertPayload("shirt", reply);
-              replies.add(reply);
+              caller.send(HELLO());
+              assertPayload("shirt", caller.recv());
+              replies++;
             }
-            client.release();
-            assertEquals(MESSAGE_NUM, replies.size());
+            assertEquals(MESSAGE_NUM, replies);
           }
         }
     );
@@ -418,17 +407,14 @@ public class ServiceTest extends ZmqAbstractTest {
         new Runnable() {
           @Override
           public void run() {
-            BlockingClient client = f.newConnBlockingClientWithIdentity(ctx(), "Y", connAddr(333));
-            client.lease();
-            Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
+            ZmqCaller caller = f.newConnectingCallerWithId(ctx(), "Y", connAddr(333));
+            int replies = 0;
             for (int i = 0; i < MESSAGE_NUM; i++) {
-              assert client.send(HELLO());
-              ZmqMessage reply = client.recv();
-              assertPayload("carp", reply);
-              replies.add(reply);
+              caller.send(HELLO());
+              assertPayload("carp", caller.recv());
+              replies++;
             }
-            client.release();
-            assertEquals(MESSAGE_NUM, replies.size());
+            assertEquals(MESSAGE_NUM, replies);
           }
         }
     );
@@ -447,7 +433,7 @@ public class ServiceTest extends ZmqAbstractTest {
   }
 
   @Test
-  public void t8() {
+  public void t8() throws InterruptedException {
     LOG.info(
         "\n" +
         "************************************************************ \n" +
@@ -476,26 +462,25 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(333));
-    client.lease();
+    waitSec();
+
+    ZmqCaller caller = f.newConnectingCaller(ctx(), connAddr(333));
     try {
-      Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
+      int replies = 0;
       for (int i = 0; i < MESSAGE_NUM; i++) {
-        assert client.send(HELLO());
-        ZmqMessage reply = client.recv();
-        assertPayload("world", reply);
-        replies.add(reply);
+        caller.send(HELLO());
+        assertPayload("world", caller.recv());
+        replies++;
       }
-      assertEquals(MESSAGE_NUM, replies.size());
+      assertEquals(MESSAGE_NUM, replies);
     }
     finally {
-      client.release();
       f.destroy();
     }
   }
 
   @Test
-  public void t9() {
+  public void t9() throws InterruptedException {
     LOG.info(
         "\n" +
         "********************************************************************************************** \n" +
@@ -525,26 +510,25 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(333));
-    client.lease();
+    waitSec();
+
+    ZmqCaller caller = f.newConnectingCaller(ctx(), connAddr(333));
     try {
-      Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
+      int replies = 0;
       for (int i = 0; i < MESSAGE_NUM; i++) {
-        assert client.send(HELLO());
-        ZmqMessage reply = client.recv();
-        assertPayload("world", reply);
-        replies.add(reply);
+        caller.send(HELLO());
+        assertPayload("world", caller.recv());
+        replies++;
       }
-      assertEquals(MESSAGE_NUM, replies.size());
+      assertEquals(MESSAGE_NUM, replies);
     }
     finally {
-      client.release();
       f.destroy();
     }
   }
 
   @Test
-  public void t10() {
+  public void t10() throws InterruptedException {
     LOG.info(
         "\n" +
         "****************************************************** \n" +
@@ -573,20 +557,19 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(555), connAddr(556));
-    client.lease();
+    waitSec();
+
+    ZmqCaller caller = f.newConnectingCaller(ctx(), connAddr(555), connAddr(556));
     try {
-      Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
+      int replies = 0;
       for (int i = 0; i < MESSAGE_NUM; i++) {
-        assert client.send(HELLO());
-        ZmqMessage reply = client.recv();
-        assertPayload("world", reply);
-        replies.add(reply);
+        caller.send(HELLO());
+        assertPayload("world", caller.recv());
+        replies++;
       }
-      assertEquals(MESSAGE_NUM, replies.size());
+      assertEquals(MESSAGE_NUM, replies);
     }
     finally {
-      client.release();
       f.destroy();
     }
   }
@@ -617,47 +600,43 @@ public class ServiceTest extends ZmqAbstractTest {
     ServiceFixture f = new ServiceFixture();
     {
       f.fairRouter(ctx(), bindAddr(555), bindAddr(666));
-      // Create worker connected at all HUBs' backends.
-      // NOT: there will be only one LIVE HUB.
+      // Create worker connected at all HUBs' backends; NOTE: there will be only one LIVE HUB.
       f.workerAcceptor(ctx(), answering(WORLD()), notAvailConnAddr0(), connAddr(666), notAvailConnAddr1());
     }
     f.init();
 
     int HWM = 1;
     int NUM_OF_NOTAVAIL = 2;
-    BlockingClient client = BlockingClient.builder()
-                                          .withChannelBuilder(
-                                              ZmqChannel.DEALER(ctx())
-                                                        .withProps(Props.builder()
-                                                                        .withHwmSend(HWM)
-                                                                        .withConnectAddr(notAvailConnAddr0())
-                                                                        .withConnectAddr(connAddr(555))
-                                                                        .withConnectAddr(notAvailConnAddr1())
-                                                                        .build())
-                                          )
-                                          .build();
-    client.lease();
+    ZmqCaller caller = ZmqCaller.builder(ctx())
+                                .withChannelProps(
+                                    Props.builder()
+                                         .withHwmSend(HWM)
+                                         .withConnectAddr(notAvailConnAddr0())
+                                         .withConnectAddr(connAddr(555))
+                                         .withConnectAddr(notAvailConnAddr1())
+                                         .build()
+                                )
+                                .build();
     int MESSAGE_NUM = 10 * HWM; // number of messages -- several times bigger than HWM.
     try {
-      Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
+      int replies = 0;
       for (int i = 0; i < MESSAGE_NUM; i++) {
-        assert client.send(HELLO());
-        ZmqMessage reply = client.recv();
+        caller.send(HELLO());
+        ZmqMessage reply = caller.recv();
         if (reply != null) {
           assertPayload("world", reply);
-          replies.add(reply);
+          replies++;
         }
       }
-      assertEquals(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM, replies.size());
+      assertEquals(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM, replies);
     }
     finally {
-      client.release();
       f.destroy();
     }
   }
 
   @Test
-  public void t12() {
+  public void t12() throws InterruptedException {
     LOG.info(
         "\n" +
         "****************************************************************************** \n" +
@@ -687,26 +666,25 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(333));
-    client.lease();
+    waitSec();
+
+    ZmqCaller caller = f.newConnectingCaller(ctx(), connAddr(333));
     try {
-      Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
+      int replies = 0;
       for (int i = 0; i < MESSAGE_NUM; i++) {
-        assert client.send(HELLO());
-        ZmqMessage reply = client.recv();
-        assertPayload("world", reply);
-        replies.add(reply);
+        caller.send(HELLO());
+        assertPayload("world", caller.recv());
+        replies++;
       }
-      assertEquals(MESSAGE_NUM, replies.size());
+      assertEquals(MESSAGE_NUM, replies);
     }
     finally {
-      client.release();
       f.destroy();
     }
   }
 
   @Test
-  public void t13() {
+  public void t13() throws InterruptedException {
     LOG.info(
         "\n" +
         "**************************************************** \n" +
@@ -734,24 +712,25 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    BlockingClient client = f.newBindBlockingClient(ctx(), bindAddr(222));
-    client.lease();
+    waitSec();
+
+    ZmqCaller caller = f.newBindingCaller(ctx(), bindAddr(222));
     try {
-      Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
+      int replies = 0;
       for (int i = 0; i < MESSAGE_NUM; i++) {
-        assert client.send(HELLO());
-        replies.add(client.recv());
+        caller.send(HELLO());
+        assert caller.recv() != null;
+        replies++;
       }
-      assertEquals(MESSAGE_NUM, replies.size());
+      assertEquals(MESSAGE_NUM, replies);
     }
     finally {
-      client.release();
       f.destroy();
     }
   }
 
   @Test
-  public void t14() {
+  public void t14() throws InterruptedException {
     LOG.info(
         "\n" +
         "******************************************************* \n" +
@@ -779,20 +758,19 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
-    BlockingClient client = f.newConnBlockingClient(ctx(), connAddr(333), connAddr(334));
-    client.lease();
+    waitSec();
+
+    ZmqCaller caller = f.newConnectingCaller(ctx(), connAddr(333), connAddr(334));
     try {
-      Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
+      int replies = 0;
       for (int i = 0; i < MESSAGE_NUM; i++) {
-        assert client.send(HELLO());
-        ZmqMessage reply = client.recv();
-        assertPayload("world", reply);
-        replies.add(reply);
+        caller.send(HELLO());
+        assertPayload("world", caller.recv());
+        replies++;
       }
-      assertEquals(MESSAGE_NUM, replies.size());
+      assertEquals(MESSAGE_NUM, replies);
     }
     finally {
-      client.release();
       f.destroy();
     }
   }
@@ -823,22 +801,20 @@ public class ServiceTest extends ZmqAbstractTest {
 
     // NOTE: this test case relies on HWM defaults settings which come along with every socket.
     // test will send 8 message, hopefully, 8 - is not greater or equal to default HWM settings.
-    BlockingClient client = f.newConnBlockingClient(ctx(), notAvailConnAddr0(), notAvailConnAddr1());
-    client.lease();
+    ZmqCaller client = f.newConnectingCaller(ctx(), notAvailConnAddr0(), notAvailConnAddr1());
     try {
       int MESSAGE_NUM = 10; // message num being sent is significantly less than default HWM.
       for (int i = 0; i < MESSAGE_NUM; i++) {
-        assert client.send(HELLO()); // this line SHOULDN'T block or raise error.
+        client.send(HELLO()); // this line SHOULDN'T block or raise error.
       }
     }
     finally {
-      client.release();
       f.destroy();
     }
   }
 
   @Test
-  public void t16() {
+  public void t16() throws InterruptedException {
     LOG.info(
         "\n" +
         "******************************************************* \n" +
@@ -868,40 +844,40 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
+    waitSec();
+
     int HWM = 1;
     int NUM_OF_NOTAVAIL = 2;
-    BlockingClient client = BlockingClient.builder()
-                                          .withChannelBuilder(
-                                              ZmqChannel.DEALER(ctx())
-                                                        .withProps(Props.builder()
-                                                                        .withHwmSend(HWM)
-                                                                        .withConnectAddr(notAvailConnAddr0())
-                                                                        .withConnectAddr(connAddr(livePort))
-                                                                        .withConnectAddr(notAvailConnAddr1())
-                                                                        .build()))
-                                          .build();
-    client.lease();
+    ZmqCaller caller = ZmqCaller.builder(ctx())
+                                .withChannelProps(
+                                    Props.builder()
+                                         .withHwmSend(HWM)
+                                         .withConnectAddr(notAvailConnAddr0())
+                                         .withConnectAddr(connAddr(livePort))
+                                         .withConnectAddr(notAvailConnAddr1())
+                                         .build()
+                                )
+                                .build();
     int MESSAGE_NUM = 10 * HWM; // number of messages -- several times bigger than HWM.
     try {
-      Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
+      int replies = 0;
       for (int i = 0; i < MESSAGE_NUM; i++) {
-        assert client.send(HELLO());
-        ZmqMessage reply = client.recv();
+        caller.send(HELLO());
+        ZmqMessage reply = caller.recv();
         if (reply != null) {
           assertPayload("world", reply);
-          replies.add(reply);
+          replies++;
         }
       }
-      assertEquals(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM, replies.size());
+      assertEquals(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM, replies);
     }
     finally {
-      client.release();
       f.destroy();
     }
   }
 
   @Test
-  public void t17() {
+  public void t17() throws InterruptedException {
     LOG.info(
         "\n" +
         "****************************************************** \n" +
@@ -926,48 +902,47 @@ public class ServiceTest extends ZmqAbstractTest {
     ServiceFixture f = new ServiceFixture();
     {
       f.fairRouter(ctx(), bindAddr(555), bindAddr(666));
-      // Create worker connected at all HUBs' backends.
-      // NOT: there will be only one LIVE HUB.
+      // Create worker connected at all HUBs' backends; NOTE: there will be only one LIVE HUB.
       f.workerAcceptor(ctx(), answering(WORLD()), notAvailConnAddr0(), connAddr(666), notAvailConnAddr1());
     }
     f.init();
 
+    waitSec();
+
     int HWM = 10;
     int NUM_OF_NOTAVAIL = 2;
-    BlockingClient client = BlockingClient.builder()
-                                          .withChannelBuilder(
-                                              ZmqChannel.DEALER(ctx())
-                                                        .withProps(Props.builder()
-                                                                        .withHwmSend(HWM)
-                                                                        .withWaitRecv(10)
-                                                                        .withWaitSend(10)
-                                                                        .withConnectAddr(connAddr(555))
-                                                                        .withConnectAddr(notAvailConnAddr0())
-                                                                        .withConnectAddr(notAvailConnAddr1())
-                                                                        .build()))
-                                          .build();
-    client.lease();
+    ZmqCaller caller = ZmqCaller.builder(ctx())
+                                .withChannelProps(
+                                    Props.builder()
+                                         .withHwmSend(HWM)
+                                         .withWaitRecv(10)
+                                         .withWaitSend(10)
+                                         .withConnectAddr(connAddr(555))
+                                         .withConnectAddr(notAvailConnAddr0())
+                                         .withConnectAddr(notAvailConnAddr1())
+                                         .build()
+                                )
+                                .build();
     int MESSAGE_NUM = 100 * HWM; // number of messages -- several times bigger than HWM.
     try {
-      Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
+      int replies = 0;
       for (int i = 0; i < MESSAGE_NUM; i++) {
-        assert client.send(HELLO());
-        ZmqMessage reply = client.recv();
+        caller.send(HELLO());
+        ZmqMessage reply = caller.recv();
         if (reply != null) {
           assertPayload("world", reply);
-          replies.add(reply);
+          replies++;
         }
       }
-      assertTrue(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM >= replies.size());
+      assertTrue(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM >= replies);
     }
     finally {
-      client.release();
       f.destroy();
     }
   }
 
   @Test
-  public void t18() {
+  public void t18() throws InterruptedException {
     LOG.info(
         "\n" +
         "******************************************************* \n" +
@@ -1001,38 +976,38 @@ public class ServiceTest extends ZmqAbstractTest {
     }
     f.init();
 
+    waitSec();
+
     int HWM = 1;
-    BlockingClient client = BlockingClient.builder()
-                                          .withChannelBuilder(
-                                              ZmqChannel.DEALER(ctx())
-                                                        .withProps(Props.builder()
-                                                                        .withHwmSend(HWM)
-                                                                        .withConnectAddr(connAddr(livePort0))
-                                                                        .withConnectAddr(notAvailConnAddr0())
-                                                                        .withConnectAddr(connAddr(livePort1))
-                                                                        .withConnectAddr(notAvailConnAddr1())
-                                                                        .withConnectAddr(connAddr(livePort2))
-                                                                        .build()))
-                                          .build();
-    client.lease();
+    ZmqCaller caller = ZmqCaller.builder(ctx())
+                                .withChannelProps(
+                                    Props.builder()
+                                         .withHwmSend(HWM)
+                                         .withConnectAddr(connAddr(livePort0))
+                                         .withConnectAddr(notAvailConnAddr0())
+                                         .withConnectAddr(connAddr(livePort1))
+                                         .withConnectAddr(notAvailConnAddr1())
+                                         .withConnectAddr(connAddr(livePort2))
+                                         .build()
+                                )
+                                .build();
     int MESSAGE_NUM = 5;
     int NUM_OF_NOTAVAIL = 2;
     try {
       for (int i = 0; i < MESSAGE_NUM; i++) {
-        assert client.send(HELLO());
+        caller.send(HELLO());
       }
-      Collection<ZmqMessage> replies = new ArrayList<ZmqMessage>();
+      int replies = 0;
       for (int i = 0; i < MESSAGE_NUM; i++) {
-        ZmqMessage reply = client.recv();
+        ZmqMessage reply = caller.recv();
         if (reply != null) {
           assertPayload("world", reply);
-          replies.add(reply);
+          replies++;
         }
       }
-      assertEquals(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM, replies.size());
+      assertEquals(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM, replies);
     }
     finally {
-      client.release();
       f.destroy();
     }
   }
