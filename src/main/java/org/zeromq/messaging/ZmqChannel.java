@@ -142,31 +142,30 @@ public final class ZmqChannel implements HasDestroy {
       }
 
       // ... bind().
-      String bindAddr = _target.props.bindAddr();
-      try {
-        if (bindAddr != null) {
-          socket.bind(bindAddr);
+      for (String addr : _target.props.bindAddr()) {
+        try {
+          socket.bind(addr);
         }
-      }
-      catch (Exception e) {
-        LOG.error("!!! Got error at .bind(addr=" + bindAddr + "): " + e, e);
-        throw ZmqException.seeCause(e);
+        catch (Exception e) {
+          LOG.error("!!! Got error at .bind(" + addr + "): " + e, e);
+          throw ZmqException.seeCause(e);
+        }
       }
 
       // ... connect().
-      String connectAddr = _target.props.connectAddr();
-      if (connectAddr != null) {
-        if (connectAddr.startsWith("inproc://")) {
+      for (String addr : _target.props.connectAddr()) {
+        // check if this is inproc: address.
+        if (addr.startsWith("inproc://")) {
           long timer = System.currentTimeMillis();
           for (; ; ) {
             try {
-              socket.connect(connectAddr);
+              socket.connect(addr);
               break;
             }
             catch (Exception e) {
               int timeout = INPROC_CONN_TIMEOUT;
               if (System.currentTimeMillis() - timer > timeout) {
-                LOG.error("!!! Can't .connect(addr=" + connectAddr + ")." + " Gave up after " + timeout + " sec.");
+                LOG.error("!!! Can't .connect(" + addr + ")." + " Gave up after " + timeout + " sec.");
                 throw ZmqException.seeCause(e);
               }
             }
@@ -174,10 +173,10 @@ public final class ZmqChannel implements HasDestroy {
         }
         else {
           try {
-            socket.connect(connectAddr);
+            socket.connect(addr);
           }
           catch (Exception e) {
-            LOG.error("!!! Got error at .connect(addr=" + connectAddr + "): " + e, e);
+            LOG.error("!!! Got error at .connect(" + addr + "): " + e, e);
             throw ZmqException.seeCause(e);
           }
         }

@@ -79,16 +79,16 @@ public final class LruRouter extends ZmqAbstractProxy {
     if (socketIdentityStorage == null) {
       throw ZmqException.fatal();
     }
-    if (frontendProps.bindAddr() == null) {
+    if (frontendProps.bindAddr().isEmpty()) {
       throw ZmqException.fatal();
     }
-    if (backendProps.bindAddr() == null) {
+    if (backendProps.bindAddr().isEmpty()) {
       throw ZmqException.fatal();
     }
-    if (frontendProps.connectAddr() != null) {
+    if (!frontendProps.connectAddr().isEmpty()) {
       throw ZmqException.fatal();
     }
-    if (backendProps.connectAddr() != null) {
+    if (!backendProps.connectAddr().isEmpty()) {
       throw ZmqException.fatal();
     }
   }

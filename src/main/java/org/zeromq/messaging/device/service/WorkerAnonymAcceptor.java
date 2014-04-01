@@ -51,10 +51,10 @@ public final class WorkerAnonymAcceptor extends ZmqAbstractWorker {
   @Override
   public void checkInvariant() {
     super.checkInvariant();
-    if (props.connectAddr() == null) {
+    if (props.connectAddr().isEmpty()) {
       throw ZmqException.fatal();
     }
-    if (props.bindAddr() != null) {
+    if (!props.bindAddr().isEmpty()) {
       throw ZmqException.fatal();
     }
   }

@@ -20,7 +20,11 @@
 
 package org.zeromq.messaging;
 
+import com.google.common.base.Strings;
 import org.zeromq.support.ObjectBuilder;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public final class Props {
 
@@ -44,48 +48,62 @@ public final class Props {
       return this;
     }
 
+    public Builder withBindAddr(Iterable<String> addresses) {
+      for (String address : addresses) {
+        withBindAddr(address);
+      }
+      return this;
+    }
+
     public Builder withConnectAddr(String address) {
       _target.setConnectAddr(address);
       return this;
     }
 
+    public Builder withConnectAddr(Iterable<String> addresses) {
+      for (String address : addresses) {
+        withConnectAddr(address);
+      }
+      return this;
+    }
+
     public Builder withHwmSend(long hwm) {
-      _target.setHwmSend(hwm);
+      _target.hwmSend = hwm;
       return this;
     }
 
     public Builder withHwmRecv(long hwm) {
-      _target.setHwmRecv(hwm);
+      _target.hwmRecv = hwm;
       return this;
     }
 
     public Builder withSocketIdPrefix(String socketIdPrefix) {
-      _target.setSocketIdPrefix(socketIdPrefix);
+      _target.socketIdPrefix = socketIdPrefix;
       return this;
     }
 
     public Builder withLinger(long linger) {
-      _target.setLinger(linger);
+      _target.linger = linger;
       return this;
     }
 
     public Builder withWaitSend(int timeout) {
-      _target.setTimeoutSend(timeout);
+      _target.timeoutSend = timeout;
       return this;
     }
 
     public Builder withWaitRecv(int timeout) {
-      _target.setTimeoutRecv(timeout);
+      _target.timeoutRecv = timeout;
       return this;
     }
 
     public Builder withReconnectInterval(long reconnectInterval) {
-      _target.setReconnectInterval(reconnectInterval);
+      _target.reconnectInterval = reconnectInterval;
       return this;
     }
 
     public Builder withReconnectIntervalMax(long reconnectIntervalMax) {
-      _target.setReconnectIntervalMax(reconnectIntervalMax);
+      _target.reconnectIntervalMax = reconnectIntervalMax;
       return this;
     }
 
@@ -95,8 +113,8 @@ public final class Props {
     }
   }
 
-  private String bindAddr;
-  private String connectAddr;
+  private List<String> bindAddr = new ArrayList<String>();
+  private List<String> connectAddr = new ArrayList<String>();
   private long hwmSend = DEFAULT_HWM_SEND;
   private long hwmRecv = DEFAULT_HWM_RECV;
   private String socketIdPrefix;
@@ -118,11 +136,21 @@ public final class Props {
   }
 
   public void setBindAddr(String bindAddr) {
-    this.bindAddr = bindAddr;
+    for (String addr : bindAddr.split("[\\s\\t\\n,]+")) {
+      addr = addr.trim();
+      if (!Strings.isNullOrEmpty(addr)) {
+        this.bindAddr.add(addr);
+      }
+    }
   }
 
   public void setConnectAddr(String connectAddr) {
-    this.connectAddr = connectAddr;
+    for (String addr : connectAddr.split("[\\s\\t\\n,]+")) {
+      addr = addr.trim();
+      if (!Strings.isNullOrEmpty(addr)) {
+        this.connectAddr.add(addr);
+      }
+    }
   }
 
   public void setHwmSend(long hwmSend) {
@@ -157,11 +185,11 @@ public final class Props {
     this.reconnectIntervalMax = reconnectIntervalMax;
   }
 
-  public String bindAddr() {
+  public List<String> bindAddr() {
     return bindAddr;
   }
 
-  public String connectAddr() {
+  public List<String> connectAddr() {
     return connectAddr;
   }
 

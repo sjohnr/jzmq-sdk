@@ -29,18 +29,20 @@ import org.zeromq.support.thread.ZmqRunnable;
 
 import java.util.Comparator;
 
+import static java.util.Arrays.asList;
+
 class ServiceFixture extends BaseFixture {
 
   void workerEmitter(ZmqContext ctx,
                      ZmqMessageProcessor messageProcessor,
-                     String connectAddr) {
+                     String... connectAddresses) {
     with(
         ZmqRunnable.builder()
                    .withRunnableContext(
                        WorkerAnonymEmitter.builder()
                                           .withCtx(ctx)
                                           .withProps(Props.builder()
-                                                          .withConnectAddr(connectAddr)
+                                                          .withConnectAddr(asList(connectAddresses))
                                                           .build())
                                           .withMessageProcessor(messageProcessor)
                                           .withPollTimeout(10)
@@ -53,7 +55,7 @@ class ServiceFixture extends BaseFixture {
   void workerEmitterWithIdentity(ZmqContext ctx,
                                  String id,
                                  ZmqMessageProcessor messageProcessor,
-                                 String connectAddr) {
+                                 String... connectAddresses) {
     with(
         ZmqRunnable.builder()
                    .withRunnableContext(
@@ -61,7 +63,7 @@ class ServiceFixture extends BaseFixture {
                                           .withCtx(ctx)
                                           .withProps(Props.builder()
                                                           .withSocketIdPrefix(id)
-                                                          .withConnectAddr(connectAddr)
+                                                          .withConnectAddr(asList(connectAddresses))
                                                           .build())
                                           .withMessageProcessor(messageProcessor)
                                           .withPollTimeout(10)
@@ -73,14 +75,14 @@ class ServiceFixture extends BaseFixture {
 
   void workerAcceptor(ZmqContext ctx,
                       ZmqMessageProcessor messageProcessor,
-                      String connectAddr) {
+                      String... connectAddresses) {
     with(
         ZmqRunnable.builder()
                    .withRunnableContext(
                        WorkerAnonymAcceptor.builder()
                                            .withCtx(ctx)
                                            .withProps(Props.builder()
-                                                           .withConnectAddr(connectAddr)
+                                                           .withConnectAddr(asList(connectAddresses))
                                                            .build())
                                            .withMessageProcessor(messageProcessor)
                                            .build()
@@ -270,12 +272,12 @@ class ServiceFixture extends BaseFixture {
     return target;
   }
 
-  BlockingClient newConnBlockingClient(ZmqContext ctx, String connectAddr) {
+  BlockingClient newConnBlockingClient(ZmqContext ctx, String... connAddresses) {
     BlockingClient target =
         BlockingClient.builder()
                       .withChannelBuilder(ZmqChannel.DEALER(ctx)
                                                     .withProps(Props.builder()
-                                                                    .withConnectAddr(connectAddr)
+                                                                    .withConnectAddr(asList(connAddresses))
                                                                     .build()))
                       .build();
     with(target);
@@ -284,12 +286,12 @@ class ServiceFixture extends BaseFixture {
 
   BlockingClient newConnBlockingClientWithIdentity(ZmqContext ctx,
                                                    String identityPrefix,
-                                                   String connectAddr) {
+                                                   String... connAddresses) {
     BlockingClient target = BlockingClient.builder()
                                           .withChannelBuilder(
                                               ZmqChannel.DEALER(ctx)
                                                         .withProps(Props.builder()
-                                                                        .withConnectAddr(connectAddr)
+                                                                        .withConnectAddr(asList(connAddresses))
                                                                         .withSocketIdPrefix(identityPrefix)
                                                                         .build()))
                                           .build();
