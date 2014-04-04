@@ -375,8 +375,6 @@ public class ServiceTest extends ZmqAbstractTest {
       f.lruRouter(ctx(), bindAddr(333), bindAddr(444), f.matchingLRUCache());
       f.workerEmitterWithId(ctx(), "X", answering(SHIRT()), connAddr(444));
       f.workerEmitterWithId(ctx(), "Y", answering(CARP()), connAddr(444));
-      f.workerEmitterWithId(ctx(), "X", answering(SHIRT()), connAddr(444));
-      f.workerEmitterWithId(ctx(), "Y", answering(CARP()), connAddr(444));
     }
     f.init();
 

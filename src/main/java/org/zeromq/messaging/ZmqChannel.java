@@ -31,12 +31,9 @@ import org.zeromq.support.ObjectBuilder;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.UUID;
 
-import static org.zeromq.support.ZmqUtils.longAsBytes;
 import static org.zeromq.support.ZmqUtils.makeHash;
 import static org.zeromq.support.ZmqUtils.mapAsJson;
-import static org.zeromq.support.ZmqUtils.mergeBytes;
 
 public final class ZmqChannel implements HasDestroy {
 
@@ -133,8 +130,10 @@ public final class ZmqChannel implements HasDestroy {
         // setting LINGER to zero -- don't block on socket.close().
         socket.setLinger(_target.props.linger());
 
-        // set socket identity: provided socket_prefix plus UUID long.
-        setupIdentity(socket);
+        // set socket identity.
+        if (_target.props.identity() != null) {
+          socket.setIdentity(_target.props.identity().getBytes());
+        }
 
         // set reconnect settings.
         socket.setReconnectIVL(_target.props.reconnectInterval());
@@ -203,15 +202,6 @@ public final class ZmqChannel implements HasDestroy {
       opts.put("reconn_intrvl_max", socket.getReconnectIVLMax());
 
       LOG.info("Created socket: {}.", mapAsJson(opts));
-    }
-
-    void setupIdentity(ZMQ.Socket socket) {
-      if (_target.props.identityPrefix() != null) {
-        byte[] delimiter = "#".getBytes(); // uuid identity part delimiter.
-        byte[] uuid = longAsBytes(UUID.randomUUID().getMostSignificantBits());
-        byte[] identity = mergeBytes(ImmutableList.of(_target.props.identityPrefix().getBytes(), delimiter, uuid));
-        socket.setIdentity(identity);
-      }
     }
 
     String getLoggableSocketType() {

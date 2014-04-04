@@ -77,8 +77,8 @@ public final class Props {
       return this;
     }
 
-    public Builder withIdentityPrefix(String identityPrefixPrefix) {
-      _target.setIdentityPrefix(identityPrefixPrefix);
+    public Builder withIdentity(String identity) {
+      _target.setIdentity(identity);
       return this;
     }
 
@@ -117,7 +117,7 @@ public final class Props {
   private List<String> connectAddr = new ArrayList<String>();
   private long hwmSend = DEFAULT_HWM_SEND;
   private long hwmRecv = DEFAULT_HWM_RECV;
-  private String identityPrefix;
+  private String identity;
   private long linger = DEFAULT_LINGER;
   private int timeoutSend = DEFAULT_WAIT_ON_SEND;
   private int timeoutRecv = DEFAULT_WAIT_ON_RECV;
@@ -161,8 +161,8 @@ public final class Props {
     this.hwmRecv = hwmRecv;
   }
 
-  public void setIdentityPrefix(String identityPrefix) {
-    this.identityPrefix = identityPrefix;
+  public void setIdentity(String identity) {
+    this.identity = identity;
   }
 
   public void setLinger(long linger) {
@@ -201,8 +201,8 @@ public final class Props {
     return hwmRecv;
   }
 
-  public String identityPrefix() {
-    return identityPrefix;
+  public String identity() {
+    return identity;
   }
 
   public long linger() {
