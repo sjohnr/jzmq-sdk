@@ -206,10 +206,10 @@ public final class ZmqChannel implements HasDestroy {
     }
 
     void setupIdentity(ZMQ.Socket socket) {
-      if (_target.props.socketIdPrefix() != null) {
-        byte[] delimiter = "#".getBytes();
+      if (_target.props.identityPrefix() != null) {
+        byte[] delimiter = "#".getBytes(); // uuid identity part delimiter.
         byte[] uuid = longAsBytes(UUID.randomUUID().getMostSignificantBits());
-        byte[] identity = mergeBytes(ImmutableList.of(_target.props.socketIdPrefix().getBytes(), delimiter, uuid));
+        byte[] identity = mergeBytes(ImmutableList.of(_target.props.identityPrefix().getBytes(), delimiter, uuid));
         socket.setIdentity(identity);
       }
     }

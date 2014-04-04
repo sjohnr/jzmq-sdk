@@ -26,17 +26,17 @@ import org.zeromq.messaging.ZmqContext;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.support.HasInvariant;
 import org.zeromq.support.ObjectBuilder;
-import org.zeromq.support.thread.ZmqRunnableContext;
+import org.zeromq.support.thread.ZmqProcess;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class ZmqAbstractRunnableContext implements ZmqRunnableContext, HasInvariant {
+public abstract class ZmqAbstractProcess implements ZmqProcess, HasInvariant {
 
   private static final long DEFAULT_POLL_TIMEOUT = 1000;
 
   @SuppressWarnings("unchecked")
-  public static abstract class Builder<B extends Builder, T extends ZmqAbstractRunnableContext>
+  public static abstract class Builder<B extends Builder, T extends ZmqAbstractProcess>
       implements ObjectBuilder<T> {
 
     protected final T _target;
@@ -70,7 +70,7 @@ public abstract class ZmqAbstractRunnableContext implements ZmqRunnableContext, 
 
   //// CONSTRUCTOR
 
-  protected ZmqAbstractRunnableContext() {
+  protected ZmqAbstractProcess() {
   }
 
   //// METHODS

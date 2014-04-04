@@ -61,7 +61,7 @@ class ServiceFixture extends BaseFixture {
                        WorkerAnonymEmitter.builder()
                                           .withCtx(ctx)
                                           .withProps(Props.builder()
-                                                          .withSocketIdPrefix(id)
+                                                          .withIdentityPrefix(id)
                                                           .withConnectAddr(asList(connectAddresses))
                                                           .build())
                                           .withMessageProcessor(messageProcessor)
@@ -284,7 +284,7 @@ class ServiceFixture extends BaseFixture {
                                 .withChannelProps(
                                     Props.builder()
                                          .withConnectAddr(asList(connAddresses))
-                                         .withSocketIdPrefix(id)
+                                         .withIdentityPrefix(id)
                                          .build())
                                 .build();
     with(target);

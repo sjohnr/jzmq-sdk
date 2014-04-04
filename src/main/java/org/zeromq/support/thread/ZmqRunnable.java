@@ -52,7 +52,7 @@ public final class ZmqRunnable implements Runnable {
     private Builder() {
     }
 
-    public Builder withRunnableContext(ZmqRunnableContext runnableContext) {
+    public Builder withRunnableContext(ZmqProcess runnableContext) {
       _target.runnableContext = runnableContext;
       return this;
     }
@@ -101,7 +101,7 @@ public final class ZmqRunnable implements Runnable {
    * {@link java.util.concurrent.ExecutorService#shutdownNow()}.
    */
   private CountDownLatch destroyLatch;
-  private ZmqRunnableContext runnableContext;
+  private ZmqProcess runnableContext;
   private ExceptionHandler exceptionHandler = DEFAULT_EXCEPTION_HANDLER;
 
   //// CONSTRUCTORS

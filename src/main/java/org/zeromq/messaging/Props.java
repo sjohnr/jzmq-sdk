@@ -77,8 +77,8 @@ public final class Props {
       return this;
     }
 
-    public Builder withSocketIdPrefix(String socketIdPrefix) {
-      _target.setSocketIdPrefix(socketIdPrefix);
+    public Builder withIdentityPrefix(String identityPrefixPrefix) {
+      _target.setIdentityPrefix(identityPrefixPrefix);
       return this;
     }
 
@@ -117,7 +117,7 @@ public final class Props {
   private List<String> connectAddr = new ArrayList<String>();
   private long hwmSend = DEFAULT_HWM_SEND;
   private long hwmRecv = DEFAULT_HWM_RECV;
-  private String socketIdPrefix;
+  private String identityPrefix;
   private long linger = DEFAULT_LINGER;
   private int timeoutSend = DEFAULT_WAIT_ON_SEND;
   private int timeoutRecv = DEFAULT_WAIT_ON_RECV;
@@ -161,8 +161,8 @@ public final class Props {
     this.hwmRecv = hwmRecv;
   }
 
-  public void setSocketIdPrefix(String socketIdPrefix) {
-    this.socketIdPrefix = socketIdPrefix;
+  public void setIdentityPrefix(String identityPrefix) {
+    this.identityPrefix = identityPrefix;
   }
 
   public void setLinger(long linger) {
@@ -201,8 +201,8 @@ public final class Props {
     return hwmRecv;
   }
 
-  public String socketIdPrefix() {
-    return socketIdPrefix;
+  public String identityPrefix() {
+    return identityPrefix;
   }
 
   public long linger() {

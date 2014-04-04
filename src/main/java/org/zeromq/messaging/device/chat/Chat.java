@@ -26,13 +26,13 @@ import org.zeromq.messaging.Props;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
-import org.zeromq.messaging.device.ZmqAbstractRunnableContext;
+import org.zeromq.messaging.device.ZmqAbstractProcess;
 
-public final class Chat extends ZmqAbstractRunnableContext {
+public final class Chat extends ZmqAbstractProcess {
 
   private static final Logger LOG = LoggerFactory.getLogger(Chat.class);
 
-  public static final class Builder extends ZmqAbstractRunnableContext.Builder<Builder, Chat> {
+  public static final class Builder extends ZmqAbstractProcess.Builder<Builder, Chat> {
 
     public Builder() {
       super(new Chat());
