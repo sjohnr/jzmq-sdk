@@ -23,26 +23,26 @@ package org.zeromq.support.thread;
 import org.zeromq.support.pool.Lease;
 import org.zeromq.support.pool.ObjectPool;
 
-public final class ZmqRunnableContextPool implements ObjectPool<ZmqRunnableContext> {
+public final class ZmqRunnableContextPool implements ObjectPool<ZmqProcess> {
 
-  private final ObjectPool<ZmqRunnableContext> pool;
+  private final ObjectPool<ZmqProcess> pool;
 
-  public ZmqRunnableContextPool(ObjectPool<ZmqRunnableContext> pool) {
+  public ZmqRunnableContextPool(ObjectPool<ZmqProcess> pool) {
     this.pool = pool;
   }
 
   @Override
-  public Lease<ZmqRunnableContext> lease() {
+  public Lease<ZmqProcess> lease() {
     return pool.lease();
   }
 
   @Override
-  public Lease<ZmqRunnableContext> lease(long timeout) {
+  public Lease<ZmqProcess> lease(long timeout) {
     return pool.lease(timeout);
   }
 
   @Override
-  public void release(Lease<ZmqRunnableContext> lease) {
+  public void release(Lease<ZmqProcess> lease) {
     pool.release(lease);
   }
 

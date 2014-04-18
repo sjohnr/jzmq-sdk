@@ -62,7 +62,6 @@ public final class SimpleObjectPool<T> implements ObjectPool<T> {
 
   private final AtomicReferenceArray<Lease<T>> _pool;
   private final BlockingDeque<Integer> _freeOids;
-  private boolean _initCalled;
 
   //// CONSTRUCTORS
 

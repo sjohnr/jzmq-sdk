@@ -22,7 +22,6 @@ package org.zeromq.messaging.device.service;
 
 import org.zeromq.messaging.BaseFixture;
 import org.zeromq.messaging.Props;
-import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqContext;
 import org.zeromq.messaging.ZmqMessage;
 import org.zeromq.support.thread.ZmqRunnable;
@@ -52,17 +51,17 @@ class ServiceFixture extends BaseFixture {
     );
   }
 
-  void workerEmitterWithIdentity(ZmqContext ctx,
-                                 String id,
-                                 ZmqMessageProcessor messageProcessor,
-                                 String... connectAddresses) {
+  void workerEmitterWithId(ZmqContext ctx,
+                           String id,
+                           ZmqMessageProcessor messageProcessor,
+                           String... connectAddresses) {
     with(
         ZmqRunnable.builder()
                    .withRunnableContext(
                        WorkerAnonymEmitter.builder()
                                           .withCtx(ctx)
                                           .withProps(Props.builder()
-                                                          .withSocketIdPrefix(id)
+                                                          .withIdentity(id)
                                                           .withConnectAddr(asList(connectAddresses))
                                                           .build())
                                           .withMessageProcessor(messageProcessor)
@@ -225,9 +224,7 @@ class ServiceFixture extends BaseFixture {
 
     @Override
     public ZmqMessage process(ZmqMessage MSG) {
-      return ZmqMessage.builder(MSG)
-                       .withPayload(ANSWER.payload())
-                       .build();
+      return ZmqMessage.builder(MSG).withPayload(ANSWER.payload()).build();
     }
   }
 
@@ -259,42 +256,37 @@ class ServiceFixture extends BaseFixture {
                         });
   }
 
-  BlockingClient newBindBlockingClient(ZmqContext ctx, String bindAddress) {
-    BlockingClient target = BlockingClient.builder()
-                                          .withChannelBuilder(
-                                              ZmqChannel.DEALER(ctx)
-                                                        .withProps(Props.builder()
-                                                                        .withBindAddr(bindAddress)
-                                                                        .build()))
-                                          .build();
+  ZmqCaller newBindingCaller(ZmqContext ctx, String bindAddress) {
+    ZmqCaller target = ZmqCaller.builder(ctx)
+                                .withChannelProps(Props.builder()
+                                                       .withBindAddr(bindAddress)
+                                                       .build())
+                                .build();
 
     with(target);
     return target;
   }
 
-  BlockingClient newConnBlockingClient(ZmqContext ctx, String... connAddresses) {
-    BlockingClient target =
-        BlockingClient.builder()
-                      .withChannelBuilder(ZmqChannel.DEALER(ctx)
-                                                    .withProps(Props.builder()
-                                                                    .withConnectAddr(asList(connAddresses))
-                                                                    .build()))
-                      .build();
+  ZmqCaller newConnectingCaller(ZmqContext ctx, String... connAddresses) {
+    ZmqCaller target = ZmqCaller.builder(ctx)
+                                .withChannelProps(Props.builder()
+                                                       .withConnectAddr(asList(connAddresses))
+                                                       .build())
+                                .build();
     with(target);
     return target;
   }
 
-  BlockingClient newConnBlockingClientWithIdentity(ZmqContext ctx,
-                                                   String identityPrefix,
-                                                   String... connAddresses) {
-    BlockingClient target = BlockingClient.builder()
-                                          .withChannelBuilder(
-                                              ZmqChannel.DEALER(ctx)
-                                                        .withProps(Props.builder()
-                                                                        .withConnectAddr(asList(connAddresses))
-                                                                        .withSocketIdPrefix(identityPrefix)
-                                                                        .build()))
-                                          .build();
+  ZmqCaller newConnectingCallerWithId(ZmqContext ctx,
+                                      String id,
+                                      String... connAddresses) {
+    ZmqCaller target = ZmqCaller.builder(ctx)
+                                .withChannelProps(
+                                    Props.builder()
+                                         .withConnectAddr(asList(connAddresses))
+                                         .withIdentity(id)
+                                         .build())
+                                .build();
     with(target);
     return target;
   }

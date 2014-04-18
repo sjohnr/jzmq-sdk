@@ -26,15 +26,15 @@ import org.zeromq.messaging.Props;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
-import org.zeromq.messaging.device.ZmqAbstractRunnableContext;
+import org.zeromq.messaging.device.ZmqAbstractProcess;
 
-public abstract class ZmqAbstractWorker extends ZmqAbstractRunnableContext {
+public abstract class ZmqAbstractWorker extends ZmqAbstractProcess {
 
   protected static final Logger LOG = LoggerFactory.getLogger(ZmqAbstractWorker.class);
 
   @SuppressWarnings("unchecked")
   public static abstract class Builder<B extends Builder, T extends ZmqAbstractWorker>
-      extends ZmqAbstractRunnableContext.Builder<B, T> {
+      extends ZmqAbstractProcess.Builder<B, T> {
 
     protected Builder(T target) {
       super(target);

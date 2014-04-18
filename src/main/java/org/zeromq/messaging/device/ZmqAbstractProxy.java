@@ -24,11 +24,11 @@ import org.zeromq.messaging.Props;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
 
-public abstract class ZmqAbstractProxy extends ZmqAbstractRunnableContext {
+public abstract class ZmqAbstractProxy extends ZmqAbstractProcess {
 
   @SuppressWarnings("unchecked")
   public static abstract class Builder<B extends Builder, T extends ZmqAbstractProxy>
-      extends ZmqAbstractRunnableContext.Builder<B, T> {
+      extends ZmqAbstractProcess.Builder<B, T> {
 
     protected Builder(T target) {
       super(target);
