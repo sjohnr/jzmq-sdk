@@ -22,7 +22,7 @@ package org.zeromq.messaging;
 
 import org.zeromq.support.HasDestroy;
 import org.zeromq.support.HasInit;
-import org.zeromq.support.thread.ZmqRunnable;
+import org.zeromq.support.thread.ZmqProcess;
 import org.zeromq.support.thread.ZmqThreadPool;
 
 import java.util.ArrayList;
@@ -51,8 +51,8 @@ public class BaseFixture implements HasInit, HasDestroy {
     _destroyables.add(d);
   }
 
-  public final void with(ZmqRunnable r) {
+  public final void with(ZmqProcess r) {
     assert r != null;
-    _threadPool.withRunnable(r);
+    _threadPool.withProcess(r);
   }
 }

@@ -24,7 +24,7 @@ import org.zeromq.messaging.BaseFixture;
 import org.zeromq.messaging.Props;
 import org.zeromq.messaging.ZmqContext;
 import org.zeromq.messaging.ZmqMessage;
-import org.zeromq.support.thread.ZmqRunnable;
+import org.zeromq.support.thread.ZmqProcess;
 
 import java.util.Comparator;
 
@@ -36,18 +36,18 @@ class ServiceFixture extends BaseFixture {
                      ZmqMessageProcessor messageProcessor,
                      String... connectAddresses) {
     with(
-        ZmqRunnable.builder()
-                   .withActor(
-                       ActiveWorker.builder()
-                                   .withCtx(ctx)
-                                   .withProps(Props.builder()
-                                                   .withConnectAddr(asList(connectAddresses))
-                                                   .build())
-                                   .withMessageProcessor(messageProcessor)
-                                   .withPollTimeout(10)
-                                   .build()
-                   )
-                   .build()
+        ZmqProcess.builder()
+                  .withActor(
+                      ActiveWorker.builder()
+                                  .withCtx(ctx)
+                                  .withProps(Props.builder()
+                                                  .withConnectAddr(asList(connectAddresses))
+                                                  .build())
+                                  .withMessageProcessor(messageProcessor)
+                                  .withPollTimeout(10)
+                                  .build()
+                  )
+                  .build()
     );
   }
 
@@ -56,19 +56,19 @@ class ServiceFixture extends BaseFixture {
                            ZmqMessageProcessor messageProcessor,
                            String... connectAddresses) {
     with(
-        ZmqRunnable.builder()
-                   .withActor(
-                       ActiveWorker.builder()
-                                   .withCtx(ctx)
-                                   .withProps(Props.builder()
-                                                   .withIdentity(id)
-                                                   .withConnectAddr(asList(connectAddresses))
-                                                   .build())
-                                   .withMessageProcessor(messageProcessor)
-                                   .withPollTimeout(10)
-                                   .build()
-                   )
-                   .build()
+        ZmqProcess.builder()
+                  .withActor(
+                      ActiveWorker.builder()
+                                  .withCtx(ctx)
+                                  .withProps(Props.builder()
+                                                  .withIdentity(id)
+                                                  .withConnectAddr(asList(connectAddresses))
+                                                  .build())
+                                  .withMessageProcessor(messageProcessor)
+                                  .withPollTimeout(10)
+                                  .build()
+                  )
+                  .build()
     );
   }
 
@@ -76,35 +76,17 @@ class ServiceFixture extends BaseFixture {
                       ZmqMessageProcessor messageProcessor,
                       String... connectAddresses) {
     with(
-        ZmqRunnable.builder()
-                   .withActor(
-                       PassiveWorker.builder()
-                                    .withCtx(ctx)
-                                    .withProps(Props.builder()
-                                                    .withConnectAddr(asList(connectAddresses))
-                                                    .build())
-                                    .withMessageProcessor(messageProcessor)
-                                    .build()
-                   )
-                   .build()
-    );
-  }
-
-  void workerWellknown(ZmqContext ctx,
-                       String bindAddress,
-                       ZmqMessageProcessor messageProcessor) {
-    with(
-        ZmqRunnable.builder()
-                   .withActor(
-                       WorkerWellknown.builder()
-                                      .withCtx(ctx)
-                                      .withProps(Props.builder()
-                                                      .withBindAddr(bindAddress)
-                                                      .build())
-                                      .withMessageProcessor(messageProcessor)
-                                      .build()
-                   )
-                   .build()
+        ZmqProcess.builder()
+                  .withActor(
+                      PassiveWorker.builder()
+                                   .withCtx(ctx)
+                                   .withProps(Props.builder()
+                                                   .withConnectAddr(asList(connectAddresses))
+                                                   .build())
+                                   .withMessageProcessor(messageProcessor)
+                                   .build()
+                  )
+                  .build()
     );
   }
 
@@ -113,20 +95,20 @@ class ServiceFixture extends BaseFixture {
                  String backendAddress,
                  LruCache lruCache) {
     with(
-        ZmqRunnable.builder()
-                   .withActor(
-                       LruRouter.builder()
-                                .withCtx(ctx)
-                                .withSocketIdentityStorage(lruCache)
-                                .withFrontendProps(Props.builder()
-                                                        .withBindAddr(frontendAddress)
-                                                        .build())
-                                .withBackendProps(Props.builder()
-                                                       .withBindAddr(backendAddress)
+        ZmqProcess.builder()
+                  .withActor(
+                      LruRouter.builder()
+                               .withCtx(ctx)
+                               .withSocketIdentityStorage(lruCache)
+                               .withFrontendProps(Props.builder()
+                                                       .withBindAddr(frontendAddress)
                                                        .build())
-                                .build()
-                   )
-                   .build()
+                               .withBackendProps(Props.builder()
+                                                      .withBindAddr(backendAddress)
+                                                      .build())
+                               .build()
+                  )
+                  .build()
     );
   }
 
@@ -134,19 +116,19 @@ class ServiceFixture extends BaseFixture {
                   String frontendAddress,
                   String backendAddress) {
     with(
-        ZmqRunnable.builder()
-                   .withActor(
-                       FairRouter.builder()
-                                 .withCtx(ctx)
-                                 .withFrontendProps(Props.builder()
-                                                         .withBindAddr(frontendAddress)
-                                                         .build())
-                                 .withBackendProps(Props.builder()
-                                                        .withBindAddr(backendAddress)
+        ZmqProcess.builder()
+                  .withActor(
+                      FairRouter.builder()
+                                .withCtx(ctx)
+                                .withFrontendProps(Props.builder()
+                                                        .withBindAddr(frontendAddress)
                                                         .build())
-                                 .build()
-                   )
-                   .build()
+                                .withBackendProps(Props.builder()
+                                                       .withBindAddr(backendAddress)
+                                                       .build())
+                                .build()
+                  )
+                  .build()
     );
   }
 
@@ -154,9 +136,29 @@ class ServiceFixture extends BaseFixture {
                           String frontendAddress,
                           String backendAddress) {
     with(
-        ZmqRunnable.builder()
-                   .withActor(
-                       FairActiveAcceptor.builder()
+        ZmqProcess.builder()
+                  .withActor(
+                      FairActiveAcceptor.builder()
+                                        .withCtx(ctx)
+                                        .withFrontendProps(Props.builder()
+                                                                .withConnectAddr(frontendAddress)
+                                                                .build())
+                                        .withBackendProps(Props.builder()
+                                                               .withBindAddr(backendAddress)
+                                                               .build())
+                                        .build()
+                  )
+                  .build()
+    );
+  }
+
+  void fairPassiveAcceptor(ZmqContext ctx,
+                           String frontendAddress,
+                           String backendAddress) {
+    with(
+        ZmqProcess.builder()
+                  .withActor(
+                      FairPassiveAcceptor.builder()
                                          .withCtx(ctx)
                                          .withFrontendProps(Props.builder()
                                                                  .withConnectAddr(frontendAddress)
@@ -165,28 +167,8 @@ class ServiceFixture extends BaseFixture {
                                                                 .withBindAddr(backendAddress)
                                                                 .build())
                                          .build()
-                   )
-                   .build()
-    );
-  }
-
-  void fairPassiveAcceptor(ZmqContext ctx,
-                           String frontendAddress,
-                           String backendAddress) {
-    with(
-        ZmqRunnable.builder()
-                   .withActor(
-                       FairPassiveAcceptor.builder()
-                                          .withCtx(ctx)
-                                          .withFrontendProps(Props.builder()
-                                                                  .withConnectAddr(frontendAddress)
-                                                                  .build())
-                                          .withBackendProps(Props.builder()
-                                                                 .withBindAddr(backendAddress)
-                                                                 .build())
-                                          .build()
-                   )
-                   .build()
+                  )
+                  .build()
     );
   }
 
@@ -194,19 +176,19 @@ class ServiceFixture extends BaseFixture {
                    String frontendAddress,
                    String backendAddress) {
     with(
-        ZmqRunnable.builder()
-                   .withActor(
-                       FairEmitter.builder()
-                                  .withCtx(ctx)
-                                  .withFrontendProps(Props.builder()
-                                                          .withBindAddr(frontendAddress)
-                                                          .build())
-                                  .withBackendProps(Props.builder()
-                                                         .withConnectAddr(backendAddress)
+        ZmqProcess.builder()
+                  .withActor(
+                      FairEmitter.builder()
+                                 .withCtx(ctx)
+                                 .withFrontendProps(Props.builder()
+                                                         .withBindAddr(frontendAddress)
                                                          .build())
-                                  .build()
-                   )
-                   .build()
+                                 .withBackendProps(Props.builder()
+                                                        .withConnectAddr(backendAddress)
+                                                        .build())
+                                 .build()
+                  )
+                  .build()
     );
   }
 

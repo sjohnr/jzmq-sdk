@@ -23,7 +23,7 @@ package org.zeromq.messaging.device.chat;
 import org.zeromq.messaging.BaseFixture;
 import org.zeromq.messaging.Props;
 import org.zeromq.messaging.ZmqContext;
-import org.zeromq.support.thread.ZmqRunnable;
+import org.zeromq.support.thread.ZmqProcess;
 
 public class ChatFixture extends BaseFixture {
 
@@ -38,18 +38,18 @@ public class ChatFixture extends BaseFixture {
             String frontendSub,
             String clusterPubConnAddr) {
     with(
-        ZmqRunnable.builder()
-                   .withActor(
-                       Chat.builder()
-                           .withCtx(ctx)
-                           .withPollTimeout(100)
-                           .withFrontendPubProps(Props.builder().withBindAddr(frontendPub).build())
-                           .withClusterPubProps(Props.builder().withBindAddr(clusterPub).build())
-                           .withFrontendSubProps(Props.builder().withBindAddr(frontendSub).build())
-                           .withClusterSubProps(Props.builder().withConnectAddr(clusterPubConnAddr).build())
-                           .build()
-                   )
-                   .build()
+        ZmqProcess.builder()
+                  .withActor(
+                      Chat.builder()
+                          .withCtx(ctx)
+                          .withPollTimeout(100)
+                          .withFrontendPubProps(Props.builder().withBindAddr(frontendPub).build())
+                          .withClusterPubProps(Props.builder().withBindAddr(clusterPub).build())
+                          .withFrontendSubProps(Props.builder().withBindAddr(frontendSub).build())
+                          .withClusterSubProps(Props.builder().withConnectAddr(clusterPubConnAddr).build())
+                          .build()
+                  )
+                  .build()
     );
   }
 }

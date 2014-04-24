@@ -728,52 +728,6 @@ public class ServiceTest extends ZmqAbstractTest {
   }
 
   @Test
-  public void t14() throws InterruptedException {
-    LOG.info(
-        "\n" +
-        "******************************************************* \n" +
-        "                                                        \n" +
-        "Test DEALER <--> [ROUTER].                              \n" +
-        "                                                        \n" +
-        "                                       ---------------  \n" +
-        "                                       |             |  \n" +
-        "------------   ____hello>>__<<world____| ROUTER(333) |  \n" +
-        "|          |  /                        |             |  \n" +
-        "|          | /                         ---------------  \n" +
-        "|  DEALER  |/                                           \n" +
-        "|          |\\                          --------------- \n" +
-        "|          | \\                         |             | \n" +
-        "------------  \\____hello>>__<<world____| ROUTER(334) | \n" +
-        "                                       |             |  \n" +
-        "                                       ---------------  \n" +
-        "                                                        \n" +
-        "******************************************************* \n");
-
-    ServiceFixture f = new ServiceFixture();
-    {
-      f.workerWellknown(ctx(), bindAddr(333), answering(WORLD()));
-      f.workerWellknown(ctx(), bindAddr(334), answering(WORLD()));
-    }
-    f.init();
-
-    waitSec();
-
-    ZmqCaller caller = f.newConnectingCaller(ctx(), connAddr(333), connAddr(334));
-    try {
-      int replies = 0;
-      for (int i = 0; i < MESSAGE_NUM; i++) {
-        caller.send(HELLO());
-        assertPayload("world", caller.recv());
-        replies++;
-      }
-      assertEquals(MESSAGE_NUM, replies);
-    }
-    finally {
-      f.destroy();
-    }
-  }
-
-  @Test
   public void t15() {
     LOG.info(
         "\n" +
@@ -805,69 +759,6 @@ public class ServiceTest extends ZmqAbstractTest {
       for (int i = 0; i < MESSAGE_NUM; i++) {
         client.send(HELLO()); // this line SHOULDN'T block or raise error.
       }
-    }
-    finally {
-      f.destroy();
-    }
-  }
-
-  @Test
-  public void t16() throws InterruptedException {
-    LOG.info(
-        "\n" +
-        "******************************************************* \n" +
-        "                                                        \n" +
-        "                 [NOT_AVAIL].                           \n" +
-        "Test DEALER <--> [ROUTER].                              \n" +
-        "                 [NOT_AVAIL].                           \n" +
-        "                                                        \n" +
-        "                                       ---------------  \n" +
-        "                                       |             |  \n" +
-        "------------   ________________________|   NOT_AVAIL |  \n" +
-        "|          |  /                        |             |  \n" +
-        "|          | /                         ---------------  \n" +
-        "|  DEALER  |/                                           \n" +
-        "|          |\\                          --------------- \n" +
-        "|          | \\                         |             | \n" +
-        "------------  \\____hello>>__<<world____| ROUTER(333) | \n" +
-        "                                       |             |  \n" +
-        "                                       ---------------  \n" +
-        "                                                        \n" +
-        "******************************************************* \n");
-
-    int livePort = 333;
-    ServiceFixture f = new ServiceFixture();
-    {
-      f.workerWellknown(ctx(), bindAddr(livePort), answering(WORLD()));
-    }
-    f.init();
-
-    waitSec();
-
-    int HWM = 1;
-    int NUM_OF_NOTAVAIL = 2;
-    ZmqCaller caller = ZmqCaller.builder(ctx())
-                                .withChannelProps(
-                                    Props.builder()
-                                         .withHwmSend(HWM)
-                                         .withConnectAddr(notAvailConnAddr0())
-                                         .withConnectAddr(connAddr(livePort))
-                                         .withConnectAddr(notAvailConnAddr1())
-                                         .build()
-                                )
-                                .build();
-    int MESSAGE_NUM = 10 * HWM; // number of messages -- several times bigger than HWM.
-    try {
-      int replies = 0;
-      for (int i = 0; i < MESSAGE_NUM; i++) {
-        caller.send(HELLO());
-        ZmqMessage reply = caller.recv();
-        if (reply != null) {
-          assertPayload("world", reply);
-          replies++;
-        }
-      }
-      assertEquals(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM, replies);
     }
     finally {
       f.destroy();
@@ -933,77 +824,6 @@ public class ServiceTest extends ZmqAbstractTest {
         }
       }
       assertTrue(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM >= replies);
-    }
-    finally {
-      f.destroy();
-    }
-  }
-
-  @Test
-  public void t18() throws InterruptedException {
-    LOG.info(
-        "\n" +
-        "******************************************************* \n" +
-        "                                                        \n" +
-        "                 [NOT_AVAIL].                           \n" +
-        "Test DEALER <--> [ROUTER].                              \n" +
-        "                 [NOT_AVAIL].                           \n" +
-        "                                                        \n" +
-        "                                       ---------------  \n" +
-        "                                       |             |  \n" +
-        "------------   ________________________|   NOT_AVAIL |  \n" +
-        "|          |  /                        |             |  \n" +
-        "|          | /                         ---------------  \n" +
-        "|  DEALER  |/                                           \n" +
-        "|          |\\                          --------------- \n" +
-        "|          | \\                         |             | \n" +
-        "------------  \\____hello>>__<<world____| ROUTER(333) | \n" +
-        "                                       |             |  \n" +
-        "                                       ---------------  \n" +
-        "                                                        \n" +
-        "******************************************************* \n");
-
-    ServiceFixture f = new ServiceFixture();
-    int livePort0 = 555;
-    int livePort1 = 560;
-    int livePort2 = 565;
-    {
-      f.workerWellknown(ctx(), bindAddr(livePort0), answering(WORLD()));
-      f.workerWellknown(ctx(), bindAddr(livePort1), answering(WORLD()));
-      f.workerWellknown(ctx(), bindAddr(livePort2), answering(WORLD()));
-    }
-    f.init();
-
-    waitSec();
-
-    int HWM = 1;
-    ZmqCaller caller = ZmqCaller.builder(ctx())
-                                .withChannelProps(
-                                    Props.builder()
-                                         .withHwmSend(HWM)
-                                         .withConnectAddr(connAddr(livePort0))
-                                         .withConnectAddr(notAvailConnAddr0())
-                                         .withConnectAddr(connAddr(livePort1))
-                                         .withConnectAddr(notAvailConnAddr1())
-                                         .withConnectAddr(connAddr(livePort2))
-                                         .build()
-                                )
-                                .build();
-    int MESSAGE_NUM = 5;
-    int NUM_OF_NOTAVAIL = 2;
-    try {
-      for (int i = 0; i < MESSAGE_NUM; i++) {
-        caller.send(HELLO());
-      }
-      int replies = 0;
-      for (int i = 0; i < MESSAGE_NUM; i++) {
-        ZmqMessage reply = caller.recv();
-        if (reply != null) {
-          assertPayload("world", reply);
-          replies++;
-        }
-      }
-      assertEquals(MESSAGE_NUM - NUM_OF_NOTAVAIL * HWM, replies);
     }
     finally {
       f.destroy();

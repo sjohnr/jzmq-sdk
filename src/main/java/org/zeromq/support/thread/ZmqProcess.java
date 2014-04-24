@@ -35,9 +35,9 @@ import java.util.concurrent.CountDownLatch;
 
 import static org.zeromq.messaging.ZmqException.ErrorCode;
 
-public final class ZmqRunnable implements Runnable {
+public final class ZmqProcess implements Runnable {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ZmqRunnable.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ZmqProcess.class);
 
   private static final ExceptionHandler DEFAULT_EXCEPTION_HANDLER =
       new InternalExceptionHandler()
@@ -45,9 +45,9 @@ public final class ZmqRunnable implements Runnable {
                         .withNext(new InterruptedExceptionHandler()
                                       .withNext(new LoggingExceptionHandler())));
 
-  public static class Builder implements ObjectBuilder<ZmqRunnable>, HasInvariant {
+  public static class Builder implements ObjectBuilder<ZmqProcess>, HasInvariant {
 
-    private final ZmqRunnable _target = new ZmqRunnable();
+    private final ZmqProcess _target = new ZmqProcess();
 
     private Builder() {
     }
@@ -70,7 +70,7 @@ public final class ZmqRunnable implements Runnable {
     }
 
     @Override
-    public ZmqRunnable build() {
+    public ZmqProcess build() {
       checkInvariant();
       return _target;
     }
@@ -106,7 +106,7 @@ public final class ZmqRunnable implements Runnable {
 
   //// CONSTRUCTORS
 
-  private ZmqRunnable() {
+  private ZmqProcess() {
   }
 
   //// METHODS

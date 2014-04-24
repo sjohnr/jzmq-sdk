@@ -37,7 +37,7 @@ public class ZmqThreadPool implements HasInit, HasDestroy {
 
   private static final Logger LOG = LoggerFactory.getLogger(ZmqThreadPool.class);
 
-  private List<ZmqRunnable> runnables = new ArrayList<ZmqRunnable>();
+  private List<ZmqProcess> processes = new ArrayList<ZmqProcess>();
 
   private CountDownLatch _destroyLatch;
   private ThreadPoolExecutor _executor;
@@ -59,26 +59,24 @@ public class ZmqThreadPool implements HasInit, HasDestroy {
                                               new ThreadFactoryBuilder().setDaemon(true)
                                                                         .setNameFormat("zmq-daemon")
                                                                         .build());
-    int i = target._executor.prestartAllCoreThreads();
-    LOG.debug("Started {} core zmq-threads.", i);
     return target;
   }
 
-  public ZmqThreadPool withRunnable(ZmqRunnable runnable) {
-    this.runnables.add(runnable);
+  public ZmqThreadPool withProcess(ZmqProcess process) {
+    this.processes.add(process);
     return this;
   }
 
   @Override
   public void init() {
-    if (runnables.isEmpty()) {
+    if (processes.isEmpty()) {
       LOG.warn("ZmqThreadPool is empty!");
       return;
     }
-    _destroyLatch = new CountDownLatch(runnables.size());
-    for (ZmqRunnable runnable : runnables) {
-      runnable.setDestroyLatch(_destroyLatch);
-      _executor.submit(runnable);
+    _destroyLatch = new CountDownLatch(processes.size());
+    for (ZmqProcess p : processes) {
+      p.setDestroyLatch(_destroyLatch);
+      _executor.submit(p);
     }
   }
 
