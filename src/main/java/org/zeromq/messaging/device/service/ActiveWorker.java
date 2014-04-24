@@ -64,7 +64,7 @@ public final class ActiveWorker extends ZmqAbstractWorker {
     checkInvariant();
 
     _pingStrategy = new DoPing();
-    reg(_channel = ZmqChannel.DEALER(ctx).withProps(props).build());
+    reg(CHANNEL_ID_WORKER, ZmqChannel.DEALER(ctx).withProps(props).build());
 
     super.init();
   }

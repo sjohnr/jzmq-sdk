@@ -21,12 +21,13 @@
 package org.zeromq.messaging.device;
 
 import org.zeromq.messaging.ZmqFrames;
+import org.zeromq.messaging.ZmqMessage;
 
 public interface ZmqSocketIdentityStorage {
 
-  void store(ZmqFrames identities);
+  void put(ZmqFrames identities);
 
-  ZmqFrames obtain(ZmqFrames identities);
+  ZmqFrames get(ZmqMessage message);
 
   int size();
 }

@@ -28,8 +28,8 @@ import org.zeromq.support.HasInvariant;
 import org.zeromq.support.ObjectBuilder;
 import org.zeromq.support.thread.ZmqActor;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public abstract class ZmqAbstractActor implements ZmqActor, HasInvariant {
 
@@ -66,7 +66,7 @@ public abstract class ZmqAbstractActor implements ZmqActor, HasInvariant {
   private long pollTimeout = DEFAULT_POLL_TIMEOUT;
 
   protected ZMQ.Poller _poller = new ZMQ.Poller(1);
-  protected List<ZmqChannel> _channels = new ArrayList<ZmqChannel>();
+  protected Map<String, ZmqChannel> _channels = new HashMap<String, ZmqChannel>();
 
   //// CONSTRUCTOR
 
@@ -97,15 +97,24 @@ public abstract class ZmqAbstractActor implements ZmqActor, HasInvariant {
 
   @Override
   public final void destroy() {
-    for (ZmqChannel channel : _channels) {
+    for (ZmqChannel channel : _channels.values()) {
       channel.destroy();
     }
+    _channels.clear();
   }
 
-  protected final void reg(ZmqChannel channel) {
+  protected final void reg(String id, ZmqChannel channel) {
     if (channel == null) {
       throw ZmqException.fatal();
     }
-    _channels.add(channel);
+    _channels.put(id, channel);
+  }
+
+  protected final ZmqChannel channel(String id) {
+    ZmqChannel channel = _channels.get(id);
+    if (channel == null) {
+      throw ZmqException.fatal();
+    }
+    return channel;
   }
 }

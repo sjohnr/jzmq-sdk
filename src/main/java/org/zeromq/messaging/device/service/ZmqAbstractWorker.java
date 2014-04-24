@@ -32,6 +32,8 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
 
   protected static final Logger LOG = LoggerFactory.getLogger(ZmqAbstractWorker.class);
 
+  protected static final String CHANNEL_ID_WORKER = "worker";
+
   @SuppressWarnings("unchecked")
   public static abstract class Builder<B extends Builder, T extends ZmqAbstractWorker>
       extends ZmqAbstractActor.Builder<B, T> {
@@ -54,7 +56,6 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
   protected Props props;
   protected ZmqMessageProcessor messageProcessor;
 
-  protected ZmqChannel _channel;
   protected ZmqPingStrategy _pingStrategy;
   protected String _pingStrategyForLogging;
 
@@ -86,9 +87,7 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
 
   @Override
   public void init() {
-    reg(_channel);
-
-    _channel.watchRecv(_poller);
+    channel(CHANNEL_ID_WORKER).watchRecv(_poller);
     _pingStrategyForLogging = _pingStrategy.getClass().getSimpleName();
   }
 
@@ -96,14 +95,16 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
   public final void exec() {
     super.exec();
 
-    if (!_channel.canRecv()) {
+    ZmqChannel workerChannel = channel(CHANNEL_ID_WORKER);
+
+    if (!workerChannel.canRecv()) {
       LOG.debug("No incoming requests. Delegating to {}.", _pingStrategyForLogging);
-      _pingStrategy.ping(_channel);
+      _pingStrategy.ping(workerChannel);
       return;
     }
 
     // receive incoming traffic.
-    ZmqMessage request = _channel.recv();
+    ZmqMessage request = workerChannel.recv();
     if (request == null) {
       LOG.error(".recv() failed!");
       return;
@@ -116,17 +117,17 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
     catch (Exception e) {
       LOG.error("Failed at processing request. Delegating to {} anyway.", _pingStrategyForLogging);
       // request processing failed -- still need to ping.
-      _pingStrategy.ping(_channel);
+      _pingStrategy.ping(workerChannel);
       return;
     }
     // if reply is not null -- send it / otherwise -- ping.
     if (reply != null) {
-      if (!_channel.send(reply)) {
+      if (!workerChannel.send(reply)) {
         LOG.warn(".send() failed!");
       }
     }
     else {
-      _pingStrategy.ping(_channel);
+      _pingStrategy.ping(workerChannel);
     }
   }
 }

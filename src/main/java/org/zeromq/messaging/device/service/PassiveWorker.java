@@ -64,7 +64,7 @@ public final class PassiveWorker extends ZmqAbstractWorker {
     checkInvariant();
 
     _pingStrategy = new DontPing();
-    reg(_channel = ZmqChannel.ROUTER(ctx).withProps(props).build());
+    reg(CHANNEL_ID_WORKER, ZmqChannel.ROUTER(ctx).withProps(props).build());
 
     super.init();
   }
