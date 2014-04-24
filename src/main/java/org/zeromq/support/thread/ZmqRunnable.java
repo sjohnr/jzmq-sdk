@@ -52,8 +52,8 @@ public final class ZmqRunnable implements Runnable {
     private Builder() {
     }
 
-    public Builder withRunnableContext(ZmqProcess runnableContext) {
-      _target.runnableContext = runnableContext;
+    public Builder withActor(ZmqActor actor) {
+      _target.actor = actor;
       return this;
     }
 
@@ -64,7 +64,7 @@ public final class ZmqRunnable implements Runnable {
 
     @Override
     public void checkInvariant() {
-      if (_target.runnableContext == null) {
+      if (_target.actor == null) {
         throw ZmqException.fatal();
       }
     }
@@ -101,7 +101,7 @@ public final class ZmqRunnable implements Runnable {
    * {@link java.util.concurrent.ExecutorService#shutdownNow()}.
    */
   private CountDownLatch destroyLatch;
-  private ZmqProcess runnableContext;
+  private ZmqActor actor;
   private ExceptionHandler exceptionHandler = DEFAULT_EXCEPTION_HANDLER;
 
   //// CONSTRUCTORS
@@ -125,11 +125,11 @@ public final class ZmqRunnable implements Runnable {
   @Override
   public final void run() {
     try {
-      runnableContext.init();
+      actor.init();
       // here we go ...
       while (!Thread.currentThread().isInterrupted()) {
         try {
-          runnableContext.execute();
+          actor.exec();
         }
         catch (Exception e) {
           // catch exception using mechanism of chained exception handlers.
@@ -148,7 +148,7 @@ public final class ZmqRunnable implements Runnable {
       // -- in case something unrecoverable happened in the "loop-until-interrupted".
       // -- in case thead had really been interrupted.
       try {
-        runnableContext.destroy();
+        actor.destroy();
       }
       catch (Throwable e) {
         LOG.error("Gobble exception at runnable_ctx.destroy(): " + e, e);
@@ -161,7 +161,7 @@ public final class ZmqRunnable implements Runnable {
     }
   }
 
-  /** <b>NOTE: this is SPI method called by {@link ZmqThreadPool}. Don't touch it.</b> */
+  /** <b>NOTE: this is SPI method for unit tests. Don't touch it.</b> */
   void setDestroyLatch(CountDownLatch destroyLatch) {
     this.destroyLatch = destroyLatch;
   }

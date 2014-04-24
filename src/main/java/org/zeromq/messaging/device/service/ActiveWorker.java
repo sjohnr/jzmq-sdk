@@ -18,71 +18,54 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.zeromq.messaging.device;
+package org.zeromq.messaging.device.service;
 
-import org.zeromq.messaging.Props;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
 
-public abstract class ZmqAbstractProxy extends ZmqAbstractActor {
+/**
+ * Active-worker device: (does ping, exposes socket identity via DEALER)
+ * <pre>
+ *   <-w(DEALER) / with-ping / exposes identity to remote peer
+ * </pre>
+ */
+public final class ActiveWorker extends ZmqAbstractWorker {
 
-  @SuppressWarnings("unchecked")
-  public static abstract class Builder<B extends Builder, T extends ZmqAbstractProxy>
-      extends ZmqAbstractActor.Builder<B, T> {
-
-    protected Builder(T target) {
-      super(target);
-    }
-
-    public final B withFrontendProps(Props props) {
-      _target.frontendProps = props;
-      return (B) this;
-    }
-
-    public final B withBackendProps(Props props) {
-      _target.backendProps = props;
-      return (B) this;
+  public static class Builder extends ZmqAbstractWorker.Builder<Builder, ActiveWorker> {
+    private Builder() {
+      super(new ActiveWorker());
     }
   }
 
-  protected Props frontendProps;
-  protected Props backendProps;
-
-  protected ZmqChannel _frontend;
-  protected ZmqChannel _backend;
-
   //// CONSTRUCTORS
 
-  protected ZmqAbstractProxy() {
+  public ActiveWorker() {
   }
 
   //// METHODS
 
-  public final void setFrontendProps(Props frontendProps) {
-    this.frontendProps = frontendProps;
-  }
-
-  public final void setBackendProps(Props backendProps) {
-    this.backendProps = backendProps;
+  public static Builder builder() {
+    return new Builder();
   }
 
   @Override
   public void checkInvariant() {
     super.checkInvariant();
-    if (frontendProps == null) {
+    if (props.connectAddr().isEmpty()) {
       throw ZmqException.fatal();
     }
-    if (backendProps == null) {
+    if (!props.bindAddr().isEmpty()) {
       throw ZmqException.fatal();
     }
   }
 
   @Override
   public void init() {
-    reg(_frontend);
-    reg(_backend);
+    checkInvariant();
 
-    _frontend.watchRecv(_poller);
-    _backend.watchRecv(_poller);
+    _pingStrategy = new DoPing();
+    reg(_channel = ZmqChannel.DEALER(ctx).withProps(props).build());
+
+    super.init();
   }
 }

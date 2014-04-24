@@ -23,7 +23,7 @@ package org.zeromq.support.thread;
 import org.zeromq.support.HasDestroy;
 import org.zeromq.support.HasInit;
 
-public interface ZmqProcess extends HasInit, HasDestroy {
+public interface ZmqActor extends HasInit, HasDestroy {
 
-  void execute();
+  void exec();
 }

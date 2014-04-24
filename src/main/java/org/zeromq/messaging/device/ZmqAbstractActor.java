@@ -26,17 +26,17 @@ import org.zeromq.messaging.ZmqContext;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.support.HasInvariant;
 import org.zeromq.support.ObjectBuilder;
-import org.zeromq.support.thread.ZmqProcess;
+import org.zeromq.support.thread.ZmqActor;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class ZmqAbstractProcess implements ZmqProcess, HasInvariant {
+public abstract class ZmqAbstractActor implements ZmqActor, HasInvariant {
 
   private static final long DEFAULT_POLL_TIMEOUT = 1000;
 
   @SuppressWarnings("unchecked")
-  public static abstract class Builder<B extends Builder, T extends ZmqAbstractProcess>
+  public static abstract class Builder<B extends Builder, T extends ZmqAbstractActor>
       implements ObjectBuilder<T> {
 
     protected final T _target;
@@ -64,13 +64,13 @@ public abstract class ZmqAbstractProcess implements ZmqProcess, HasInvariant {
 
   protected ZmqContext ctx;
   private long pollTimeout = DEFAULT_POLL_TIMEOUT;
-  private List<ZmqChannel> channels = new ArrayList<ZmqChannel>();
 
   protected ZMQ.Poller _poller = new ZMQ.Poller(1);
+  protected List<ZmqChannel> _channels = new ArrayList<ZmqChannel>();
 
   //// CONSTRUCTOR
 
-  protected ZmqAbstractProcess() {
+  protected ZmqAbstractActor() {
   }
 
   //// METHODS
@@ -91,13 +91,13 @@ public abstract class ZmqAbstractProcess implements ZmqProcess, HasInvariant {
   }
 
   @Override
-  public void execute() {
+  public void exec() {
     _poller.poll(pollTimeout);
   }
 
   @Override
   public final void destroy() {
-    for (ZmqChannel channel : channels) {
+    for (ZmqChannel channel : _channels) {
       channel.destroy();
     }
   }
@@ -106,6 +106,6 @@ public abstract class ZmqAbstractProcess implements ZmqProcess, HasInvariant {
     if (channel == null) {
       throw ZmqException.fatal();
     }
-    channels.add(channel);
+    _channels.add(channel);
   }
 }

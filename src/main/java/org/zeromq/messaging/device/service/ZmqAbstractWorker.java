@@ -26,15 +26,15 @@ import org.zeromq.messaging.Props;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
-import org.zeromq.messaging.device.ZmqAbstractProcess;
+import org.zeromq.messaging.device.ZmqAbstractActor;
 
-public abstract class ZmqAbstractWorker extends ZmqAbstractProcess {
+public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
 
   protected static final Logger LOG = LoggerFactory.getLogger(ZmqAbstractWorker.class);
 
   @SuppressWarnings("unchecked")
   public static abstract class Builder<B extends Builder, T extends ZmqAbstractWorker>
-      extends ZmqAbstractProcess.Builder<B, T> {
+      extends ZmqAbstractActor.Builder<B, T> {
 
     protected Builder(T target) {
       super(target);
@@ -93,8 +93,8 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractProcess {
   }
 
   @Override
-  public final void execute() {
-    super.execute();
+  public final void exec() {
+    super.exec();
 
     if (!_channel.canRecv()) {
       LOG.debug("No incoming requests. Delegating to {}.", _pingStrategyForLogging);

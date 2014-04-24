@@ -37,15 +37,15 @@ class ServiceFixture extends BaseFixture {
                      String... connectAddresses) {
     with(
         ZmqRunnable.builder()
-                   .withRunnableContext(
-                       WorkerAnonymEmitter.builder()
-                                          .withCtx(ctx)
-                                          .withProps(Props.builder()
-                                                          .withConnectAddr(asList(connectAddresses))
-                                                          .build())
-                                          .withMessageProcessor(messageProcessor)
-                                          .withPollTimeout(10)
-                                          .build()
+                   .withActor(
+                       ActiveWorker.builder()
+                                   .withCtx(ctx)
+                                   .withProps(Props.builder()
+                                                   .withConnectAddr(asList(connectAddresses))
+                                                   .build())
+                                   .withMessageProcessor(messageProcessor)
+                                   .withPollTimeout(10)
+                                   .build()
                    )
                    .build()
     );
@@ -57,16 +57,16 @@ class ServiceFixture extends BaseFixture {
                            String... connectAddresses) {
     with(
         ZmqRunnable.builder()
-                   .withRunnableContext(
-                       WorkerAnonymEmitter.builder()
-                                          .withCtx(ctx)
-                                          .withProps(Props.builder()
-                                                          .withIdentity(id)
-                                                          .withConnectAddr(asList(connectAddresses))
-                                                          .build())
-                                          .withMessageProcessor(messageProcessor)
-                                          .withPollTimeout(10)
-                                          .build()
+                   .withActor(
+                       ActiveWorker.builder()
+                                   .withCtx(ctx)
+                                   .withProps(Props.builder()
+                                                   .withIdentity(id)
+                                                   .withConnectAddr(asList(connectAddresses))
+                                                   .build())
+                                   .withMessageProcessor(messageProcessor)
+                                   .withPollTimeout(10)
+                                   .build()
                    )
                    .build()
     );
@@ -77,14 +77,14 @@ class ServiceFixture extends BaseFixture {
                       String... connectAddresses) {
     with(
         ZmqRunnable.builder()
-                   .withRunnableContext(
-                       WorkerAnonymAcceptor.builder()
-                                           .withCtx(ctx)
-                                           .withProps(Props.builder()
-                                                           .withConnectAddr(asList(connectAddresses))
-                                                           .build())
-                                           .withMessageProcessor(messageProcessor)
-                                           .build()
+                   .withActor(
+                       PassiveWorker.builder()
+                                    .withCtx(ctx)
+                                    .withProps(Props.builder()
+                                                    .withConnectAddr(asList(connectAddresses))
+                                                    .build())
+                                    .withMessageProcessor(messageProcessor)
+                                    .build()
                    )
                    .build()
     );
@@ -95,7 +95,7 @@ class ServiceFixture extends BaseFixture {
                        ZmqMessageProcessor messageProcessor) {
     with(
         ZmqRunnable.builder()
-                   .withRunnableContext(
+                   .withActor(
                        WorkerWellknown.builder()
                                       .withCtx(ctx)
                                       .withProps(Props.builder()
@@ -114,7 +114,7 @@ class ServiceFixture extends BaseFixture {
                  LruCache lruCache) {
     with(
         ZmqRunnable.builder()
-                   .withRunnableContext(
+                   .withActor(
                        LruRouter.builder()
                                 .withCtx(ctx)
                                 .withSocketIdentityStorage(lruCache)
@@ -135,7 +135,7 @@ class ServiceFixture extends BaseFixture {
                   String backendAddress) {
     with(
         ZmqRunnable.builder()
-                   .withRunnableContext(
+                   .withActor(
                        FairRouter.builder()
                                  .withCtx(ctx)
                                  .withFrontendProps(Props.builder()
@@ -155,7 +155,7 @@ class ServiceFixture extends BaseFixture {
                           String backendAddress) {
     with(
         ZmqRunnable.builder()
-                   .withRunnableContext(
+                   .withActor(
                        FairActiveAcceptor.builder()
                                          .withCtx(ctx)
                                          .withFrontendProps(Props.builder()
@@ -175,7 +175,7 @@ class ServiceFixture extends BaseFixture {
                            String backendAddress) {
     with(
         ZmqRunnable.builder()
-                   .withRunnableContext(
+                   .withActor(
                        FairPassiveAcceptor.builder()
                                           .withCtx(ctx)
                                           .withFrontendProps(Props.builder()
@@ -195,7 +195,7 @@ class ServiceFixture extends BaseFixture {
                    String backendAddress) {
     with(
         ZmqRunnable.builder()
-                   .withRunnableContext(
+                   .withActor(
                        FairEmitter.builder()
                                   .withCtx(ctx)
                                   .withFrontendProps(Props.builder()

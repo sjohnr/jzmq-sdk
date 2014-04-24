@@ -20,6 +20,7 @@
 
 package org.zeromq.support.thread;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.support.HasDestroy;
@@ -29,16 +30,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
-public final class ThreadPool implements HasInit, HasDestroy {
+public class ZmqThreadPool implements HasInit, HasDestroy {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ThreadPool.class);
-
-  private static AtomicInteger _threadNum = new AtomicInteger();
+  private static final Logger LOG = LoggerFactory.getLogger(ZmqThreadPool.class);
 
   private List<ZmqRunnable> runnables = new ArrayList<ZmqRunnable>();
 
@@ -47,33 +44,27 @@ public final class ThreadPool implements HasInit, HasDestroy {
 
   //// CONSTRUCTORS
 
-  private ThreadPool() {
+  private ZmqThreadPool() {
   }
 
   //// METHODS
 
-  public static ThreadPool newCachedDaemonThreadPool() {
-    ThreadPool target = new ThreadPool();
+  public static ZmqThreadPool newCachedDaemonThreadPool() {
+    ZmqThreadPool target = new ZmqThreadPool();
     target._executor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors(),
                                               Integer.MAX_VALUE,
                                               60L,
                                               TimeUnit.SECONDS,
                                               new SynchronousQueue<Runnable>(),
-                                              new ThreadFactory() {
-                                                @Override
-                                                public Thread newThread(Runnable r) {
-                                                  Thread t = new Thread(r);
-                                                  t.setDaemon(true);
-                                                  t.setName("zmq-daemon-" + _threadNum.incrementAndGet());
-                                                  return t;
-                                                }
-                                              });
+                                              new ThreadFactoryBuilder().setDaemon(true)
+                                                                        .setNameFormat("zmq-daemon")
+                                                                        .build());
     int i = target._executor.prestartAllCoreThreads();
     LOG.debug("Started {} core zmq-threads.", i);
     return target;
   }
 
-  public ThreadPool withRunnable(ZmqRunnable runnable) {
+  public ZmqThreadPool withRunnable(ZmqRunnable runnable) {
     this.runnables.add(runnable);
     return this;
   }
@@ -81,7 +72,7 @@ public final class ThreadPool implements HasInit, HasDestroy {
   @Override
   public void init() {
     if (runnables.isEmpty()) {
-      LOG.warn("ThreadPool is empty!");
+      LOG.warn("ZmqThreadPool is empty!");
       return;
     }
     _destroyLatch = new CountDownLatch(runnables.size());

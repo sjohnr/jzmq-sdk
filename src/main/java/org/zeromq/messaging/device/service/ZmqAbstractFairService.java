@@ -30,8 +30,8 @@ public abstract class ZmqAbstractFairService extends ZmqAbstractProxy {
   private static final Logger LOG = LoggerFactory.getLogger(ZmqAbstractFairService.class);
 
   @Override
-  public final void execute() {
-    super.execute();
+  public final void exec() {
+    super.exec();
 
     // ==== handle backend traffic first ====
     if (_backend.canRecv()) {

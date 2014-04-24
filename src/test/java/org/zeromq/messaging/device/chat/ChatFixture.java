@@ -39,7 +39,7 @@ public class ChatFixture extends BaseFixture {
             String clusterPubConnAddr) {
     with(
         ZmqRunnable.builder()
-                   .withRunnableContext(
+                   .withActor(
                        Chat.builder()
                            .withCtx(ctx)
                            .withPollTimeout(100)

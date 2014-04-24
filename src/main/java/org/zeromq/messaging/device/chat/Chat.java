@@ -26,13 +26,13 @@ import org.zeromq.messaging.Props;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
-import org.zeromq.messaging.device.ZmqAbstractProcess;
+import org.zeromq.messaging.device.ZmqAbstractActor;
 
-public final class Chat extends ZmqAbstractProcess {
+public final class Chat extends ZmqAbstractActor {
 
   private static final Logger LOG = LoggerFactory.getLogger(Chat.class);
 
-  public static final class Builder extends ZmqAbstractProcess.Builder<Builder, Chat> {
+  public static final class Builder extends ZmqAbstractActor.Builder<Builder, Chat> {
 
     public Builder() {
       super(new Chat());
@@ -160,8 +160,8 @@ public final class Chat extends ZmqAbstractProcess {
   }
 
   @Override
-  public void execute() {
-    super.execute();
+  public void exec() {
+    super.exec();
 
     if (_frontendPub.canRecv()) {
       ZmqMessage message = _frontendPub.recv();
