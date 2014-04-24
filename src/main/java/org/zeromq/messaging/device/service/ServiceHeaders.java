@@ -25,18 +25,17 @@ import org.zeromq.messaging.ZmqHeaders;
 /**
  * Service class headers. Acts as a mutable container for <i>service protocol</i> properties:
  * <pre>
- *   ServiceHeaders.MsgType -- PING/RETRY.
- *   ServiceHeaders.MsgNumOfHops -- the number of hops for message.
+ *   ServiceHeaders.MsgType -- PING/PONG/RETRY.
  *   ServiceHeaders.MsgCid -- correlation id for call.
  * </pre>
  */
 public final class ServiceHeaders extends ZmqHeaders<ServiceHeaders> {
 
   public static final String HEADER_MSG_TYPE = "ServiceHeaders.MsgType";
-  public static final String HEADER_MSG_NUM_OF_HOPS = "ServiceHeaders.MsgNumOfHops";
   public static final String HEADER_CID = "ServiceHeaders.MsgCid";
 
   private static final String PING = "PING";
+  private static final String PONG = "PONG";
   private static final String RETRY = "RETRY";
 
   //// METHODS
@@ -55,8 +54,17 @@ public final class ServiceHeaders extends ZmqHeaders<ServiceHeaders> {
     return this;
   }
 
+  public ServiceHeaders setMsgTypePong() {
+    set(HEADER_MSG_TYPE, PONG);
+    return this;
+  }
+
   public boolean isMsgTypePing() {
     return PING.equals(getHeaderOrNull(HEADER_MSG_TYPE));
+  }
+
+  public boolean isMsgTypePong() {
+    return PONG.equals(getHeaderOrNull(HEADER_MSG_TYPE));
   }
 
   public ServiceHeaders setMsgTypeRetry() {
@@ -66,15 +74,6 @@ public final class ServiceHeaders extends ZmqHeaders<ServiceHeaders> {
 
   public boolean isMsgTypeRetry() {
     return RETRY.equals(getHeaderOrNull(HEADER_MSG_TYPE));
-  }
-
-  public ServiceHeaders setNumOfHops(int numOfHops) {
-    set(HEADER_MSG_NUM_OF_HOPS, numOfHops);
-    return this;
-  }
-
-  public int getNumOfHops() {
-    return Integer.valueOf(getHeaderOrException(HEADER_MSG_NUM_OF_HOPS));
   }
 
   public ServiceHeaders setCid(long cid) {

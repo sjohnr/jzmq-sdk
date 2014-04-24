@@ -31,12 +31,7 @@ class DoPing implements ZmqPingStrategy {
 
   @Override
   public void ping(ZmqChannel channel) {
-    ZmqMessage ping = ZmqMessage.builder()
-                                .withHeaders(
-                                    new ServiceHeaders()
-                                        .setMsgTypePing()
-                                        .setNumOfHops(0))
-                                .build();
+    ZmqMessage ping = ZmqMessage.builder().withHeaders(new ServiceHeaders().setMsgTypePing()).build();
     if (!channel.send(ping)) {
       LOG.warn("Can't send PING.");
     }
