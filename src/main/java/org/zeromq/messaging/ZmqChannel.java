@@ -127,7 +127,7 @@ public final class ZmqChannel implements HasDestroy {
         socket.setSendTimeOut(_target.props.timeoutSend());
         socket.setReceiveTimeOut(_target.props.timeoutRecv());
 
-        // setting LINGER to zero -- don't block on socket.close().
+        // set LINGER.
         socket.setLinger(_target.props.linger());
 
         // set socket identity.
