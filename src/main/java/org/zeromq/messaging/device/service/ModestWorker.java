@@ -24,23 +24,23 @@ import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
 
 /**
- * Passive-worker device: (doesn't ping, just connects and awaits for incoming traffic; doesn't expose socket identity)
+ * Modest-worker device: (does ping only once, exposes socket identity via DEALER)
  * <pre>
- *   <-w(ROUTER) / no-ping / no identity to remote peer
+ *   <-w(DEALER) / with-ping-only-once / exposes identity to remote peer
  * </pre>
  */
-public final class PassiveWorker extends ZmqAbstractWorker {
+public final class ModestWorker extends ZmqAbstractWorker {
 
-  public static class Builder extends ZmqAbstractWorker.Builder<Builder, PassiveWorker> {
+  public static class Builder extends ZmqAbstractWorker.Builder<Builder, ModestWorker> {
     private Builder() {
-      super(new PassiveWorker());
+      super(new ModestWorker());
     }
   }
 
   //// CONSTRUCTORS
 
-  private PassiveWorker() {
-    pingStrategy = new DontPing();
+  private ModestWorker() {
+    pingStrategy = new DoPingOnce();
   }
 
   //// METHODS
@@ -68,7 +68,7 @@ public final class PassiveWorker extends ZmqAbstractWorker {
   @Override
   public void init() {
     checkInvariant();
-    reg(CHANNEL_ID_WORKER, ZmqChannel.ROUTER(ctx).withProps(props).build());
+    reg(CHANNEL_ID_WORKER, ZmqChannel.DEALER(ctx).withProps(props).build());
     super.init();
   }
 }

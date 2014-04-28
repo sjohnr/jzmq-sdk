@@ -47,6 +47,11 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
       return (B) this;
     }
 
+    public final B withPingStrategy(ZmqPingStrategy pingStrategy) {
+      _target.setPingStrategy(pingStrategy);
+      return (B) this;
+    }
+
     public final B withMessageProcessor(ZmqMessageProcessor messageProcessor) {
       _target.setMessageProcessor(messageProcessor);
       return (B) this;
@@ -54,9 +59,9 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
   }
 
   protected Props props;
+  protected ZmqPingStrategy pingStrategy;
   protected ZmqMessageProcessor messageProcessor;
 
-  protected ZmqPingStrategy _pingStrategy;
   protected String _pingStrategyForLogging;
 
   //// CONSTRUCTORS
@@ -70,6 +75,10 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
     this.props = props;
   }
 
+  public void setPingStrategy(ZmqPingStrategy pingStrategy) {
+    this.pingStrategy = pingStrategy;
+  }
+
   public final void setMessageProcessor(ZmqMessageProcessor messageProcessor) {
     this.messageProcessor = messageProcessor;
   }
@@ -80,6 +89,9 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
     if (props == null) {
       throw ZmqException.fatal();
     }
+    if (pingStrategy == null) {
+      throw ZmqException.fatal();
+    }
     if (messageProcessor == null) {
       throw ZmqException.fatal();
     }
@@ -88,7 +100,7 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
   @Override
   public void init() {
     channel(CHANNEL_ID_WORKER).watchRecv(_poller);
-    _pingStrategyForLogging = _pingStrategy.getClass().getSimpleName();
+    _pingStrategyForLogging = pingStrategy.getClass().getSimpleName();
   }
 
   @Override
@@ -99,7 +111,7 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
 
     if (!workerChannel.canRecv()) {
       LOG.debug("No incoming requests. Delegating to {}.", _pingStrategyForLogging);
-      _pingStrategy.ping(workerChannel);
+      pingStrategy.ping(workerChannel);
       return;
     }
 
@@ -117,7 +129,7 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
     catch (Exception e) {
       LOG.error("Failed at processing request. Delegating to {} anyway.", _pingStrategyForLogging);
       // request processing failed -- still need to ping.
-      _pingStrategy.ping(workerChannel);
+      pingStrategy.ping(workerChannel);
       return;
     }
     // if reply is not null -- send it / otherwise -- ping.
@@ -127,7 +139,7 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
       }
     }
     else {
-      _pingStrategy.ping(workerChannel);
+      pingStrategy.ping(workerChannel);
     }
   }
 }

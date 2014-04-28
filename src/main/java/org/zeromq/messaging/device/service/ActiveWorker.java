@@ -39,13 +39,19 @@ public final class ActiveWorker extends ZmqAbstractWorker {
 
   //// CONSTRUCTORS
 
-  public ActiveWorker() {
+  private ActiveWorker() {
+    pingStrategy = new DoPing();
   }
 
   //// METHODS
 
   public static Builder builder() {
     return new Builder();
+  }
+
+  @Override
+  public void setPingStrategy(ZmqPingStrategy pingStrategy) {
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -62,10 +68,7 @@ public final class ActiveWorker extends ZmqAbstractWorker {
   @Override
   public void init() {
     checkInvariant();
-
-    _pingStrategy = new DoPing();
     reg(CHANNEL_ID_WORKER, ZmqChannel.DEALER(ctx).withProps(props).build());
-
     super.init();
   }
 }
