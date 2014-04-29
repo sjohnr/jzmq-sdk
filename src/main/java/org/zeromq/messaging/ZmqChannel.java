@@ -92,20 +92,28 @@ public final class ZmqChannel implements HasDestroy {
         _target._inputAdapter = InputMessageAdapter.builder().expectIdentities().build();
         _target._outputAdapter = OutputMessageAdapter.builder().awareOfDEALERType().expectIdentities().build();
       }
-      if (_target.socketType == ZMQ.PUB || _target.socketType == ZMQ.PUSH) {
+      if (_target.socketType == ZMQ.PUB) {
         _target._inputAdapter = null;
-        _target._outputAdapter = OutputMessageAdapter.builder().awareOfTopicFrame().expectIdentities().build();
+        _target._outputAdapter = OutputMessageAdapter.builder().awareOfTopicFrame().build();
       }
-      if (_target.socketType == ZMQ.SUB || _target.socketType == ZMQ.PULL) {
+      if (_target.socketType == ZMQ.PUSH) {
+        _target._inputAdapter = null;
+        _target._outputAdapter = OutputMessageAdapter.builder().build();
+      }
+      if (_target.socketType == ZMQ.SUB) {
         _target._outputAdapter = null;
-        _target._inputAdapter = InputMessageAdapter.builder().awareOfTopicFrame().expectIdentities().build();
+        _target._inputAdapter = InputMessageAdapter.builder().awareOfTopicFrame().build();
+      }
+      if (_target.socketType == ZMQ.PULL) {
+        _target._outputAdapter = null;
+        _target._inputAdapter = InputMessageAdapter.builder().build();
       }
       if (_target.socketType == ZMQ.XPUB) {
         _target._inputAdapter = InputMessageAdapter.builder().awareOfTopicFrame().awareOfExtendedPubSub().build();
-        _target._outputAdapter = OutputMessageAdapter.builder().awareOfTopicFrame().expectIdentities().build();
+        _target._outputAdapter = OutputMessageAdapter.builder().awareOfTopicFrame().build();
       }
       if (_target.socketType == ZMQ.XSUB) {
-        _target._inputAdapter = InputMessageAdapter.builder().awareOfTopicFrame().expectIdentities().build();
+        _target._inputAdapter = InputMessageAdapter.builder().awareOfTopicFrame().build();
         _target._outputAdapter = OutputMessageAdapter.builder().awareOfTopicFrame().awareOfExtendedPubSub().build();
       }
 

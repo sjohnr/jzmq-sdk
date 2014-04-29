@@ -40,7 +40,6 @@ import static org.zeromq.support.ZmqUtils.isEmptyFrame;
  * ZmqFrames([FRAME, ..., FRAME]) => ZmqMessage([[HEADER] | PAYLOAD]).
  * ZmqFrames([FRAME, ..., FRAME]) => ZmqMessage([[PEER_IDENTITY] | [HEADER] | PAYLOAD]).
  * ZmqFrames([FRAME, ..., FRAME]) => ZmqMessage([TOPIC | [HEADER] | PAYLOAD]).
- * ZmqFrames([FRAME, ..., FRAME]) => ZmqMessage([TOPIC | [PEER_IDENTITY] | [HEADER] | PAYLOAD]).
  * </pre>
  */
 class InputMessageAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
@@ -71,17 +70,11 @@ class InputMessageAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
 
     @Override
     public void checkInvariant() {
-      if (_target.awareOfExtendedPubSub && _target.expectIdentities) {
-        throw ZmqException.fatal();
-      }
-      if (_target.awareOfExtendedPubSub && !_target.awareOfTopicFrame) {
-        throw ZmqException.fatal();
-      }
+      // no-op.
     }
 
     @Override
     public InputMessageAdapter build() {
-      checkInvariant();
       return _target;
     }
   }

@@ -209,52 +209,6 @@ public class InputOutputMessageAdapterTest {
 
   @Test
   public void t4() {
-    LOG.info(
-        "\n" +
-        "Test conversion:                                                                                   \n" +
-        "                                                                                                   \n" +
-        "[TOPIC | [PEER_IDENTITY] | [HEADER] | PAYLOAD]  =>  [FRAME, ..., FRAME]                            \n" +
-        "[FRAME, ..., FRAME]                             =>  [TOPIC | [PEER_IDENTITY] | [HEADER] | PAYLOAD] \n" +
-        "                                                                                                   \n" +
-        "                                                                                                   \n");
-
-    ZmqMessage message = ZmqMessage.builder()
-                                   .withTopic(topic)
-                                   .withIdentities(identities)
-                                   .withHeaders(headers)
-                                   .withPayload(payload)
-                                   .build();
-
-    OutputMessageAdapter output = OutputMessageAdapter.builder()
-                                                      .awareOfTopicFrame()
-                                                      .expectIdentities()
-                                                      .build();
-    ZmqFrames frames = output.convert(message);
-    Iterator<byte[]> framesIter = frames.iterator();
-
-    assertNextFrame(topic, framesIter);
-    assertNextFrame(DIV_FRAME, framesIter);
-    assertNextFrame(id_0, framesIter);
-    assertNextFrame(EMPTY_FRAME, framesIter);
-    assertNextFrame(id_1, framesIter);
-    assertNextFrame(EMPTY_FRAME, framesIter);
-    assertNextFrame(id_2, framesIter);
-    assertNextFrame(EMPTY_FRAME, framesIter);
-    assertNextFrame(DIV_FRAME, framesIter);
-    assertNextFrame(headers, framesIter);
-    assertNextFrame(payload, framesIter);
-
-    assert !framesIter.hasNext();
-
-    InputMessageAdapter input = InputMessageAdapter.builder()
-                                                   .awareOfTopicFrame()
-                                                   .expectIdentities()
-                                                   .build();
-    assertEq(message, input.convert(frames));
-  }
-
-  @Test
-  public void t5() {
     ZmqMessage message = ZmqMessage.builder()
                                    .withTopic(topic)
                                    .withExtendedPubSubFlag(BYTE_SUB)
@@ -280,7 +234,7 @@ public class InputOutputMessageAdapterTest {
   }
 
   @Test
-  public void t6() {
+  public void t5() {
     ZmqMessage message = ZmqMessage.builder()
                                    .withTopic(EMPTY_FRAME)
                                    .withExtendedPubSubFlag(BYTE_UNSUB)

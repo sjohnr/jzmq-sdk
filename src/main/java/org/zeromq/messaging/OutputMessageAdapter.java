@@ -40,7 +40,6 @@ import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
  * ZmqMessage([[HEADER] | PAYLOAD])                           => ZmqFrames([FRAME, ..., FRAME]).
  * ZmqMessage([[PEER_IDENTITY] | [HEADER] | PAYLOAD])         => ZmqFrames([FRAME, ..., FRAME]).
  * ZmqMessage([TOPIC | [HEADER] | PAYLOAD])                   => ZmqFrames([FRAME, ..., FRAME]).
- * ZmqMessage([TOPIC | [PEER_IDENTITY] | [HEADER] | PAYLOAD]) => ZmqFrames([FRAME, ..., FRAME]).
  * </pre>
  */
 class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
@@ -76,26 +75,11 @@ class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
 
     @Override
     public void checkInvariant() {
-      if (_target.awareOfTopicFrame && _target.awareOfDEALERType) {
-        throw ZmqException.fatal();
-      }
-      if (_target.awareOfDEALERType && !_target.expectIdentities) {
-        throw ZmqException.fatal();
-      }
-      if (_target.awareOfExtendedPubSub && _target.awareOfDEALERType) {
-        throw ZmqException.fatal();
-      }
-      if (_target.awareOfExtendedPubSub && _target.expectIdentities) {
-        throw ZmqException.fatal();
-      }
-      if (_target.awareOfExtendedPubSub && !_target.awareOfTopicFrame) {
-        throw ZmqException.fatal();
-      }
+      // no-op.
     }
 
     @Override
     public OutputMessageAdapter build() {
-      checkInvariant();
       return _target;
     }
   }
