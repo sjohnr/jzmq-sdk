@@ -29,8 +29,8 @@ import java.util.List;
 public final class Props {
 
   private static final int DEFAULT_LINGER = 0; // by default it's allowed to close socket and not be blocked.
-  private static final int DEFAULT_WAIT_ON_SEND = 1000; // how long to wait on .send(), best guess.
-  private static final int DEFAULT_WAIT_ON_RECV = 1000; // how long to wait on .recv(), best guess.
+  private static final int DEFAULT_SEND_TIMEOUT = 1000; // how long to wait on .send(), best guess.
+  private static final int DEFAULT_RECV_TIMEOUT = 1000; // how long to wait on .recv(), best guess.
   private static final long DEFAULT_HWM_SEND = 1000; // HWM, best guess.
   private static final long DEFAULT_HWM_RECV = 1000; // HWM, best guess.
   private static final long DEFAULT_RECONNECT_INTERVAL = 100; // reconnection interval, best guess.
@@ -87,13 +87,13 @@ public final class Props {
       return this;
     }
 
-    public Builder withWaitSend(int timeout) {
-      _target.setTimeoutSend(timeout);
+    public Builder withSendTimeout(int timeout) {
+      _target.setSendTimeout(timeout);
       return this;
     }
 
-    public Builder withWaitRecv(int timeout) {
-      _target.setTimeoutRecv(timeout);
+    public Builder withRecvTimeout(int timeout) {
+      _target.setRecvTimeout(timeout);
       return this;
     }
 
@@ -119,8 +119,8 @@ public final class Props {
   private long hwmRecv = DEFAULT_HWM_RECV;
   private String identity;
   private long linger = DEFAULT_LINGER;
-  private int timeoutSend = DEFAULT_WAIT_ON_SEND;
-  private int timeoutRecv = DEFAULT_WAIT_ON_RECV;
+  private int sendTimeout = DEFAULT_SEND_TIMEOUT;
+  private int recvTimeout = DEFAULT_RECV_TIMEOUT;
   private long reconnectInterval = DEFAULT_RECONNECT_INTERVAL;
   private long reconnectIntervalMax = DEFAULT_RECONNECT_INTERVAL_MAX;
 
@@ -169,12 +169,12 @@ public final class Props {
     this.linger = linger;
   }
 
-  public void setTimeoutSend(int timeoutSend) {
-    this.timeoutSend = timeoutSend;
+  public void setSendTimeout(int timeout) {
+    this.sendTimeout = timeout;
   }
 
-  public void setTimeoutRecv(int timeoutRecv) {
-    this.timeoutRecv = timeoutRecv;
+  public void setRecvTimeout(int timeout) {
+    this.recvTimeout = timeout;
   }
 
   public void setReconnectInterval(long reconnectInterval) {
@@ -209,12 +209,12 @@ public final class Props {
     return linger;
   }
 
-  public int timeoutSend() {
-    return timeoutSend;
+  public int sendTimeout() {
+    return sendTimeout;
   }
 
-  public int timeoutRecv() {
-    return timeoutRecv;
+  public int recvTimeout() {
+    return recvTimeout;
   }
 
   public long reconnectInterval() {

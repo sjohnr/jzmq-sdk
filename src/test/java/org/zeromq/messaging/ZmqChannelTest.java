@@ -94,8 +94,8 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                .withProps(Props.builder()
                                                .withHwmRecv(0)
                                                .withHwmSend(0)
-                                               .withWaitSend(-1)
-                                               .withWaitRecv(1)
+                                               .withSendTimeout(-1)
+                                               .withRecvTimeout(1)
                                                .withConnectAddr(connAddr(4466))
                                                .build())
                                .build();
@@ -120,8 +120,8 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                .withProps(Props.builder()
                                                .withHwmRecv(1)
                                                .withHwmSend(1)
-                                               .withWaitSend(0)
-                                               .withWaitRecv(0)
+                                               .withSendTimeout(0)
+                                               .withRecvTimeout(0)
                                                .withConnectAddr(connAddr(4466))
                                                .build())
                                .build();
@@ -208,16 +208,16 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
     ZmqChannel client = ZmqChannel.DEALER(ctx())
                                   .withProps(Props.builder()
-                                                  .withWaitSend(0)
-                                                  .withWaitRecv(100)
+                                                  .withSendTimeout(0)
+                                                  .withRecvTimeout(100)
                                                   .withConnectAddr(connAddr(6677))
                                                   .build())
                                   .build();
 
     ZmqChannel server = ZmqChannel.ROUTER(ctx())
                                   .withProps(Props.builder()
-                                                  .withWaitSend(0)
-                                                  .withWaitRecv(100)
+                                                  .withSendTimeout(0)
+                                                  .withRecvTimeout(100)
                                                   .withBindAddr(bindAddr(6677))
                                                   .build())
                                   .build();

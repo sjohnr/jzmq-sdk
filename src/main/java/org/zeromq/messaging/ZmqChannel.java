@@ -132,8 +132,8 @@ public final class ZmqChannel implements HasDestroy {
         socket.setRcvHWM(_target.props.hwmRecv());
 
         // set socket .send()/.recv() timeout.
-        socket.setSendTimeOut(_target.props.timeoutSend());
-        socket.setReceiveTimeOut(_target.props.timeoutRecv());
+        socket.setSendTimeOut(_target.props.sendTimeout());
+        socket.setReceiveTimeOut(_target.props.recvTimeout());
 
         // set LINGER.
         socket.setLinger(_target.props.linger());
