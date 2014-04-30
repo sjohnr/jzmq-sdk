@@ -28,6 +28,8 @@ import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
 import org.zeromq.messaging.device.ZmqAbstractActor;
 
+import static com.google.common.base.Preconditions.checkState;
+
 public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
 
   protected static final Logger LOG = LoggerFactory.getLogger(ZmqAbstractWorker.class);
@@ -61,8 +63,6 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
   protected Props props;
   protected ZmqPingStrategy pingStrategy;
   protected ZmqMessageProcessor messageProcessor;
-
-  protected String _pingStrategyForLogging;
 
   //// CONSTRUCTORS
 
@@ -100,7 +100,6 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
   @Override
   public void init() {
     channel(CHANNEL_ID_WORKER).watchRecv(_poller);
-    _pingStrategyForLogging = pingStrategy.getClass().getSimpleName();
   }
 
   @Override
@@ -110,33 +109,25 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
     ZmqChannel workerChannel = channel(CHANNEL_ID_WORKER);
 
     if (!workerChannel.canRecv()) {
-      LOG.debug("No incoming requests. Delegating to {}.", _pingStrategyForLogging);
       pingStrategy.ping(workerChannel);
       return;
     }
 
-    // receive incoming traffic.
-    ZmqMessage request = workerChannel.recv();
-    if (request == null) {
-      LOG.error(".recv() failed!");
-      return;
-    }
-
+    ZmqMessage request = workerChannel.recvDontWait();
+    checkState(request != null);
     ZmqMessage reply;
     try {
       reply = messageProcessor.process(request);
     }
     catch (Exception e) {
-      LOG.error("Failed at processing request. Delegating to {} anyway.", _pingStrategyForLogging);
+      LOG.error("Failed at processing worker request: " + e, e);
       // request processing failed -- still need to ping.
       pingStrategy.ping(workerChannel);
       return;
     }
     // if reply is not null -- send it / otherwise -- ping.
     if (reply != null) {
-      if (!workerChannel.send(reply)) {
-        LOG.warn(".send() failed!");
-      }
+      checkState(workerChannel.send(reply));
     }
     else {
       pingStrategy.ping(workerChannel);
