@@ -260,4 +260,21 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     assert client.canRecv(); // yes, client has input.
     assert client.recv() != null;
   }
+
+  @Test
+  public void t7() {
+    LOG.info("Test .send()/.recvDontWait()/.recv() operations.");
+
+    ZmqChannel client = ZmqChannel.DEALER(ctx())
+                                  .withProps(Props.builder().withConnectAddr(connAddr(6677)).build())
+                                  .build();
+
+    ZmqChannel server = ZmqChannel.ROUTER(ctx())
+                                  .withProps(Props.builder().withBindAddr(bindAddr(6677)).build())
+                                  .build();
+
+    assert client.send(HELLO());
+    assert server.recvDontWait() == null;
+    assert server.recv() != null;
+  }
 }

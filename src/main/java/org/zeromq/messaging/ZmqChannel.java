@@ -357,6 +357,33 @@ public final class ZmqChannel implements HasDestroy {
   }
 
   /**
+   * Function which receives a message. Doesn't block.
+   *
+   * @return a message or null.
+   */
+  public ZmqMessage recvDontWait() {
+    assertSocket();
+    try {
+      ZmqFrames input = new ZmqFrames();
+      for (; ; ) {
+        byte[] frame = _socket.recv(1);
+        if (frame == null) {
+          return null;
+        }
+        input.add(frame);
+        if (!_socket.hasReceiveMore()) {
+          break;
+        }
+      }
+      return _inputAdapter.convert(input);
+    }
+    catch (Exception e) {
+      LOG.error("!!! Message wasn't received! Exception occured: " + e, e);
+      throw ZmqException.seeCause(e);
+    }
+  }
+
+  /**
    * Subscribe function.
    *
    * @param topic the "topic" to subscribe on.
