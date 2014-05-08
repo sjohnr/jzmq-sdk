@@ -201,16 +201,22 @@ public final class Chat extends ZmqAbstractActor {
   }
 
   private void logMessage(String direction, ZmqMessage message) {
-    byte[] topic = message.topic();
-    byte[] payload = message.payload();
-    LOG.debug("Message: {} (topic={} bytes, payload={} bytes).", direction, topic.length, payload.length);
+    if (LOG.isDebugEnabled()) {
+      byte[] topic = message.topic();
+      byte[] payload = message.payload();
+      LOG.debug("Message: {} (topic={} bytes, payload={} bytes).", direction, topic.length, payload.length);
+    }
   }
 
   private void logSubscribe(String direction, byte[] topic) {
-    LOG.debug("Subscribe: {} (topic={} bytes).", direction, topic.length);
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Subscribe: {} (topic={} bytes).", direction, topic.length);
+    }
   }
 
   private void logUnsubscribe(String direction, byte[] topic) {
-    LOG.debug("Unsubscribe: {} (topic={} bytes).", direction, topic.length);
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Unsubscribe: {} (topic={} bytes).", direction, topic.length);
+    }
   }
 }
