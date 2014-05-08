@@ -49,7 +49,7 @@ public class ZmqMessageTest {
     identities.add(id2);
   }
 
-  private static final byte[] headers = "{\"a\":[\"a\"]}".getBytes();
+  private static final byte[] headers = "{\"a\":\"a\"}".getBytes();
   private static final byte[] payload = "payload".getBytes();
 
   @Test
@@ -103,7 +103,7 @@ public class ZmqMessageTest {
 
     assertEq(topic, message.topic());
     assertEquals(identities.size(), message.identityFrames().size());
-    assertArrayEquals("{\"a\":[\"xyz\"],\"0\":[\"h0\"],\"1\":[\"h1\"]}".getBytes(), message.headersAsBinary());
+    assertArrayEquals("{\"a\":\"xyz\",\"0\":\"h0\",\"1\":\"h1\"}".getBytes(), message.headersAsBinary());
     assertEq(payload, message.payload());
 
     assertEq(message, ZmqMessage.builder(message).build());
@@ -218,7 +218,7 @@ public class ZmqMessageTest {
                                 .withHeaders(new ZmqHeaders().set("x", "x"))
                                 .build();
 
-    assertArrayEquals("{\"x\":[\"x\"]}".getBytes(), copy.headersAsBinary());
+    assertArrayEquals("{\"x\":\"x\"}".getBytes(), copy.headersAsBinary());
 
     ZmqMessage copy2 = ZmqMessage.builder(src)
                                  .withHeaders(new ZmqHeaders()
@@ -226,7 +226,7 @@ public class ZmqMessageTest {
                                                   .set("y", "y"))
                                  .build();
 
-    assertArrayEquals("{\"a\":[\"b\"],\"y\":[\"y\"]}".getBytes(), copy2.headersAsBinary());
+    assertArrayEquals("{\"a\":\"b\",\"y\":\"y\"}".getBytes(), copy2.headersAsBinary());
   }
 
   private void assertEq(byte[] a, byte[] b) {

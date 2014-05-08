@@ -104,7 +104,7 @@ public class ZmqHeadersTest {
     }
 
     try {
-      new ZmqHeaders().copy("{\"0\":[]}".getBytes());
+      new ZmqHeaders().copy("{\"0\":\"\"}".getBytes());
       fail();
     }
     catch (ZmqException e) {
@@ -118,13 +118,13 @@ public class ZmqHeadersTest {
                                          .set("b", "b")
                                          .set("c", "c");
 
-    assertArrayEquals("{\"a\":[\"a\"],\"b\":[\"b\"],\"c\":[\"c\"]}".getBytes(), headers.asBinary());
+    assertArrayEquals("{\"a\":\"a\",\"b\":\"b\",\"c\":\"c\"}".getBytes(), headers.asBinary());
 
     ZmqHeaders copy = headers
-        .copy("{\"a\":[\"x\"]}".getBytes())
+        .copy("{\"a\":\"x\"}".getBytes())
         .copy(new ZmqHeaders().set("c", "y"));
 
-    assertArrayEquals("{\"a\":[\"x\"],\"b\":[\"b\"],\"c\":[\"y\"]}".getBytes(), copy.asBinary());
+    assertArrayEquals("{\"a\":\"x\",\"b\":\"b\",\"c\":\"y\"}".getBytes(), copy.asBinary());
   }
 
   @Test
@@ -133,12 +133,12 @@ public class ZmqHeadersTest {
                                          .set("b", "B")
                                          .set("c", "C");
 
-    assertArrayEquals("{\"a\":[\"A\"],\"b\":[\"B\"],\"c\":[\"C\"]}".getBytes(), headers.asBinary());
+    assertArrayEquals("{\"a\":\"A\",\"b\":\"B\",\"c\":\"C\"}".getBytes(), headers.asBinary());
 
-    ZmqHeaders copy = headers.copy("{\"a\":[\"\"]}".getBytes())
-                             .copy(new ZmqHeaders().set("b", ""))
-                             .copy("{\"c\":[\"\"]}".getBytes());
+    ZmqHeaders copy = headers.copy("{\"a\":\"AA\"}".getBytes())
+                             .copy(new ZmqHeaders().set("b", "BB"))
+                             .copy("{\"c\":\"CC\"}".getBytes());
 
-    assertArrayEquals("{\"a\":[\"\"],\"b\":[\"\"],\"c\":[\"\"]}".getBytes(), copy.asBinary());
+    assertArrayEquals("{\"a\":\"AA\",\"b\":\"BB\",\"c\":\"CC\"}".getBytes(), copy.asBinary());
   }
 }

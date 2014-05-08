@@ -27,7 +27,6 @@ import com.fasterxml.jackson.core.JsonToken;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -39,9 +38,9 @@ import static org.zeromq.support.ZmqUtils.isEmptyFrame;
 /**
  * Map data structure for <i>generic headers</i>:
  * <pre>
- *   header_id_0  [header_value_0]
+ *   header_id_0  header_value_0
  *   ...
- *   header_id_m  [header_value_m]
+ *   header_id_m  header_value_m
  * </pre>
  * Where header {@code .._id .._value} are strings. Wire format is JSON.
  */
@@ -69,32 +68,23 @@ public class ZmqHeaders<T extends ZmqHeaders> {
       JsonParser p = jf.createParser(headers);
       JsonToken token;
       String headerId = null;
-      ArrayList<String> headerContent = null;
       do {
         token = p.nextToken();
         if (token != null) {
           switch (token) {
             case FIELD_NAME:
               String fn = p.getText();
-              if (headerId == null) {
+              if (headerId == null || headerId.isEmpty()) {
                 headerId = fn;
-                headerContent = new ArrayList<String>();
               }
               break;
             case VALUE_STRING:
               String text = p.getText();
-              if (text == null) {
+              if (text == null || text.isEmpty()) {
                 throw ZmqException.wrongHeader();
               }
-              headerContent.add(text);
-              break;
-            case END_ARRAY:
-              if (headerContent.isEmpty()) {
-                throw ZmqException.wrongHeader();
-              }
-              _map.put(headerId, headerContent.get(0));
+              _map.put(headerId, text);
               headerId = null;
-              headerContent = null;
               break;
           }
         }
@@ -143,7 +133,7 @@ public class ZmqHeaders<T extends ZmqHeaders> {
    */
   public final String getHeaderOrException(String k) {
     String header = getHeaderOrNull(k);
-    if (header == null) {
+    if (header == null || header.isEmpty()) {
       throw ZmqException.headerIsNotSet();
     }
     return header;
@@ -163,14 +153,8 @@ public class ZmqHeaders<T extends ZmqHeaders> {
       StringWriter w = new StringWriter();
       JsonGenerator g = jf.createGenerator(w);
       g.writeStartObject();
-      {
-        for (Map.Entry<String, String> entry : _map.entrySet()) {
-          String headerId = entry.getKey();
-          String headerContent = entry.getValue();
-          g.writeArrayFieldStart(headerId);
-          g.writeString(headerContent);
-          g.writeEndArray();
-        }
+      for (Map.Entry<String, String> entry : _map.entrySet()) {
+        g.writeStringField(entry.getKey(), entry.getValue());
       }
       g.writeEndObject();
       g.close();

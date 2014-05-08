@@ -57,7 +57,7 @@ public class InputOutputMessageAdapterTest {
     identities.add(id_2);
   }
 
-  private static final byte[] headers = "{\"h0\":[\"h0\"],\"h1\":[\"h1\"],\"h2\":[\"h2\"]}".getBytes();
+  private static final byte[] headers = "{\"h0\":\"h0\",\"h1\":\"h1\",\"h2\":\"h2\"}".getBytes();
 
   @Test
   public void t0() {
