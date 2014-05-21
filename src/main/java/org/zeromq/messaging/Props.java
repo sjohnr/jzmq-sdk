@@ -33,8 +33,6 @@ public final class Props {
   private static final int DEFAULT_RECV_TIMEOUT = 1000; // how long to wait on .recv(), best guess.
   private static final long DEFAULT_HWM_SEND = 1000; // HWM, best guess.
   private static final long DEFAULT_HWM_RECV = 1000; // HWM, best guess.
-  private static final long DEFAULT_RECONNECT_INTERVAL = 100; // reconnection interval, best guess.
-  private static final long DEFAULT_RECONNECT_INTERVAL_MAX = 0; // reconnection interval max, best guess.
 
   public static final class Builder implements ObjectBuilder<Props> {
 
@@ -97,16 +95,6 @@ public final class Props {
       return this;
     }
 
-    public Builder withReconnectInterval(long reconnectInterval) {
-      _target.setReconnectInterval(reconnectInterval);
-      return this;
-    }
-
-    public Builder withReconnectIntervalMax(long reconnectIntervalMax) {
-      _target.setReconnectIntervalMax(reconnectIntervalMax);
-      return this;
-    }
-
     @Override
     public Props build() {
       return _target;
@@ -121,8 +109,6 @@ public final class Props {
   private long linger = DEFAULT_LINGER;
   private int sendTimeout = DEFAULT_SEND_TIMEOUT;
   private int recvTimeout = DEFAULT_RECV_TIMEOUT;
-  private long reconnectInterval = DEFAULT_RECONNECT_INTERVAL;
-  private long reconnectIntervalMax = DEFAULT_RECONNECT_INTERVAL_MAX;
 
   //// CONSTRUCTORS
 
@@ -177,14 +163,6 @@ public final class Props {
     this.recvTimeout = timeout;
   }
 
-  public void setReconnectInterval(long reconnectInterval) {
-    this.reconnectInterval = reconnectInterval;
-  }
-
-  public void setReconnectIntervalMax(long reconnectIntervalMax) {
-    this.reconnectIntervalMax = reconnectIntervalMax;
-  }
-
   public List<String> bindAddr() {
     return bindAddr;
   }
@@ -215,13 +193,5 @@ public final class Props {
 
   public int recvTimeout() {
     return recvTimeout;
-  }
-
-  public long reconnectInterval() {
-    return reconnectInterval;
-  }
-
-  public long reconnectIntervalMax() {
-    return reconnectIntervalMax;
   }
 }

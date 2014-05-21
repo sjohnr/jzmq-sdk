@@ -142,10 +142,6 @@ public final class ZmqChannel implements HasDestroy {
         if (_target.props.identity() != null) {
           socket.setIdentity(_target.props.identity().getBytes());
         }
-
-        // set reconnect settings.
-        socket.setReconnectIVL(_target.props.reconnectInterval());
-        socket.setReconnectIVLMax(_target.props.reconnectIntervalMax());
       }
 
       // ... bind().
