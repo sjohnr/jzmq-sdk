@@ -21,31 +21,32 @@
 package org.zeromq.support.pool;
 
 import org.zeromq.messaging.ZmqException;
+import org.zeromq.support.HasDestroy;
 import org.zeromq.support.ObjectBuilder;
 
+import java.util.BitSet;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReferenceArray;
 
-public final class SimpleObjectPool<T> implements ObjectPool<T> {
+public final class SimpleObjectPool<T extends HasDestroy> implements ObjectPool<T> {
 
   public static final int DEFAULT_CAPACITY = 64; // just best guess.
 
-  private static class LeaseImpl<T> implements Lease<T> {
+  private static class LeaseImpl<T extends HasDestroy> implements Lease<T> {
 
-    final ObjectPool<T> objectPool;
-    final int oid;
+    final SimpleObjectPool<T> objectPool;
+    final int i;
     final T obj;
 
-    LeaseImpl(ObjectPool<T> objectPool, int oid, T obj) {
+    LeaseImpl(SimpleObjectPool<T> objectPool, int i, T obj) {
       this.objectPool = objectPool;
-      this.oid = oid;
+      this.i = i;
       this.obj = obj;
     }
 
-    public int oid() {
-      return oid;
+    public int i() {
+      return i;
     }
 
     public T get() {
@@ -55,13 +56,19 @@ public final class SimpleObjectPool<T> implements ObjectPool<T> {
     public void release() {
       objectPool.release(this);
     }
+
+    @Override
+    public void destroy() {
+      obj.destroy();
+    }
   }
 
   private final int capacity;
   private final ObjectBuilder<T> objectBuilder;
 
-  private final AtomicReferenceArray<Lease<T>> _pool;
-  private final BlockingDeque<Integer> _freeOids;
+  private final Lease<T>[] _pool;
+  private final BlockingDeque<Integer> indexes;
+  private final BitSet _poolState; // 1 - obj in pool is free, 0 - obj in pool is busy.
 
   //// CONSTRUCTORS
 
@@ -69,14 +76,16 @@ public final class SimpleObjectPool<T> implements ObjectPool<T> {
     this(DEFAULT_CAPACITY, objectBuilder);
   }
 
+  @SuppressWarnings("unchecked")
   public SimpleObjectPool(int capacity, ObjectBuilder<T> objectBuilder) {
     this.capacity = capacity;
     this.objectBuilder = objectBuilder;
 
-    _pool = new AtomicReferenceArray<Lease<T>>(capacity);
-    _freeOids = new LinkedBlockingDeque<Integer>(capacity);
-    for (int oid = 0; oid < capacity; oid++) {
-      _freeOids.add(oid);
+    _pool = new Lease[capacity];
+    _poolState = new BitSet(capacity);
+    indexes = new LinkedBlockingDeque<Integer>(capacity);
+    for (int i = 0; i < capacity; i++) {
+      indexes.add(i);
     }
   }
 
@@ -84,19 +93,19 @@ public final class SimpleObjectPool<T> implements ObjectPool<T> {
 
   @Override
   public Lease<T> lease() {
-    Integer oid = _freeOids.pollFirst();
-    if (oid == null) {
+    Integer i = indexes.pollFirst();
+    if (i == null) {
       return null;
     }
-    return _lease(oid);
+    return _lease(i);
   }
 
   @Override
   public Lease<T> lease(long timeout) {
-    Integer oid;
+    Integer i;
     try {
-      oid = _freeOids.pollFirst(timeout, TimeUnit.MILLISECONDS);
-      if (oid == null) {
+      i = indexes.pollFirst(timeout, TimeUnit.MILLISECONDS);
+      if (i == null) {
         return null;
       }
     }
@@ -104,22 +113,14 @@ public final class SimpleObjectPool<T> implements ObjectPool<T> {
       Thread.interrupted();
       throw ZmqException.seeCause(e);
     }
-    return _lease(oid);
+    return _lease(i);
   }
 
   @Override
-  public void release(Lease<T> lease) {
-    boolean set = _pool.compareAndSet(lease.oid(), null, lease);
-    if (set) {
-      _freeOids.offerFirst(lease.oid());
-    }
-  }
-
-  @Override
-  public int size() {
+  public int available() {
     int size = 0;
-    for (int i = 0; i < _pool.length(); i++) {
-      if (_pool.get(i) != null) {
+    for (int i = 0; i < _pool.length; i++) {
+      if (_poolState.get(i)) { // check that obj is free.
         size++;
       }
     }
@@ -131,16 +132,24 @@ public final class SimpleObjectPool<T> implements ObjectPool<T> {
     return capacity;
   }
 
-  private Lease<T> _lease(Integer oid) {
-    Lease<T> lease = _pool.getAndSet(oid, null);
+  private Lease<T> _lease(int i) {
+    _poolState.set(i, false); // set to 0 - busy.
+    Lease<T> lease = _pool[i];
     if (lease == null) {
-      lease = new LeaseImpl<T>(this, oid, objectBuilder.build());
+      _pool[i] = (lease = new LeaseImpl<T>(this, i, objectBuilder.build()));
     }
     return lease;
   }
 
   @Override
   public void destroy() {
-    // no-op.
+    for (Lease<T> lease : _pool) {
+      lease.destroy();
+    }
+  }
+
+  void release(Lease<T> lease) {
+    _poolState.set(lease.i(), true); // set to 1 - free.
+    indexes.offerFirst(lease.i());
   }
 }

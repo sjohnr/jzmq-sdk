@@ -24,6 +24,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.base.Throwables;
 import org.junit.Test;
 import org.zeromq.Checker;
+import org.zeromq.support.HasDestroy;
 import org.zeromq.support.ObjectBuilder;
 
 import java.util.concurrent.CountDownLatch;
@@ -36,13 +37,27 @@ import static org.junit.Assert.assertThat;
 
 public class SimpleObjectPoolTest {
 
+  static class String implements HasDestroy {
+
+    CharSequence str;
+
+    String(CharSequence str) {
+      this.str = str;
+    }
+
+    @Override
+    public void destroy() {
+      str = null;
+    }
+  }
+
   final ObjectBuilder<String> testStrBuilder = new ObjectBuilder<String>() {
 
     private int c = 0;
 
     @Override
     public String build() {
-      return "cool" + (++c);
+      return new String("cool" + (++c));
     }
   };
 
@@ -51,21 +66,21 @@ public class SimpleObjectPoolTest {
     SimpleObjectPool<String> pool = new SimpleObjectPool<String>(testStrBuilder);
 
     assertThat(pool.capacity(), is(SimpleObjectPool.DEFAULT_CAPACITY));
-    assertThat(pool.size(), is(0));
+    assertThat(pool.available(), is(0));
 
     Lease<String> s = pool.lease();
-    assertThat(pool.size(), is(0));
-    assertEquals("cool1", s.get());
+    assertThat(pool.available(), is(0));
+    assertEquals("cool1", s.get().str);
 
     s.release();
-    assertThat(pool.size(), is(1));
+    assertThat(pool.available(), is(1));
 
     Lease<String> x = pool.lease();
-    assertThat(pool.size(), is(0));
+    assertThat(pool.available(), is(0));
     assertSame(s, x);
 
     x.release();
-    assertThat(pool.size(), is(1));
+    assertThat(pool.available(), is(1));
   }
 
   @Test
@@ -73,7 +88,7 @@ public class SimpleObjectPoolTest {
     SimpleObjectPool<String> pool = new SimpleObjectPool<String>(1, testStrBuilder);
 
     Lease<String> s = pool.lease();
-    assertThat(pool.size(), is(0));
+    assertThat(pool.available(), is(0));
 
     // check that it's permitted to release same
     // object several times with out negative consequences.
@@ -83,7 +98,7 @@ public class SimpleObjectPoolTest {
     s.release();
     s.release();
 
-    assertThat(pool.size(), is(1));
+    assertThat(pool.available(), is(1));
     assertSame(s, pool.lease());
   }
 
@@ -92,7 +107,7 @@ public class SimpleObjectPoolTest {
     SimpleObjectPool<String> pool = new SimpleObjectPool<String>(1, testStrBuilder);
 
     Lease<String> lease = pool.lease();
-    assertEquals("cool1", lease.get());
+    assertEquals("cool1", lease.get().str);
 
     assert pool.lease() == null;
 
@@ -102,7 +117,7 @@ public class SimpleObjectPoolTest {
     assert timer.stop().elapsedMillis() >= timeout;
 
     lease.release();
-    assertEquals("cool1", pool.lease().get());
+    assertEquals("cool1", pool.lease().get().str);
   }
 
   @Test
@@ -121,7 +136,7 @@ public class SimpleObjectPoolTest {
     l4.await();
 
     assert checker.passed();
-    assertEquals(4, pool.size());
+    assertEquals(4, pool.available());
   }
 
   @Test
@@ -144,7 +159,7 @@ public class SimpleObjectPoolTest {
     l8.await();
 
     assert checker.passed();
-    assert pool.size() <= 8;
+    assert pool.available() <= 8;
   }
 
   private Thread leaseReleaseFast(final CountDownLatch l,
