@@ -22,15 +22,13 @@ package org.zeromq.support.pool;
 
 import org.zeromq.support.HasDestroy;
 
-public interface ObjectPool<T> extends HasDestroy {
+public interface ObjectPool<T extends HasDestroy> extends HasDestroy {
 
   Lease<T> lease();
 
   Lease<T> lease(long timeout);
 
-  void release(Lease<T> lease);
-
-  int size();
+  int available();
 
   int capacity();
 }
