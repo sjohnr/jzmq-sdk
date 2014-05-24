@@ -169,33 +169,53 @@ public final class Chat extends ZmqAbstractActor {
     ZmqChannel frontendSub = channel(CHANNEL_ID_FRONTEND_SUB);
 
     if (frontendPub.canRecv()) {
-      ZmqMessage message = frontendPub.recv();
-      clusterPub.send(message);
-      logMessage("local --> cluster", message);
+      for (; ; ) {
+        ZmqMessage message = frontendPub.recvDontWait();
+        if (message == null) {
+          break;
+        }
+        clusterPub.send(message);
+        logMessage("local --> cluster", message);
+      }
     }
     if (clusterPub.canRecv()) {
-      ZmqMessage message = clusterPub.recv();
-      frontendPub.send(message);
-      if (message.isSubscribe()) {
-        logSubscribe("local <-- cluster", message.topic());
-      }
-      else if (message.isUnsubscribe()) {
-        logUnsubscribe("local <-- cluster", message.topic());
+      for (; ; ) {
+        ZmqMessage message = clusterPub.recvDontWait();
+        if (message == null) {
+          break;
+        }
+        frontendPub.send(message);
+        if (message.isSubscribe()) {
+          logSubscribe("local <-- cluster", message.topic());
+        }
+        else if (message.isUnsubscribe()) {
+          logUnsubscribe("local <-- cluster", message.topic());
+        }
       }
     }
     if (clusterSub.canRecv()) {
-      ZmqMessage message = clusterSub.recv();
-      frontendSub.send(message);
-      logMessage("local <-- cluster", message);
+      for (; ; ) {
+        ZmqMessage message = clusterSub.recvDontWait();
+        if (message == null) {
+          break;
+        }
+        frontendSub.send(message);
+        logMessage("local <-- cluster", message);
+      }
     }
     if (frontendSub.canRecv()) {
-      ZmqMessage message = frontendSub.recv();
-      clusterSub.send(message);
-      if (message.isSubscribe()) {
-        logSubscribe("local --> cluster", message.topic());
-      }
-      else if (message.isUnsubscribe()) {
-        logUnsubscribe("local --> cluster", message.topic());
+      for (; ; ) {
+        ZmqMessage message = frontendSub.recvDontWait();
+        if (message == null) {
+          break;
+        }
+        clusterSub.send(message);
+        if (message.isSubscribe()) {
+          logSubscribe("local --> cluster", message.topic());
+        }
+        else if (message.isUnsubscribe()) {
+          logUnsubscribe("local --> cluster", message.topic());
+        }
       }
     }
   }
