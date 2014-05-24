@@ -117,16 +117,18 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
       if (request == null) {
         return;
       }
+      ZmqMessage reply = null;
       try {
-        ZmqMessage reply = messageProcessor.process(request);
+        reply = messageProcessor.process(request);
+      }
+      catch (Exception e) {
+        LOG.error("Got issue at processing request: " + e, e);
+      }
+      if (reply != null) {
         boolean send = workerChannel.send(reply);
         if (!send) {
           LOG.error("Can't send reply: " + reply);
         }
-      }
-      catch (Exception e) {
-        LOG.error("Got issue at processing request: " + e, e);
-        return;
       }
     }
   }
