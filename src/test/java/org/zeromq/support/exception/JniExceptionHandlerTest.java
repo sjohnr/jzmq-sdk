@@ -21,6 +21,7 @@
 package org.zeromq.support.exception;
 
 import org.junit.Test;
+import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
 import org.zeromq.messaging.ZmqException;
 
@@ -34,26 +35,26 @@ public class JniExceptionHandlerTest {
   public void t0() {
     JniExceptionHandler target = new JniExceptionHandler();
 
-    RuntimeException re = new RuntimeException();
+    RuntimeException runtimeException = new RuntimeException();
     try {
-      target.handleException(re);
+      target.handleException(runtimeException);
       fail();
     }
     catch (Exception e) {
       assert e instanceof ZmqException;
-      assertEquals(ZmqException.ErrorCode.SEE_CAUSE, ((ZmqException) e).errorCode());
-      assertSame(re, e.getCause());
+      assertEquals(ZmqException.ErrorCode.SEE_CAUSE, ((ZmqException) e).code());
+      assertSame(runtimeException, e.getCause());
     }
 
-    Error err = new AssertionError();
+    Error assertionError = new AssertionError();
     try {
-      target.handleException(err);
+      target.handleException(assertionError);
       fail();
     }
     catch (Exception e) {
       assert e instanceof ZmqException;
-      assertEquals(ZmqException.ErrorCode.SEE_CAUSE, ((ZmqException) e).errorCode());
-      assertSame(err, e.getCause());
+      assertEquals(ZmqException.ErrorCode.SEE_CAUSE, ((ZmqException) e).code());
+      assertSame(assertionError, e.getCause());
     }
   }
 
@@ -61,13 +62,42 @@ public class JniExceptionHandlerTest {
   public void t1() {
     JniExceptionHandler target = new JniExceptionHandler();
 
-    ZMQException ze = new ZMQException("xyz", "xyz".hashCode());
+    ZMQException nativeZMQException = new ZMQException("x-y-z", (int) ZMQ.Error.EHOSTUNREACH.getCode());
     try {
-      target.handleException(ze);
+      target.handleException(nativeZMQException);
+    }
+    catch (Exception e) {
+      assert e instanceof ZmqException;
+      assertEquals(ZmqException.ErrorCode.NATIVE_ERROR, ((ZmqException) e).code());
+      assertEquals(ZMQ.Error.EHOSTUNREACH, ((ZmqException) e).nativeError());
+    }
+  }
+
+  @Test
+  public void t2() {
+    JniExceptionHandler target = new JniExceptionHandler();
+
+    ZmqException zmqException = ZmqException.seeCause(new ZMQException("a-b-c", (int) ZMQ.Error.EHOSTUNREACH.getCode()));
+    try {
+      target.handleException(zmqException);
+    }
+    catch (Exception e) {
+      assert e instanceof ZmqException;
+      assertEquals(ZmqException.ErrorCode.NATIVE_ERROR, ((ZmqException) e).code());
+      assertEquals(ZMQ.Error.EHOSTUNREACH, ((ZmqException) e).nativeError());
+    }
+  }
+
+  @Test
+  public void t3() {
+    JniExceptionHandler target = new JniExceptionHandler();
+
+    ZmqException zmqException = ZmqException.seeCause(new ZMQException("unknown", "unknown".hashCode()));
+    try {
+      target.handleException(zmqException);
     }
     catch (Exception e) {
       assert e instanceof ZMQException;
-      assertSame(ze, e);
     }
   }
 }

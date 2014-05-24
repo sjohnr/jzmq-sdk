@@ -81,11 +81,11 @@ public final class ZmqProcess implements Runnable {
     public void handleException(Throwable t) {
       if (ZmqException.class.isAssignableFrom(t.getClass())) {
         ZmqException e = (ZmqException) t;
-        if (e.errorCode() == ErrorCode.SEE_CAUSE) {
+        if (e.code() == ErrorCode.SEE_CAUSE) {
           handleException(e.getCause());
           return;
         }
-        else if (e.errorCode() == ErrorCode.FATAL) {
+        else if (e.code() == ErrorCode.FATAL) {
           throw e;
         }
         else {

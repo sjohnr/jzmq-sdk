@@ -20,7 +20,10 @@
 
 package org.zeromq.messaging;
 
-import com.google.common.base.Preconditions;
+import com.google.common.base.Objects;
+import org.zeromq.ZMQ;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 public final class ZmqException extends RuntimeException {
 
@@ -30,27 +33,33 @@ public final class ZmqException extends RuntimeException {
     SEE_CAUSE,
     FATAL,
     CONTEXT_NOT_ACCESSIBLE,
-    SOCKET_IDENTITY_STORAGE_IS_EMPTY,
-    SOCKET_IDENTITY_NOT_MATCHED,
     HEADER_IS_NOT_SET,
     WRONG_HEADER,
     WRONG_MESSAGE,
-    FAILED_AT_SEND,
-    FAILED_AT_RECV
+    NATIVE_ERROR
   }
 
-  private final ErrorCode errorCode;
+  private final ErrorCode code;
+  private final ZMQ.Error nativeError;
 
   //// CONSTRUCTORS
 
-  private ZmqException(ErrorCode errorCode) {
-    this.errorCode = errorCode;
+  private ZmqException(ErrorCode code) {
+    this.code = code;
+    this.nativeError = null;
   }
 
   private ZmqException(Throwable e) {
     super(e);
-    Preconditions.checkArgument(e != null);
-    this.errorCode = ErrorCode.SEE_CAUSE;
+    checkArgument(e != null);
+    this.code = ErrorCode.SEE_CAUSE;
+    this.nativeError = null;
+  }
+
+  private ZmqException(ZMQ.Error nativeError) {
+    checkArgument(nativeError != null);
+    this.code = ErrorCode.NATIVE_ERROR;
+    this.nativeError = nativeError;
   }
 
   //// METHODS
@@ -67,14 +76,6 @@ public final class ZmqException extends RuntimeException {
     return new ZmqException(ErrorCode.CONTEXT_NOT_ACCESSIBLE);
   }
 
-  public static ZmqException socketIdentityStorageIsEmpty() {
-    return new ZmqException(ErrorCode.SOCKET_IDENTITY_STORAGE_IS_EMPTY);
-  }
-
-  public static ZmqException socketIdentityNotMatched() {
-    return new ZmqException(ErrorCode.SOCKET_IDENTITY_NOT_MATCHED);
-  }
-
   public static ZmqException headerIsNotSet() {
     return new ZmqException(ErrorCode.HEADER_IS_NOT_SET);
   }
@@ -87,20 +88,23 @@ public final class ZmqException extends RuntimeException {
     return new ZmqException(ErrorCode.WRONG_MESSAGE);
   }
 
-  public static ZmqException failedAtSend() {
-    return new ZmqException(ErrorCode.FAILED_AT_SEND);
+  public static ZmqException wrappedNative(ZMQ.Error nativeError) {
+    return new ZmqException(nativeError);
   }
 
-  public static ZmqException failedAtRecv() {
-    return new ZmqException(ErrorCode.FAILED_AT_RECV);
+  public ErrorCode code() {
+    return code;
   }
 
-  public ErrorCode errorCode() {
-    return errorCode;
+  public ZMQ.Error nativeError() {
+    return nativeError;
   }
 
   @Override
   public String getMessage() {
-    return "errorCode=" + errorCode;
+    return Objects.toStringHelper(this)
+                  .add("code", code)
+                  .add("nativeError", nativeError)
+                  .toString();
   }
 }

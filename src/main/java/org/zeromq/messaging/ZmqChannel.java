@@ -142,6 +142,11 @@ public final class ZmqChannel implements HasDestroy {
         if (_target.props.identity() != null) {
           socket.setIdentity(_target.props.identity().getBytes());
         }
+
+        // set ROUTER_MANDATORY flag.
+        if (_target.socketType == ZMQ.ROUTER) {
+          socket.setRouterMandatory(_target.props.isRouterMandatory());
+        }
       }
 
       // ... bind().
@@ -204,6 +209,9 @@ public final class ZmqChannel implements HasDestroy {
       opts.put("timeout_recv", socket.getReceiveTimeOut());
       opts.put("reconn_intrvl", socket.getReconnectIVL());
       opts.put("reconn_intrvl_max", socket.getReconnectIVLMax());
+      if (_target.socketType == ZMQ.ROUTER) {
+        opts.put("router_mandatory", _target.props.isRouterMandatory());
+      }
 
       LOG.info("Created socket: {}.", mapAsJson(opts));
     }
@@ -299,7 +307,7 @@ public final class ZmqChannel implements HasDestroy {
   }
 
   /**
-   * Function which sends a message. May block if timeout on socket has been specified.
+   * Sends a message. May block if send_timeout on socket has been specified.
    *
    * @param message message to send.
    * @return flag indicating success or fail for send operation.
@@ -312,7 +320,7 @@ public final class ZmqChannel implements HasDestroy {
       int i = 0;
       boolean sent = false;
       for (byte[] frame : output) {
-        sent = _socket.send(frame, ++i < outputSize ? ZMQ.SNDMORE : 0);
+        sent = _socket.send(frame, ++i < outputSize ? ZMQ.SNDMORE : ZMQ.DONTWAIT);
         if (!sent) {
           return false;
         }
@@ -326,57 +334,21 @@ public final class ZmqChannel implements HasDestroy {
   }
 
   /**
-   * Function which receives a message. May block if timeout on socket has been specified.
+   * Receives a message. May block if recv_timeout on socket has been specified.
    *
    * @return a message or null.
    */
   public ZmqMessage recv() {
-    assertSocket();
-    try {
-      ZmqFrames input = new ZmqFrames();
-      for (; ; ) {
-        byte[] frame = _socket.recv(0);
-        if (frame == null) {
-          return null;
-        }
-        input.add(frame);
-        if (!_socket.hasReceiveMore()) {
-          break;
-        }
-      }
-      return _inputAdapter.convert(input);
-    }
-    catch (Exception e) {
-      LOG.error("!!! Message wasn't received! Exception occured: " + e, e);
-      throw ZmqException.seeCause(e);
-    }
+    return recv(0 /* block if necessary */);
   }
 
   /**
-   * Function which receives a message. Doesn't block.
+   * Receives a message. Doesn't block. Doesn't respect recv_timeout on socket if it has been specified.
    *
    * @return a message or null.
    */
   public ZmqMessage recvDontWait() {
-    assertSocket();
-    try {
-      ZmqFrames input = new ZmqFrames();
-      for (; ; ) {
-        byte[] frame = _socket.recv(1);
-        if (frame == null) {
-          return null;
-        }
-        input.add(frame);
-        if (!_socket.hasReceiveMore()) {
-          break;
-        }
-      }
-      return _inputAdapter.convert(input);
-    }
-    catch (Exception e) {
-      LOG.error("!!! Message wasn't received! Exception occured: " + e, e);
-      throw ZmqException.seeCause(e);
-    }
+    return recv(ZMQ.DONTWAIT);
   }
 
   /**
@@ -487,5 +459,27 @@ public final class ZmqChannel implements HasDestroy {
 
   private boolean isRegistered() {
     return _pollableInd != POLLABLE_IND_NOT_INITIALIZED;
+  }
+
+  private ZmqMessage recv(int flag) {
+    assertSocket();
+    try {
+      ZmqFrames input = new ZmqFrames();
+      for (; ; ) {
+        byte[] frame = _socket.recv(flag);
+        if (frame == null) {
+          return null;
+        }
+        input.add(frame);
+        if (!_socket.hasReceiveMore()) {
+          break;
+        }
+      }
+      return _inputAdapter.convert(input);
+    }
+    catch (Exception e) {
+      LOG.error("!!! Message wasn't received! Exception occured: " + e, e);
+      throw ZmqException.seeCause(e);
+    }
   }
 }

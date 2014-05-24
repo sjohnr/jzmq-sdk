@@ -29,8 +29,6 @@ import static junit.framework.Assert.assertEquals;
 
 public abstract class ZmqAbstractTest {
 
-  public static final long MESSAGE_NUM = 100;
-
   private final ZmqContext _ctx = new ZmqContext();
 
   protected final ZmqContext ctx() {

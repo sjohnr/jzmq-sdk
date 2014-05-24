@@ -95,6 +95,16 @@ public final class Props {
       return this;
     }
 
+    public Builder withRouterMandatory() {
+      _target.setRouterMandatory(true);
+      return this;
+    }
+
+    public Builder withRouterNotMandatory() {
+      _target.setRouterMandatory(false);
+      return this;
+    }
+
     @Override
     public Props build() {
       return _target;
@@ -109,6 +119,7 @@ public final class Props {
   private long linger = DEFAULT_LINGER;
   private int sendTimeout = DEFAULT_SEND_TIMEOUT;
   private int recvTimeout = DEFAULT_RECV_TIMEOUT;
+  private boolean routerMandatory;
 
   //// CONSTRUCTORS
 
@@ -193,5 +204,13 @@ public final class Props {
 
   public int recvTimeout() {
     return recvTimeout;
+  }
+
+  public boolean isRouterMandatory() {
+    return routerMandatory;
+  }
+
+  public void setRouterMandatory(boolean routerMandatory) {
+    this.routerMandatory = routerMandatory;
   }
 }

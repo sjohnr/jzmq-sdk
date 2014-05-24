@@ -54,7 +54,7 @@ public class ZmqHeadersTest {
       fail();
     }
     catch (ZmqException e) {
-      assertEquals(HEADER_IS_NOT_SET, e.errorCode());
+      assertEquals(HEADER_IS_NOT_SET, e.code());
     }
   }
 
@@ -100,7 +100,7 @@ public class ZmqHeadersTest {
       fail();
     }
     catch (ZmqException e) {
-      assert e.errorCode() == WRONG_HEADER;
+      assert e.code() == WRONG_HEADER;
     }
 
     try {
@@ -108,7 +108,7 @@ public class ZmqHeadersTest {
       fail();
     }
     catch (ZmqException e) {
-      assert e.errorCode() == WRONG_HEADER;
+      assert e.code() == WRONG_HEADER;
     }
   }
 
