@@ -25,7 +25,7 @@ import org.zeromq.messaging.ZmqHeaders;
 /**
  * Service class headers. Acts as a mutable container for <i>service protocol</i> properties:
  * <pre>
- *   ServiceHeaders.MsgType -- PING/PONG/RETRY.
+ *   ServiceHeaders.MsgType -- PING/PONG.
  *   ServiceHeaders.MsgCid -- correlation id for call.
  * </pre>
  */
@@ -36,7 +36,6 @@ public final class ServiceHeaders extends ZmqHeaders<ServiceHeaders> {
 
   private static final String PING = "PING";
   private static final String PONG = "PONG";
-  private static final String RETRY = "RETRY";
 
   //// METHODS
 
@@ -65,15 +64,6 @@ public final class ServiceHeaders extends ZmqHeaders<ServiceHeaders> {
 
   public boolean isMsgTypePong() {
     return PONG.equals(getHeaderOrNull(HEADER_MSG_TYPE));
-  }
-
-  public ServiceHeaders setMsgTypeRetry() {
-    set(HEADER_MSG_TYPE, RETRY);
-    return this;
-  }
-
-  public boolean isMsgTypeRetry() {
-    return RETRY.equals(getHeaderOrNull(HEADER_MSG_TYPE));
   }
 
   public ServiceHeaders setCid(long cid) {
