@@ -28,8 +28,6 @@ import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqMessage;
 import org.zeromq.messaging.device.ZmqAbstractActor;
 
-import static com.google.common.base.Preconditions.checkState;
-
 public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
 
   protected static final Logger LOG = LoggerFactory.getLogger(ZmqAbstractWorker.class);
@@ -108,29 +106,28 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
 
     ZmqChannel workerChannel = channel(CHANNEL_ID_WORKER);
 
+    // If no incoming traffic after polling -- send a PING.
     if (!workerChannel.canRecv()) {
       pingStrategy.ping(workerChannel);
       return;
     }
 
-    ZmqMessage request = workerChannel.recvDontWait();
-    checkState(request != null);
-    ZmqMessage reply;
-    try {
-      reply = messageProcessor.process(request);
-    }
-    catch (Exception e) {
-      LOG.error("Failed at processing worker request: " + e, e);
-      // request processing failed -- still need to ping.
-      pingStrategy.ping(workerChannel);
-      return;
-    }
-    // if reply is not null -- send it / otherwise -- ping.
-    if (reply != null) {
-      checkState(workerChannel.send(reply));
-    }
-    else {
-      pingStrategy.ping(workerChannel);
+    for (; ; ) {
+      ZmqMessage request = workerChannel.recvDontWait();
+      if (request == null) {
+        return;
+      }
+      try {
+        ZmqMessage reply = messageProcessor.process(request);
+        boolean send = workerChannel.send(reply);
+        if (!send) {
+          LOG.error("Can't send reply: " + reply);
+        }
+      }
+      catch (Exception e) {
+        LOG.error("Got issue at processing request: " + e, e);
+        return;
+      }
     }
   }
 }
