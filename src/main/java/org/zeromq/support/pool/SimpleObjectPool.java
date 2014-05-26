@@ -45,14 +45,12 @@ public final class SimpleObjectPool<T extends HasDestroy> implements ObjectPool<
       this.obj = obj;
     }
 
-    public int i() {
-      return i;
-    }
-
+    @Override
     public T get() {
       return obj;
     }
 
+    @Override
     public void release() {
       objectPool.release(this);
     }
@@ -148,8 +146,8 @@ public final class SimpleObjectPool<T extends HasDestroy> implements ObjectPool<
     }
   }
 
-  void release(Lease<T> lease) {
-    _poolState.set(lease.i(), true); // set to 1 - free.
-    indexes.offerFirst(lease.i());
+  void release(LeaseImpl<T> lease) {
+    _poolState.set(lease.i, true); // set to 1 - free.
+    indexes.offerFirst(lease.i);
   }
 }
