@@ -25,5 +25,5 @@ import org.zeromq.support.HasInit;
 
 public interface ZmqActor extends HasInit, HasDestroy {
 
-  void exec();
+  void exec() throws Exception;
 }
