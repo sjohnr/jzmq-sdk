@@ -32,8 +32,6 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
 
   protected static final Logger LOG = LoggerFactory.getLogger(ZmqAbstractWorker.class);
 
-  protected static final int DEFAULT_PROC_LIMIT = 1000;
-
   protected static final String CHANNEL_ID_WORKER = "worker";
 
   @SuppressWarnings("unchecked")
@@ -58,17 +56,11 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
       _target.setMessageProcessor(messageProcessor);
       return (B) this;
     }
-
-    public final B withProcLimit(int procLimit) {
-      _target.setProcLimit(procLimit);
-      return (B) this;
-    }
   }
 
   protected Props props;
   protected ZmqPingStrategy pingStrategy;
   protected ZmqMessageProcessor messageProcessor;
-  protected int procLimit = DEFAULT_PROC_LIMIT;
 
   //// CONSTRUCTORS
 
@@ -87,10 +79,6 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
 
   public final void setMessageProcessor(ZmqMessageProcessor messageProcessor) {
     this.messageProcessor = messageProcessor;
-  }
-
-  public final void setProcLimit(int procLimit) {
-    this.procLimit = procLimit;
   }
 
   @Override
@@ -124,7 +112,7 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
       return;
     }
 
-    for (int i = 0; i < procLimit; i++) {
+    for (int i = 0; i < props.procLimit(); i++) {
       ZmqMessage request = worker.recvDontWait();
       if (request == null) {
         if (LOG.isDebugEnabled()) {

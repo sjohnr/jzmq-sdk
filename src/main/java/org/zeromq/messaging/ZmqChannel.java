@@ -199,7 +199,7 @@ public final class ZmqChannel implements HasDestroy {
       Map<String, Object> opts = new LinkedHashMap<String, Object>();
 
       opts.put("type", getLoggableSocketType());
-      opts.put("identity", makeHash(ImmutableList.of(socket.getIdentity())));
+      opts.put("custom_identity", makeHash(ImmutableList.of(socket.getIdentity())));
       opts.put("hwm_send", socket.getSndHWM());
       opts.put("hwm_recv", socket.getRcvHWM());
       opts.put("linger", socket.getLinger());
@@ -212,6 +212,7 @@ public final class ZmqChannel implements HasDestroy {
       if (_target.socketType == ZMQ.ROUTER) {
         opts.put("router_mandatory", _target.props.isRouterMandatory());
       }
+      opts.put("proc_limit", _target.props.procLimit());
 
       LOG.info("Created socket: {}.", mapAsJson(opts));
     }

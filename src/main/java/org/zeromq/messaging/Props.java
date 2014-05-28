@@ -33,6 +33,7 @@ public final class Props {
   private static final int DEFAULT_RECV_TIMEOUT = 1000; // how long to wait on .recv(), best guess.
   private static final long DEFAULT_HWM_SEND = 1000; // HWM, best guess.
   private static final long DEFAULT_HWM_RECV = 1000; // HWM, best guess.
+  private static final int DEFAULT_PROC_LIMIT = 1000;
 
   public static final class Builder implements ObjectBuilder<Props> {
 
@@ -105,6 +106,11 @@ public final class Props {
       return this;
     }
 
+    public final Builder withProcLimit(int procLimit) {
+      _target.setProcLimit(procLimit);
+      return this;
+    }
+
     @Override
     public Props build() {
       return _target;
@@ -120,6 +126,7 @@ public final class Props {
   private int sendTimeout = DEFAULT_SEND_TIMEOUT;
   private int recvTimeout = DEFAULT_RECV_TIMEOUT;
   private boolean routerMandatory;
+  private int procLimit = DEFAULT_PROC_LIMIT;
 
   //// CONSTRUCTORS
 
@@ -212,5 +219,13 @@ public final class Props {
 
   public void setRouterMandatory(boolean routerMandatory) {
     this.routerMandatory = routerMandatory;
+  }
+
+  public void setProcLimit(int procLimit) {
+    this.procLimit = procLimit;
+  }
+
+  public int procLimit() {
+    return procLimit;
   }
 }
