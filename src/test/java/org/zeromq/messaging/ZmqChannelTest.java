@@ -36,7 +36,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
   static final Logger LOG = LoggerFactory.getLogger(ZmqChannelTest.class);
 
   static final int HWM_UNLIMITED = 0;
-  static final int HWM_ONLY_ONE = 1;
+  static final int HWM_ONE = 1;
 
   @Test(expected = ZmqException.class)
   public void t0() {
@@ -95,12 +95,12 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
   @Test
   public void t4() {
-    LOG.info("Test edge settings: HWM_ONLY_ONE.");
+    LOG.info("Test edge settings: HWM_ONE.");
 
     ZmqChannel req = ZmqChannel.DEALER(ctx())
                                .withProps(Props.builder()
-                                               .withHwmRecv(HWM_ONLY_ONE)
-                                               .withHwmSend(HWM_ONLY_ONE)
+                                               .withHwmRecv(HWM_ONE)
+                                               .withHwmSend(HWM_ONE)
                                                .withSendTimeout(0)
                                                .withRecvTimeout(0)
                                                .withConnectAddr(connAddr(4466))
@@ -170,19 +170,10 @@ public class ZmqChannelTest extends ZmqAbstractTest {
   public void t6() {
     LOG.info("Test poller operations on connected channel.");
 
-    ZmqChannel client = ZmqChannel.DEALER(ctx())
-                                  .withProps(Props.builder()
-                                                  .withSendTimeout(0)
-                                                  .withConnectAddr(connAddr(6677))
-                                                  .build())
-                                  .build();
-
-    ZmqChannel server = ZmqChannel.ROUTER(ctx())
-                                  .withProps(Props.builder()
-                                                  .withSendTimeout(0)
-                                                  .withBindAddr(bindAddr(6677))
-                                                  .build())
-                                  .build();
+    ZmqChannel client = ZmqChannel.DEALER(ctx()).withProps(Props.builder()
+                                                                .withConnectAddr(connAddr(6677))
+                                                                .build()).build();
+    ZmqChannel server = ZmqChannel.ROUTER(ctx()).withProps(Props.builder().withBindAddr(bindAddr(6677)).build()).build();
 
     ZMQ.Poller clientPoller = new ZMQ.Poller(1);
     client.watchRecv(clientPoller);
@@ -236,12 +227,12 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
   @Test
   public void t8() {
-    LOG.info("Test .send() with DONT_WAIT operations and HWM_ONLY_ONE.");
+    LOG.info("Test .send() with DONT_WAIT operations and HWM_ONE.");
 
     ZmqChannel client = ZmqChannel.DEALER(ctx())
                                   .withProps(Props.builder()
                                                   .withConnectAddr(connAddr(6677))
-                                                  .withHwmSend(HWM_ONLY_ONE)
+                                                  .withHwmSend(HWM_ONE)
                                                   .build())
                                   .build();
 
@@ -256,7 +247,6 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     ZmqChannel server = ZmqChannel.ROUTER(ctx())
                                   .withProps(Props.builder()
                                                   .withBindAddr(bindAddr(6677))
-                                                  .withSendTimeout(0)
                                                   .withRouterMandatory()
                                                   .build())
                                   .build();
@@ -295,5 +285,39 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     p.poll(100);
     assert !channel.canRecv();
     channel.unregister();
+  }
+
+  @Test
+  public void t11() {
+    LOG.info("Test router: what happens when its queue is full.");
+
+    ZmqChannel server = ZmqChannel.ROUTER(ctx())
+                                  .withProps(Props.builder()
+                                                  .withBindAddr(bindAddr(6677))
+                                                  .withRouterMandatory()
+                                                  .withHwmSend(HWM_ONE)
+                                                  .withHwmRecv(HWM_ONE)
+                                                  .build())
+                                  .build();
+
+    ZmqChannel client = ZmqChannel.DEALER(ctx())
+                                  .withProps(Props.builder()
+                                                  .withConnectAddr(connAddr(6677))
+                                                  .withHwmSend(HWM_UNLIMITED)
+                                                  .withHwmRecv(HWM_UNLIMITED)
+                                                  .build())
+                                  .build();
+
+    client.send(HELLO());
+    ZmqMessage hello = server.recv();
+    assert hello != null;
+
+    server.send(ZmqMessage.builder(WORLD()).withIdentities(hello.identityFrames()).build());
+    server.send(ZmqMessage.builder(WORLD()).withIdentities(hello.identityFrames()).build()); // send second message.
+    server.send(ZmqMessage.builder(WORLD()).withIdentities(hello.identityFrames()).build()); // send third message.
+
+    assert client.recv() != null;
+    assert client.recv() == null; // second message has been silently dropped.
+    assert client.recv() == null; // thrird message has been silently dropped.
   }
 }
