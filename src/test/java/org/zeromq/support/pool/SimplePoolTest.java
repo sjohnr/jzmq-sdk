@@ -25,7 +25,6 @@ import com.google.common.base.Throwables;
 import org.junit.Test;
 import org.zeromq.Checker;
 import org.zeromq.support.HasDestroy;
-import org.zeromq.support.ObjectBuilder;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -35,7 +34,7 @@ import static junit.framework.Assert.assertSame;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-public class SimpleObjectPoolTest {
+public class SimplePoolTest {
 
   static class String implements HasDestroy {
 
@@ -51,7 +50,7 @@ public class SimpleObjectPoolTest {
     }
   }
 
-  final ObjectBuilder<String> testStrBuilder = new ObjectBuilder<String>() {
+  final PoolObjectLifecycle<String> testStrBuilder = new PoolObjectLifecycle<String>() {
 
     private int c = 0;
 
@@ -59,13 +58,18 @@ public class SimpleObjectPoolTest {
     public String build() {
       return new String("cool" + (++c));
     }
+
+    @Override
+    public void destroy(String string) {
+      // no-op for test.
+    }
   };
 
   @Test
   public void t0() {
-    SimpleObjectPool<String> pool = new SimpleObjectPool<String>(testStrBuilder);
+    SimplePool<String> pool = new SimplePool<String>(testStrBuilder);
 
-    assertThat(pool.capacity(), is(SimpleObjectPool.DEFAULT_CAPACITY));
+    assertThat(pool.capacity(), is(SimplePool.DEFAULT_CAPACITY));
     assertThat(pool.available(), is(0));
 
     Lease<String> s = pool.lease();
@@ -85,7 +89,7 @@ public class SimpleObjectPoolTest {
 
   @Test
   public void t1() {
-    SimpleObjectPool<String> pool = new SimpleObjectPool<String>(1, testStrBuilder);
+    SimplePool<String> pool = new SimplePool<String>(1, testStrBuilder);
 
     Lease<String> s = pool.lease();
     assertThat(pool.available(), is(0));
@@ -103,8 +107,8 @@ public class SimpleObjectPoolTest {
   }
 
   @Test
-  public void t2() {
-    SimpleObjectPool<String> pool = new SimpleObjectPool<String>(1, testStrBuilder);
+  public void t2() throws InterruptedException {
+    SimplePool<String> pool = new SimplePool<String>(1, testStrBuilder);
 
     Lease<String> lease = pool.lease();
     assertEquals("cool1", lease.get().str);
@@ -122,7 +126,7 @@ public class SimpleObjectPoolTest {
 
   @Test
   public void t3() throws InterruptedException {
-    SimpleObjectPool<String> pool = new SimpleObjectPool<String>(Short.MAX_VALUE, testStrBuilder);
+    SimplePool<String> pool = new SimplePool<String>(Short.MAX_VALUE, testStrBuilder);
 
     Checker checker = new Checker();
     CountDownLatch l4 = new CountDownLatch(4);
@@ -141,7 +145,7 @@ public class SimpleObjectPoolTest {
 
   @Test
   public void t4() throws InterruptedException {
-    SimpleObjectPool<String> pool = new SimpleObjectPool<String>(Short.MAX_VALUE, testStrBuilder);
+    SimplePool<String> pool = new SimplePool<String>(Short.MAX_VALUE, testStrBuilder);
 
     Checker checker = new Checker();
     CountDownLatch l8 = new CountDownLatch(8);
@@ -164,7 +168,7 @@ public class SimpleObjectPoolTest {
 
   private Thread leaseReleaseFast(final CountDownLatch l,
                                   final int iterNum,
-                                  final SimpleObjectPool<String> pool,
+                                  final SimplePool<String> pool,
                                   final Checker checker) {
     Thread t = new Thread(new Runnable() {
       @Override
@@ -187,7 +191,7 @@ public class SimpleObjectPoolTest {
 
   private Thread leaseReleaseSlow(final CountDownLatch l,
                                   final int iterNum,
-                                  final SimpleObjectPool<String> pool,
+                                  final SimplePool<String> pool,
                                   final Checker checker) {
     Thread t = new Thread(new Runnable() {
       @Override

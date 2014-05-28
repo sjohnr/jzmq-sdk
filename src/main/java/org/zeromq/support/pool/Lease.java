@@ -20,9 +20,7 @@
 
 package org.zeromq.support.pool;
 
-import org.zeromq.support.HasDestroy;
-
-public interface Lease<T extends HasDestroy> extends HasDestroy {
+public interface Lease<T> {
 
   T get();
 
