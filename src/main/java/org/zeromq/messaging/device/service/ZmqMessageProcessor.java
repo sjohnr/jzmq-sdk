@@ -40,5 +40,5 @@ public interface ZmqMessageProcessor {
    * @param message incoming request_message.
    * @return reply_message or {@code null} if reply is not required.
    */
-  ZmqMessage process(ZmqMessage message);
+  ZmqMessage process(ZmqMessage message) throws Exception;
 }
