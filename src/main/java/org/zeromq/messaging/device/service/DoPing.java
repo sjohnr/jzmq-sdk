@@ -20,26 +20,13 @@
 
 package org.zeromq.messaging.device.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqMessage;
 
 class DoPing implements ZmqPingStrategy {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DoPing.class);
-
-  private static final ZmqMessage PING = ZmqMessage.builder()
-                                                   .withHeaders(new ServiceHeaders().setMsgTypePing())
-                                                   .build();
-
   @Override
   public void ping(ZmqChannel channel) {
-    if (!channel.send(PING)) {
-      LOG.warn("Can't send PING.");
-    }
-    else {
-      LOG.info("Send PING.");
-    }
+    channel.send(ZmqMessage.builder().withHeaders(new ServiceHeaders().setMsgTypePing()).build());
   }
 }
