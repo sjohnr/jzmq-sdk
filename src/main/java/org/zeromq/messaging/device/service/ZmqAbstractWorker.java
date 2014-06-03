@@ -106,18 +106,14 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
 
     ZmqChannel worker = channel(CHANNEL_ID_WORKER);
 
-    // If no incoming traffic after polling -- send a PING.
     if (!worker.canRecv()) {
       pingStrategy.ping(worker);
       return;
     }
 
-    for (int i = 0; i < props.procLimit(); i++) {
+    for (; ; ) {
       ZmqMessage request = worker.recvDontWait();
       if (request == null) {
-        if (LOG.isDebugEnabled()) {
-          LOG.debug("Request processed: " + i);
-        }
         return;
       }
       ZmqMessage reply = null;
@@ -125,7 +121,7 @@ public abstract class ZmqAbstractWorker extends ZmqAbstractActor {
         reply = messageProcessor.process(request);
       }
       catch (Exception e) {
-        LOG.error("Got issue at processing request: " + e, e);
+        LOG.error("Got issue at processing request: " + request, e);
       }
       if (reply != null) {
         boolean send = worker.send(reply);
