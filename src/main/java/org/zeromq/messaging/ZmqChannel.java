@@ -315,23 +315,17 @@ public final class ZmqChannel implements HasDestroy {
    */
   public boolean send(ZmqMessage message) {
     assertSocket();
-    try {
-      ZmqFrames output = _outputAdapter.convert(message);
-      int outputSize = output.size();
-      int i = 0;
-      boolean sent = false;
-      for (byte[] frame : output) {
-        sent = _socket.send(frame, ++i < outputSize ? ZMQ.SNDMORE : ZMQ.DONTWAIT);
-        if (!sent) {
-          return false;
-        }
+    ZmqFrames output = _outputAdapter.convert(message);
+    int outputSize = output.size();
+    int i = 0;
+    boolean sent = false;
+    for (byte[] frame : output) {
+      sent = _socket.send(frame, ++i < outputSize ? ZMQ.SNDMORE : ZMQ.DONTWAIT);
+      if (!sent) {
+        return false;
       }
-      return sent;
     }
-    catch (Exception e) {
-      LOG.error("!!! Message wasn't sent! Exception occured: " + e, e);
-      throw ZmqException.seeCause(e);
-    }
+    return sent;
   }
 
   /**
@@ -464,23 +458,17 @@ public final class ZmqChannel implements HasDestroy {
 
   private ZmqMessage recv(int flag) {
     assertSocket();
-    try {
-      ZmqFrames input = new ZmqFrames();
-      for (; ; ) {
-        byte[] frame = _socket.recv(flag);
-        if (frame == null) {
-          return null;
-        }
-        input.add(frame);
-        if (!_socket.hasReceiveMore()) {
-          break;
-        }
+    ZmqFrames input = new ZmqFrames();
+    for (; ; ) {
+      byte[] frame = _socket.recv(flag);
+      if (frame == null) {
+        return null;
       }
-      return _inputAdapter.convert(input);
+      input.add(frame);
+      if (!_socket.hasReceiveMore()) {
+        break;
+      }
     }
-    catch (Exception e) {
-      LOG.error("!!! Message wasn't received! Exception occured: " + e, e);
-      throw ZmqException.seeCause(e);
-    }
+    return _inputAdapter.convert(input);
   }
 }

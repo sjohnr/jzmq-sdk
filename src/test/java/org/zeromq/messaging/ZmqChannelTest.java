@@ -255,8 +255,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
       server.send(HELLO());
       fail();
     }
-    catch (ZmqException e) {
-      assert e.code() == SEE_CAUSE;
+    catch (Exception e) {
       try {
         new JniExceptionHandler().handleException(e);
       }
