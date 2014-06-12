@@ -45,7 +45,7 @@ public class ZmqHeadersTest {
 
   @Test
   public void t1() {
-    ZmqHeaders headers = new ZmqHeaders().copy("{\"0\":[\"abc\"]}".getBytes());
+    ZmqHeaders headers = new ZmqHeaders().copy("0=abc".getBytes());
 
     headers.getHeaderOrException("0"); // expecting header.
     assertNull(headers.getHeaderOrNull("1")); // not expecting header.
@@ -103,13 +103,7 @@ public class ZmqHeadersTest {
       assert e.code() == WRONG_HEADER;
     }
 
-    try {
-      new ZmqHeaders().copy("{\"0\":\"\"}".getBytes());
-      fail();
-    }
-    catch (ZmqException e) {
-      assert e.code() == WRONG_HEADER;
-    }
+    assertEquals("", new ZmqHeaders().copy("0=".getBytes()).getHeaderOrNull("0"));
   }
 
   @Test
@@ -118,13 +112,13 @@ public class ZmqHeadersTest {
                                          .set("b", "b")
                                          .set("c", "c");
 
-    assertArrayEquals("{\"a\":\"a\",\"b\":\"b\",\"c\":\"c\"}".getBytes(), headers.asBinary());
+    assertArrayEquals("a=a,b=b,c=c".getBytes(), headers.asBinary());
 
     ZmqHeaders copy = headers
-        .copy("{\"a\":\"x\"}".getBytes())
+        .copy("a=x".getBytes())
         .copy(new ZmqHeaders().set("c", "y"));
 
-    assertArrayEquals("{\"a\":\"x\",\"b\":\"b\",\"c\":\"y\"}".getBytes(), copy.asBinary());
+    assertArrayEquals("a=x,b=b,c=y".getBytes(), copy.asBinary());
   }
 
   @Test
@@ -133,12 +127,12 @@ public class ZmqHeadersTest {
                                          .set("b", "B")
                                          .set("c", "C");
 
-    assertArrayEquals("{\"a\":\"A\",\"b\":\"B\",\"c\":\"C\"}".getBytes(), headers.asBinary());
+    assertArrayEquals("a=A,b=B,c=C".getBytes(), headers.asBinary());
 
-    ZmqHeaders copy = headers.copy("{\"a\":\"AA\"}".getBytes())
+    ZmqHeaders copy = headers.copy("a=AA".getBytes())
                              .copy(new ZmqHeaders().set("b", "BB"))
-                             .copy("{\"c\":\"CC\"}".getBytes());
+                             .copy("c=CC".getBytes());
 
-    assertArrayEquals("{\"a\":\"AA\",\"b\":\"BB\",\"c\":\"CC\"}".getBytes(), copy.asBinary());
+    assertArrayEquals("a=AA,b=BB,c=CC".getBytes(), copy.asBinary());
   }
 }

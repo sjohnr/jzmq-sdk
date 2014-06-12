@@ -20,15 +20,10 @@
 
 package org.zeromq.messaging;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -42,21 +37,15 @@ import static org.zeromq.support.ZmqUtils.isEmptyFrame;
  *   ...
  *   header_id_m  header_value_m
  * </pre>
- * Where header {@code .._id .._value} are strings. Wire format is JSON.
+ * Where header {@code ..._id and ..._value} are strings. Wire format as following:
+ * <pre>
+ *   header_id_0=header_value_0,...,header_id_m=header_value_m
+ * </pre>
  */
 @SuppressWarnings("unchecked")
 public class ZmqHeaders<T extends ZmqHeaders> {
 
   private final LinkedHashMap<String, String> _map = new LinkedHashMap();
-
-  private static final JsonFactory DEFAULT_JSON_FACTORY = new JsonFactory();
-
-  static {
-    DEFAULT_JSON_FACTORY.disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES);
-    DEFAULT_JSON_FACTORY.disable(JsonParser.Feature.AUTO_CLOSE_SOURCE);
-    DEFAULT_JSON_FACTORY.disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET);
-    DEFAULT_JSON_FACTORY.enable(JsonGenerator.Feature.WRITE_NUMBERS_AS_STRINGS);
-  }
 
   //// METHODS
 
@@ -72,36 +61,7 @@ public class ZmqHeaders<T extends ZmqHeaders> {
     if (isDivFrame(headers)) {
       throw ZmqException.wrongHeader();
     }
-    try {
-      JsonParser parser = DEFAULT_JSON_FACTORY.createParser(headers);
-      JsonToken token;
-      String headerId = null;
-      do {
-        token = parser.nextToken();
-        if (token != null) {
-          switch (token) {
-            case FIELD_NAME:
-              String fn = parser.getText();
-              if (headerId == null || headerId.isEmpty()) {
-                headerId = fn;
-              }
-              break;
-            case VALUE_STRING:
-              String text = parser.getText();
-              if (text == null || text.isEmpty()) {
-                throw ZmqException.wrongHeader();
-              }
-              _map.put(headerId, text);
-              headerId = null;
-              break;
-          }
-        }
-      }
-      while (token != null);
-    }
-    catch (IOException e) {
-      throw ZmqException.seeCause(e);
-    }
+    _map.putAll(Splitter.on(",").withKeyValueSeparator("=").split(new String(headers)));
     return (T) this;
   }
 
@@ -156,19 +116,6 @@ public class ZmqHeaders<T extends ZmqHeaders> {
     if (_map.isEmpty()) {
       return ZmqMessage.EMPTY_FRAME;
     }
-    try {
-      StringWriter writer = new StringWriter();
-      JsonGenerator gen = DEFAULT_JSON_FACTORY.createGenerator(writer);
-      gen.writeStartObject();
-      for (Map.Entry<String, String> entry : _map.entrySet()) {
-        gen.writeStringField(entry.getKey(), entry.getValue());
-      }
-      gen.writeEndObject();
-      gen.close();
-      return writer.toString().getBytes();
-    }
-    catch (IOException e) {
-      throw ZmqException.seeCause(e);
-    }
+    return Joiner.on(",").withKeyValueSeparator("=").join(_map.entrySet()).getBytes();
   }
 }
