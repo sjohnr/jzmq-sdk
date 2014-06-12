@@ -49,6 +49,15 @@ public class ZmqHeaders<T extends ZmqHeaders> {
 
   private final LinkedHashMap<String, String> _map = new LinkedHashMap();
 
+  private static final JsonFactory DEFAULT_JSON_FACTORY = new JsonFactory();
+
+  static {
+    DEFAULT_JSON_FACTORY.disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES);
+    DEFAULT_JSON_FACTORY.disable(JsonParser.Feature.AUTO_CLOSE_SOURCE);
+    DEFAULT_JSON_FACTORY.disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET);
+    DEFAULT_JSON_FACTORY.enable(JsonGenerator.Feature.WRITE_NUMBERS_AS_STRINGS);
+  }
+
   //// METHODS
 
   public final T copy(ZmqHeaders headers) {
@@ -64,22 +73,21 @@ public class ZmqHeaders<T extends ZmqHeaders> {
       throw ZmqException.wrongHeader();
     }
     try {
-      JsonFactory jf = new JsonFactory();
-      JsonParser p = jf.createParser(headers);
+      JsonParser parser = DEFAULT_JSON_FACTORY.createParser(headers);
       JsonToken token;
       String headerId = null;
       do {
-        token = p.nextToken();
+        token = parser.nextToken();
         if (token != null) {
           switch (token) {
             case FIELD_NAME:
-              String fn = p.getText();
+              String fn = parser.getText();
               if (headerId == null || headerId.isEmpty()) {
                 headerId = fn;
               }
               break;
             case VALUE_STRING:
-              String text = p.getText();
+              String text = parser.getText();
               if (text == null || text.isEmpty()) {
                 throw ZmqException.wrongHeader();
               }
@@ -149,16 +157,15 @@ public class ZmqHeaders<T extends ZmqHeaders> {
       return ZmqMessage.EMPTY_FRAME;
     }
     try {
-      JsonFactory jf = new JsonFactory();
-      StringWriter w = new StringWriter();
-      JsonGenerator g = jf.createGenerator(w);
-      g.writeStartObject();
+      StringWriter writer = new StringWriter();
+      JsonGenerator gen = DEFAULT_JSON_FACTORY.createGenerator(writer);
+      gen.writeStartObject();
       for (Map.Entry<String, String> entry : _map.entrySet()) {
-        g.writeStringField(entry.getKey(), entry.getValue());
+        gen.writeStringField(entry.getKey(), entry.getValue());
       }
-      g.writeEndObject();
-      g.close();
-      return w.toString().getBytes();
+      gen.writeEndObject();
+      gen.close();
+      return writer.toString().getBytes();
     }
     catch (IOException e) {
       throw ZmqException.seeCause(e);
