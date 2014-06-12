@@ -103,11 +103,11 @@ public class ZmqHeaders<T extends ZmqHeaders> {
    * @return header content. <b>Never null.</b>
    */
   public final String getHeaderOrException(String k) {
-    String header = getHeaderOrNull(k);
-    if (header == null || header.isEmpty()) {
+    String v = getHeaderOrNull(k);
+    if (v == null) {
       throw ZmqException.headerIsNotSet();
     }
-    return header;
+    return v;
   }
 
   /**

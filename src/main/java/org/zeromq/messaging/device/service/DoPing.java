@@ -21,12 +21,17 @@
 package org.zeromq.messaging.device.service;
 
 import org.zeromq.messaging.ZmqChannel;
+import org.zeromq.messaging.ZmqCommonHeaders;
 import org.zeromq.messaging.ZmqMessage;
 
 class DoPing implements ZmqPingStrategy {
 
+  private static final ZmqMessage PING = ZmqMessage.builder()
+                                                   .withHeaders(new ZmqCommonHeaders().setMessageType(ZmqCommonHeaders.MessageType.PING))
+                                                   .build();
+
   @Override
   public void ping(ZmqChannel channel) {
-    channel.send(ZmqMessage.builder().withHeaders(new ServiceHeaders().setMsgTypePing()).build());
+    channel.send(PING);
   }
 }
