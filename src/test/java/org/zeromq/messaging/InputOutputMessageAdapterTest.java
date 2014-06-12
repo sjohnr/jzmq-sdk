@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.support.ZmqUtils;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -46,8 +47,9 @@ public class InputOutputMessageAdapterTest {
   private static final byte[] id_1 = "i1".getBytes();
   private static final byte[] id_2 = "i2".getBytes();
 
-  private static final byte[] payload = "payload".getBytes();
   private static final byte[] topic = "topic".getBytes();
+  private static final byte[] headers = "h0=h0,h1=h1,h2=h2".getBytes();
+  private static final byte[] payload = "payload".getBytes();
 
   private static final ZmqFrames identities = new ZmqFrames();
 
@@ -57,7 +59,13 @@ public class InputOutputMessageAdapterTest {
     identities.add(id_2);
   }
 
-  private static final byte[] headers = "h0=h0,h1=h1,h2=h2".getBytes();
+  private static final byte[] headers_payload =
+      ByteBuffer.allocate(4 + 17 + 4 + 7)
+                .putInt(17)
+                .put("h0=h0,h1=h1,h2=h2".getBytes())
+                .putInt(7)
+                .put("payload".getBytes())
+                .array();
 
   @Test
   public void t0() {
@@ -83,8 +91,7 @@ public class InputOutputMessageAdapterTest {
 
     assertNextFrame(topic, framesIter);
     assertNextFrame(DIV_FRAME, framesIter);
-    assertNextFrame(headers, framesIter);
-    assertNextFrame(payload, framesIter);
+    assertNextFrame(headers_payload, framesIter);
 
     assert !framesIter.hasNext();
 
@@ -114,8 +121,7 @@ public class InputOutputMessageAdapterTest {
     ZmqFrames frames = out.convert(message);
     Iterator<byte[]> framesIter = frames.iterator();
 
-    assertNextFrame(headers, framesIter);
-    assertNextFrame(payload, framesIter);
+    assertNextFrame(headers_payload, framesIter);
 
     assert !framesIter.hasNext();
 
@@ -153,8 +159,7 @@ public class InputOutputMessageAdapterTest {
     assertNextFrame(id_2, framesIter);
     assertNextFrame(EMPTY_FRAME, framesIter);
     assertNextFrame(DIV_FRAME, framesIter);
-    assertNextFrame(headers, framesIter);
-    assertNextFrame(payload, framesIter);
+    assertNextFrame(headers_payload, framesIter);
 
     assert !framesIter.hasNext();
 
@@ -196,8 +201,7 @@ public class InputOutputMessageAdapterTest {
     assertNextFrame(id_2, framesIter);
     assertNextFrame(EMPTY_FRAME, framesIter);
     assertNextFrame(DIV_FRAME, framesIter);
-    assertNextFrame(headers, framesIter);
-    assertNextFrame(payload, framesIter);
+    assertNextFrame(headers_payload, framesIter);
 
     assert !framesIter.hasNext();
 

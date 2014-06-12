@@ -27,6 +27,7 @@ import org.zeromq.support.ObjectAdapter;
 import org.zeromq.support.ObjectBuilder;
 import org.zeromq.support.ZmqUtils;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import static org.zeromq.messaging.ZmqMessage.DIV_FRAME;
@@ -134,13 +135,13 @@ class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
         target.add(DIV_FRAME);
       }
 
-      // --- headers
+      // --- headers_size, headers, payload_size, payload
 
-      target.add(message.headersAsBinary());
-
-      // --- payload
-
-      target.add(message.payload());
+      byte[] headers = message.headersAsBinary();
+      byte[] payload = message.payload();
+      ByteBuffer buf = ByteBuffer.allocate(4/* sizeOf headers.len */ + headers.length + 4/* sizeOf payload.len */ + payload.length);
+      buf.putInt(headers.length).put(headers).putInt(payload.length).put(payload);
+      target.add(buf.array());
 
       return target;
     }

@@ -26,6 +26,7 @@ import org.zeromq.support.HasInvariant;
 import org.zeromq.support.ObjectAdapter;
 import org.zeromq.support.ObjectBuilder;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
@@ -136,13 +137,17 @@ class InputMessageAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
         builder.withIdentities(identities);
       }
 
-      // --- headers
+      // --- headers_size, headers, payload_size, payload
 
-      builder.withHeaders(frames.poll());
+      ByteBuffer buf = ByteBuffer.wrap(frames.poll());
 
-      // --- payload
+      byte[] headers = new byte[buf.getInt()];
+      buf.get(headers);
+      builder.withHeaders(headers);
 
-      builder.withPayload(frames.poll());
+      byte[] payload = new byte[buf.getInt()];
+      buf.get(payload);
+      builder.withPayload(payload);
 
       return builder.build();
     }
