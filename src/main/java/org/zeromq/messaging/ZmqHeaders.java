@@ -45,6 +45,9 @@ import static org.zeromq.support.ZmqUtils.isEmptyFrame;
 @SuppressWarnings("unchecked")
 public class ZmqHeaders<T extends ZmqHeaders> {
 
+  private static final Splitter.MapSplitter DEFAULT_SPLITTER = Splitter.on(",").withKeyValueSeparator("=");
+  private static final Joiner.MapJoiner DEFAULT_JOINER = Joiner.on(",").withKeyValueSeparator("=");
+
   private final LinkedHashMap<String, String> _map = new LinkedHashMap();
 
   //// METHODS
@@ -61,7 +64,7 @@ public class ZmqHeaders<T extends ZmqHeaders> {
     if (isDivFrame(headers)) {
       throw ZmqException.wrongHeader();
     }
-    _map.putAll(Splitter.on(",").withKeyValueSeparator("=").split(new String(headers)));
+    _map.putAll(DEFAULT_SPLITTER.split(new String(headers)));
     return (T) this;
   }
 
@@ -108,14 +111,14 @@ public class ZmqHeaders<T extends ZmqHeaders> {
   }
 
   /**
-   * Converts headers to JSON.
+   * Converts headers to "headers" string.
    *
-   * @return JSON string.
+   * @return "headers" string.
    */
   public final byte[] asBinary() {
     if (_map.isEmpty()) {
       return ZmqMessage.EMPTY_FRAME;
     }
-    return Joiner.on(",").withKeyValueSeparator("=").join(_map.entrySet()).getBytes();
+    return DEFAULT_JOINER.join(_map.entrySet()).getBytes();
   }
 }
