@@ -23,7 +23,8 @@ package org.zeromq.messaging;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 
-import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -47,7 +48,7 @@ public class ZmqHeaders<T extends ZmqHeaders> {
   private static final Splitter.MapSplitter DEFAULT_SPLITTER = Splitter.on(",").withKeyValueSeparator("=");
   private static final Joiner.MapJoiner DEFAULT_JOINER = Joiner.on(",").withKeyValueSeparator("=");
 
-  private final LinkedHashMap<String, String> _map = new LinkedHashMap();
+  private final Map<String, String> _map = new TreeMap<String, String>();
 
   //// METHODS
 

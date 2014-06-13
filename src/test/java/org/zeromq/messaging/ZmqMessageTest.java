@@ -96,13 +96,13 @@ public class ZmqMessageTest {
                         .withHeaders(new ZmqHeaders()
                                          .copy(message.headersAsBinary())
                                          .set("a", "xyz")
-                                         .set("0", headerOverride0)
-                                         .set("1", headerOverride1))
+                                         .set("b", headerOverride0)
+                                         .set("c", headerOverride1))
                         .build();
 
     assertEq(topic, message.topic());
     assertEquals(identities.size(), message.identityFrames().size());
-    assertArrayEquals("a=xyz,0=h0,1=h1".getBytes(), message.headersAsBinary());
+    assertArrayEquals("a=xyz,b=h0,c=h1".getBytes(), message.headersAsBinary());
     assertEq(payload, message.payload());
 
     assertEq(message, ZmqMessage.builder(message).build());
