@@ -169,23 +169,9 @@ public final class ZmqMessage {
     return headers.asBinary();
   }
 
-  /**
-   * Function returns a <i>view</i> of headers specified by {@code viewClass}.
-   *
-   * @param viewClass the headers-view-class. <b>Have to have no-arg constructor.</b>
-   */
   @SuppressWarnings("unchecked")
-  public <T extends ZmqHeaders> T headersAs(Class<T> viewClass) {
-    try {
-      return (T) viewClass.newInstance().copy(headers);
-    }
-    catch (Exception e) {
-      throw ZmqException.seeCause(e);
-    }
-  }
-
-  public ZmqHeaders headers() {
-    return headersAs(ZmqHeaders.class);
+  public <T extends ZmqHeaders> T headers() {
+    return (T) new ZmqHeaders().copy(headers);
   }
 
   public byte[] payload() {
