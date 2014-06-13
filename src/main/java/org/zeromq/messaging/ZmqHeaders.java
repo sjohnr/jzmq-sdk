@@ -22,9 +22,9 @@ package org.zeromq.messaging;
 
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -49,7 +49,7 @@ public class ZmqHeaders<T extends ZmqHeaders> {
   private static final Pattern commaSign = Pattern.compile(",");
   private static final Pattern equalSign = Pattern.compile("=");
 
-  private final Map<String, String> _map = new TreeMap<String, String>();
+  private final Map<String, String> _map = new LinkedHashMap<String, String>();
   private int _charCounter = 0;
 
   //// METHODS
