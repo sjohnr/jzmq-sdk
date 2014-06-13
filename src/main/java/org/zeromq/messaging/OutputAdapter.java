@@ -30,7 +30,6 @@ import org.zeromq.support.ZmqUtils;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import static org.zeromq.messaging.ZmqMessage.DIV_FRAME;
 import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
 
 /**
@@ -43,13 +42,13 @@ import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
  * ZmqMessage([TOPIC | [HEADER] | PAYLOAD])                   => ZmqFrames([FRAME, ..., FRAME]).
  * </pre>
  */
-class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
+class OutputAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(OutputMessageAdapter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(OutputAdapter.class);
 
-  public static class Builder implements ObjectBuilder<OutputMessageAdapter>, HasInvariant {
+  public static class Builder implements ObjectBuilder<OutputAdapter>, HasInvariant {
 
-    private final OutputMessageAdapter _target = new OutputMessageAdapter();
+    private final OutputAdapter _target = new OutputAdapter();
 
     private Builder() {
     }
@@ -80,7 +79,7 @@ class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
     }
 
     @Override
-    public OutputMessageAdapter build() {
+    public OutputAdapter build() {
       return _target;
     }
   }
@@ -92,7 +91,7 @@ class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
 
   //// CONSTRUCTORS
 
-  private OutputMessageAdapter() {
+  private OutputAdapter() {
   }
 
   //// METHODS
@@ -118,7 +117,6 @@ class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
 
       if (awareOfTopicFrame) {
         target.add(message.topic());
-        target.add(DIV_FRAME);
       }
 
       // --- identities
@@ -132,7 +130,7 @@ class OutputMessageAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
           target.add(frame);
           target.add(EMPTY_FRAME);
         }
-        target.add(DIV_FRAME);
+        target.add(EMPTY_FRAME);
       }
 
       // --- headers_size, headers, payload_size, payload

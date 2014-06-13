@@ -27,7 +27,6 @@ import java.util.Arrays;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.zeromq.messaging.ZmqMessage.DIV_FRAME;
 import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
 
 public class ZmqMessageTest {
@@ -164,14 +163,6 @@ public class ZmqMessageTest {
     // check topic
     try {
       ZmqMessage.builder()
-                .withTopic(DIV_FRAME)
-                .build();
-      fail();
-    }
-    catch (IllegalArgumentException e) {
-    }
-    try {
-      ZmqMessage.builder()
                 .withTopic(null)
                 .build();
       fail();
@@ -181,26 +172,7 @@ public class ZmqMessageTest {
     // check payload
     try {
       ZmqMessage.builder()
-                .withPayload(DIV_FRAME)
-                .build();
-      fail();
-    }
-    catch (IllegalArgumentException e) {
-    }
-    try {
-      ZmqMessage.builder()
                 .withPayload(null)
-                .build();
-      fail();
-    }
-    catch (IllegalArgumentException e) {
-    }
-    // check identities
-    try {
-      ZmqFrames i = new ZmqFrames();
-      i.add(DIV_FRAME);
-      ZmqMessage.builder()
-                .withIdentities(i)
                 .build();
       fail();
     }

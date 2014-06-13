@@ -41,9 +41,7 @@ public final class ZmqContext implements HasInit, HasDestroy {
 
   private static final Logger LOG = LoggerFactory.getLogger(ZmqContext.class);
 
-  private static final int DEFAULT_THREAD_NUM = 1;
-
-  private int threadNum = DEFAULT_THREAD_NUM;
+  private int threadNum = 1;
 
   private ZMQ.Context _context;
   private List<ZMQ.Socket> _sockets = new ArrayList<ZMQ.Socket>();

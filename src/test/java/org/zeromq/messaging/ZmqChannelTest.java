@@ -29,7 +29,6 @@ import org.zeromq.support.exception.JniExceptionHandler;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.zeromq.messaging.ZmqException.ErrorCode.FATAL;
-import static org.zeromq.messaging.ZmqException.ErrorCode.SEE_CAUSE;
 
 public class ZmqChannelTest extends ZmqAbstractTest {
 
@@ -62,9 +61,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
     ZmqChannel.DEALER(ctx())
               .withProps(Props.builder().withConnectAddr(inprocAddr("service")).build())
-              .withProps(Props.builder()
-                             .withConnectAddr(inprocAddr("service-noabc")) /* not available inproc address */
-                             .build())
+              .withProps(Props.builder().withConnectAddr(inprocAddr("service-noabc")) /* not available inproc address */.build())
               .build();
   }
 
@@ -170,9 +167,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
   public void t6() {
     LOG.info("Test poller operations on connected channel.");
 
-    ZmqChannel client = ZmqChannel.DEALER(ctx()).withProps(Props.builder()
-                                                                .withConnectAddr(connAddr(6677))
-                                                                .build()).build();
+    ZmqChannel client = ZmqChannel.DEALER(ctx()).withProps(Props.builder().withConnectAddr(connAddr(6677)).build()).build();
     ZmqChannel server = ZmqChannel.ROUTER(ctx()).withProps(Props.builder().withBindAddr(bindAddr(6677)).build()).build();
 
     ZMQ.Poller clientPoller = new ZMQ.Poller(1);

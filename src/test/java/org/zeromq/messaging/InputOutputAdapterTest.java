@@ -36,12 +36,11 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.zeromq.messaging.ZmqMessage.BYTE_SUB;
 import static org.zeromq.messaging.ZmqMessage.BYTE_UNSUB;
-import static org.zeromq.messaging.ZmqMessage.DIV_FRAME;
 import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
 
-public class InputOutputMessageAdapterTest {
+public class InputOutputAdapterTest {
 
-  static final Logger LOG = LoggerFactory.getLogger(InputOutputMessageAdapterTest.class);
+  static final Logger LOG = LoggerFactory.getLogger(InputOutputAdapterTest.class);
 
   private static final byte[] id_0 = "i0".getBytes();
   private static final byte[] id_1 = "i1".getBytes();
@@ -83,21 +82,20 @@ public class InputOutputMessageAdapterTest {
                                    .withPayload(payload)
                                    .build();
 
-    OutputMessageAdapter out = OutputMessageAdapter.builder()
-                                                   .awareOfTopicFrame()
-                                                   .build();
+    OutputAdapter out = OutputAdapter.builder()
+                                     .awareOfTopicFrame()
+                                     .build();
     ZmqFrames frames = out.convert(message);
     Iterator<byte[]> framesIter = frames.iterator();
 
     assertNextFrame(topic, framesIter);
-    assertNextFrame(DIV_FRAME, framesIter);
     assertNextFrame(headers_payload, framesIter);
 
     assert !framesIter.hasNext();
 
-    InputMessageAdapter input = InputMessageAdapter.builder()
-                                                   .awareOfTopicFrame()
-                                                   .build();
+    InputAdapter input = InputAdapter.builder()
+                                     .awareOfTopicFrame()
+                                     .build();
     assertEq(message, input.convert(frames));
   }
 
@@ -117,7 +115,7 @@ public class InputOutputMessageAdapterTest {
                                    .withPayload(payload)
                                    .build();
 
-    OutputMessageAdapter out = OutputMessageAdapter.builder().build();
+    OutputAdapter out = OutputAdapter.builder().build();
     ZmqFrames frames = out.convert(message);
     Iterator<byte[]> framesIter = frames.iterator();
 
@@ -125,7 +123,7 @@ public class InputOutputMessageAdapterTest {
 
     assert !framesIter.hasNext();
 
-    InputMessageAdapter input = InputMessageAdapter.builder().build();
+    InputAdapter input = InputAdapter.builder().build();
     assertEq(message, input.convert(frames));
   }
 
@@ -146,9 +144,9 @@ public class InputOutputMessageAdapterTest {
                                    .withPayload(payload)
                                    .build();
 
-    OutputMessageAdapter output = OutputMessageAdapter.builder()
-                                                      .expectIdentities()
-                                                      .build();
+    OutputAdapter output = OutputAdapter.builder()
+                                        .expectIdentities()
+                                        .build();
     ZmqFrames frames = output.convert(message);
     Iterator<byte[]> framesIter = frames.iterator();
 
@@ -158,14 +156,14 @@ public class InputOutputMessageAdapterTest {
     assertNextFrame(EMPTY_FRAME, framesIter);
     assertNextFrame(id_2, framesIter);
     assertNextFrame(EMPTY_FRAME, framesIter);
-    assertNextFrame(DIV_FRAME, framesIter);
+    assertNextFrame(EMPTY_FRAME, framesIter);
     assertNextFrame(headers_payload, framesIter);
 
     assert !framesIter.hasNext();
 
-    InputMessageAdapter input = InputMessageAdapter.builder()
-                                                   .expectIdentities()
-                                                   .build();
+    InputAdapter input = InputAdapter.builder()
+                                     .expectIdentities()
+                                     .build();
     assertEq(message, input.convert(frames));
   }
 
@@ -186,10 +184,10 @@ public class InputOutputMessageAdapterTest {
                                    .withPayload(payload)
                                    .build();
 
-    OutputMessageAdapter output = OutputMessageAdapter.builder()
-                                                      .awareOfDEALERType()
-                                                      .expectIdentities()
-                                                      .build();
+    OutputAdapter output = OutputAdapter.builder()
+                                        .awareOfDEALERType()
+                                        .expectIdentities()
+                                        .build();
     ZmqFrames frames = output.convert(message);
     Iterator<byte[]> framesIter = frames.iterator();
 
@@ -200,14 +198,14 @@ public class InputOutputMessageAdapterTest {
     assertNextFrame(EMPTY_FRAME, framesIter);
     assertNextFrame(id_2, framesIter);
     assertNextFrame(EMPTY_FRAME, framesIter);
-    assertNextFrame(DIV_FRAME, framesIter);
+    assertNextFrame(EMPTY_FRAME, framesIter);
     assertNextFrame(headers_payload, framesIter);
 
     assert !framesIter.hasNext();
 
-    InputMessageAdapter input = InputMessageAdapter.builder()
-                                                   .expectIdentities()
-                                                   .build();
+    InputAdapter input = InputAdapter.builder()
+                                     .expectIdentities()
+                                     .build();
     assertEq(message, input.convert(frames));
   }
 
@@ -218,10 +216,10 @@ public class InputOutputMessageAdapterTest {
                                    .withExtendedPubSubFlag(BYTE_SUB)
                                    .build();
 
-    OutputMessageAdapter output = OutputMessageAdapter.builder()
-                                                      .awareOfTopicFrame()
-                                                      .awareOfExtendedPubSub()
-                                                      .build();
+    OutputAdapter output = OutputAdapter.builder()
+                                        .awareOfTopicFrame()
+                                        .awareOfExtendedPubSub()
+                                        .build();
 
     ZmqFrames frames = output.convert(message);
     Iterator<byte[]> framesIter = frames.iterator();
@@ -229,10 +227,10 @@ public class InputOutputMessageAdapterTest {
     assertNextFrame(ZmqUtils.mergeBytes(Arrays.asList(new byte[]{BYTE_SUB}, topic)), framesIter);
     assert !framesIter.hasNext();
 
-    InputMessageAdapter input = InputMessageAdapter.builder()
-                                                   .awareOfTopicFrame()
-                                                   .awareOfExtendedPubSub()
-                                                   .build();
+    InputAdapter input = InputAdapter.builder()
+                                     .awareOfTopicFrame()
+                                     .awareOfExtendedPubSub()
+                                     .build();
 
     assertEq(message, input.convert(frames));
   }
@@ -244,10 +242,10 @@ public class InputOutputMessageAdapterTest {
                                    .withExtendedPubSubFlag(BYTE_UNSUB)
                                    .build();
 
-    OutputMessageAdapter output = OutputMessageAdapter.builder()
-                                                      .awareOfTopicFrame()
-                                                      .awareOfExtendedPubSub()
-                                                      .build();
+    OutputAdapter output = OutputAdapter.builder()
+                                        .awareOfTopicFrame()
+                                        .awareOfExtendedPubSub()
+                                        .build();
 
     ZmqFrames frames = output.convert(message);
     Iterator<byte[]> framesIter = frames.iterator();
@@ -255,10 +253,10 @@ public class InputOutputMessageAdapterTest {
     assertNextFrame(ZmqUtils.mergeBytes(Arrays.asList(new byte[]{BYTE_UNSUB}, EMPTY_FRAME)), framesIter);
     assert !framesIter.hasNext();
 
-    InputMessageAdapter input = InputMessageAdapter.builder()
-                                                   .awareOfTopicFrame()
-                                                   .awareOfExtendedPubSub()
-                                                   .build();
+    InputAdapter input = InputAdapter.builder()
+                                     .awareOfTopicFrame()
+                                     .awareOfExtendedPubSub()
+                                     .build();
 
     assertEq(message, input.convert(frames));
   }

@@ -27,7 +27,6 @@ import java.util.LinkedHashMap;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static org.zeromq.support.ZmqUtils.isDivFrame;
 import static org.zeromq.support.ZmqUtils.isEmptyFrame;
 
 /**
@@ -60,9 +59,6 @@ public class ZmqHeaders<T extends ZmqHeaders> {
   public final T copy(byte[] headers) {
     if (isEmptyFrame(headers)) {
       return (T) this;
-    }
-    if (isDivFrame(headers)) {
-      throw ZmqException.wrongHeader();
     }
     _map.putAll(DEFAULT_SPLITTER.split(new String(headers)));
     return (T) this;

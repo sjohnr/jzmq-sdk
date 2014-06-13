@@ -39,19 +39,11 @@ public class PubSubTest extends ZmqAbstractTest {
     }
 
     ZmqChannel newPublisher() {
-      return ZmqChannel.PUB(ctx)
-                       .withProps(Props.builder()
-                                       .withBindAddr(inprocAddr("p"))
-                                       .build())
-                       .build();
+      return ZmqChannel.PUB(ctx).withProps(Props.builder().withBindAddr(inprocAddr("PubSubTest")).build()).build();
     }
 
     ZmqChannel newSubscriber() {
-      return ZmqChannel.SUB(ctx)
-                       .withProps(Props.builder()
-                                       .withConnectAddr(inprocAddr("p"))
-                                       .build())
-                       .build();
+      return ZmqChannel.SUB(ctx).withProps(Props.builder().withConnectAddr(inprocAddr("PubSubTest")).build()).build();
     }
   }
 

@@ -46,19 +46,23 @@ public abstract class ZmqAbstractTest {
   }
 
   public static ZmqMessage HELLO() {
-    return ZmqMessage.builder().withPayload("hello".getBytes()).build();
+    return ZmqMessage.builder().withHeaders(HEADERS()).withPayload("hello".getBytes()).build();
   }
 
   public static ZmqMessage WORLD() {
-    return ZmqMessage.builder().withPayload("world".getBytes()).build();
+    return ZmqMessage.builder().withHeaders(HEADERS()).withPayload("world".getBytes()).build();
   }
 
   public static ZmqMessage CARP() {
-    return ZmqMessage.builder().withPayload("carp".getBytes()).build();
+    return ZmqMessage.builder().withHeaders(HEADERS()).withPayload("carp".getBytes()).build();
   }
 
   public static ZmqMessage SHIRT() {
-    return ZmqMessage.builder().withPayload("shirt".getBytes()).build();
+    return ZmqMessage.builder().withHeaders(HEADERS()).withPayload("shirt".getBytes()).build();
+  }
+
+  public static ZmqHeaders HEADERS() {
+    return new ZmqHeaders().set("zmq", "is").set("so", "much").set("co", "col");
   }
 
   public static void assertPayload(String payload, ZmqMessage message) {

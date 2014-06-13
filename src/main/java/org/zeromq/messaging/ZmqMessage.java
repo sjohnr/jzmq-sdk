@@ -23,13 +23,11 @@ package org.zeromq.messaging;
 import org.zeromq.support.ObjectBuilder;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.zeromq.support.ZmqUtils.isDivFrame;
 import static org.zeromq.support.ZmqUtils.isEmptyFrame;
 
 public final class ZmqMessage {
 
   public static final byte[] EMPTY_FRAME = "".getBytes();
-  public static final byte[] DIV_FRAME = new byte[]{'\u001D'}; // group separator.
   public static final byte BYTE_SUB = 1; // denotes subscribe request.
   public static final byte BYTE_UNSUB = 0; // denotes unsubscribe request.
 
@@ -53,7 +51,7 @@ public final class ZmqMessage {
     }
 
     public Builder withTopic(byte[] topic) {
-      checkArgument(!isDivFrame(topic));
+      checkArgument(topic != null);
       _target.topic = topic;
       return this;
     }
@@ -62,7 +60,6 @@ public final class ZmqMessage {
       _target.identities = new ZmqFrames(frames.size());
       for (byte[] identity : frames) {
         checkArgument(!isEmptyFrame(identity));
-        checkArgument(!isDivFrame(identity));
         _target.identities.add(identity);
       }
       return this;
@@ -79,7 +76,7 @@ public final class ZmqMessage {
     }
 
     public Builder withPayload(byte[] payload) {
-      checkArgument(!isDivFrame(payload));
+      checkArgument(payload != null);
       _target.payload = payload;
       return this;
     }

@@ -23,10 +23,8 @@ package org.zeromq.support;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.zeromq.messaging.ZmqException;
-import org.zeromq.messaging.ZmqMessage;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.zip.CRC32;
 
@@ -40,11 +38,6 @@ public class ZmqUtils {
   public static boolean isEmptyFrame(byte[] frame) {
     checkArgument(frame != null);
     return frame.length == 0;
-  }
-
-  public static boolean isDivFrame(byte[] frame) {
-    checkArgument(frame != null);
-    return Arrays.equals(ZmqMessage.DIV_FRAME, frame);
   }
 
   public static long makeHash(Iterable<byte[]> buf) {

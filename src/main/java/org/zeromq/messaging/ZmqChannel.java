@@ -37,11 +37,10 @@ import static org.zeromq.support.ZmqUtils.mapAsJson;
 
 public final class ZmqChannel implements HasDestroy {
 
-  private static final int INPROC_CONN_TIMEOUT = 1000; // inproc protocol conn timeout, best guess.
-
-  private static final int POLLABLE_IND_NOT_INITIALIZED = -1;
-
   private static final Logger LOG = LoggerFactory.getLogger(ZmqChannel.class);
+
+  private static final int INPROC_CONN_TIMEOUT = 1000; // inproc protocol conn timeout, best guess.
+  private static final int POLLABLE_IND_NOT_INITIALIZED = -1;
 
   public static final class Builder implements ObjectBuilder<ZmqChannel>, HasInvariant {
 
@@ -85,36 +84,36 @@ public final class ZmqChannel implements HasDestroy {
       checkInvariant();
 
       if (_target.socketType == ZMQ.ROUTER) {
-        _target._inputAdapter = InputMessageAdapter.builder().expectIdentities().build();
-        _target._outputAdapter = OutputMessageAdapter.builder().expectIdentities().build();
+        _target._inputAdapter = InputAdapter.builder().expectIdentities().build();
+        _target._outputAdapter = OutputAdapter.builder().expectIdentities().build();
       }
       if (_target.socketType == ZMQ.DEALER) {
-        _target._inputAdapter = InputMessageAdapter.builder().expectIdentities().build();
-        _target._outputAdapter = OutputMessageAdapter.builder().awareOfDEALERType().expectIdentities().build();
+        _target._inputAdapter = InputAdapter.builder().expectIdentities().build();
+        _target._outputAdapter = OutputAdapter.builder().awareOfDEALERType().expectIdentities().build();
       }
       if (_target.socketType == ZMQ.PUB) {
         _target._inputAdapter = null;
-        _target._outputAdapter = OutputMessageAdapter.builder().awareOfTopicFrame().build();
+        _target._outputAdapter = OutputAdapter.builder().awareOfTopicFrame().build();
       }
       if (_target.socketType == ZMQ.PUSH) {
         _target._inputAdapter = null;
-        _target._outputAdapter = OutputMessageAdapter.builder().build();
+        _target._outputAdapter = OutputAdapter.builder().build();
       }
       if (_target.socketType == ZMQ.SUB) {
         _target._outputAdapter = null;
-        _target._inputAdapter = InputMessageAdapter.builder().awareOfTopicFrame().build();
+        _target._inputAdapter = InputAdapter.builder().awareOfTopicFrame().build();
       }
       if (_target.socketType == ZMQ.PULL) {
         _target._outputAdapter = null;
-        _target._inputAdapter = InputMessageAdapter.builder().build();
+        _target._inputAdapter = InputAdapter.builder().build();
       }
       if (_target.socketType == ZMQ.XPUB) {
-        _target._inputAdapter = InputMessageAdapter.builder().awareOfTopicFrame().awareOfExtendedPubSub().build();
-        _target._outputAdapter = OutputMessageAdapter.builder().awareOfTopicFrame().build();
+        _target._inputAdapter = InputAdapter.builder().awareOfTopicFrame().awareOfExtendedPubSub().build();
+        _target._outputAdapter = OutputAdapter.builder().awareOfTopicFrame().build();
       }
       if (_target.socketType == ZMQ.XSUB) {
-        _target._inputAdapter = InputMessageAdapter.builder().awareOfTopicFrame().build();
-        _target._outputAdapter = OutputMessageAdapter.builder().awareOfTopicFrame().awareOfExtendedPubSub().build();
+        _target._inputAdapter = InputAdapter.builder().awareOfTopicFrame().build();
+        _target._outputAdapter = OutputAdapter.builder().awareOfTopicFrame().awareOfExtendedPubSub().build();
       }
 
       _target._socket = createSocket();

@@ -30,7 +30,6 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
-import static org.zeromq.support.ZmqUtils.isDivFrame;
 import static org.zeromq.support.ZmqUtils.isEmptyFrame;
 
 /**
@@ -43,13 +42,13 @@ import static org.zeromq.support.ZmqUtils.isEmptyFrame;
  * ZmqFrames([FRAME, ..., FRAME]) => ZmqMessage([TOPIC | [HEADER] | PAYLOAD]).
  * </pre>
  */
-class InputMessageAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
+class InputAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(InputMessageAdapter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(InputAdapter.class);
 
-  public static class Builder implements ObjectBuilder<InputMessageAdapter>, HasInvariant {
+  public static class Builder implements ObjectBuilder<InputAdapter>, HasInvariant {
 
-    private final InputMessageAdapter _target = new InputMessageAdapter();
+    private final InputAdapter _target = new InputAdapter();
 
     private Builder() {
     }
@@ -75,7 +74,7 @@ class InputMessageAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
     }
 
     @Override
-    public InputMessageAdapter build() {
+    public InputAdapter build() {
       return _target;
     }
   }
@@ -86,7 +85,7 @@ class InputMessageAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
 
   //// CONSTRUCTORS
 
-  private InputMessageAdapter() {
+  private InputAdapter() {
   }
 
   //// METHODS
@@ -112,27 +111,24 @@ class InputMessageAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
 
       if (awareOfTopicFrame) {
         builder.withTopic(frames.poll());
-        // consume [-] frame.
-        if (!isDivFrame(frames.poll())) {
-          throw ZmqException.wrongHeader();
-        }
       }
 
       // --- identities
 
       if (expectIdentities) {
         ZmqFrames identities = new ZmqFrames();
-        for (; ; ) {
+        for (int emptyFrameSeen = 0; ; ) {
           byte[] frame = frames.poll();
-          if (isDivFrame(frame)) {
-            // is current frame [-] then stop.
+          if (isEmptyFrame(frame)) {
+            ++emptyFrameSeen;
+          }
+          if (emptyFrameSeen == 2) {
             break;
           }
-          if (isEmptyFrame(frame)) {
-            // is [ ] current frame then skip.
-            continue;
+          if (!isEmptyFrame(frame)) {
+            emptyFrameSeen = 0;
+            identities.add(frame);
           }
-          identities.add(frame);
         }
         builder.withIdentities(identities);
       }
