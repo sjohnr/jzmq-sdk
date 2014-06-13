@@ -68,11 +68,11 @@ public class ZmqHeadersTest {
 
   @Test
   public void t3() {
-    ZmqHeaders headers = new ZmqHeaders().copy(new ZmqHeaders().set("0", 0))
-                                         .copy(new ZmqHeaders().set("1", 1))
-                                         .copy(new ZmqHeaders().set("1", 1))
-                                         .copy(new ZmqHeaders().set("2", 2))
-                                         .copy(new ZmqHeaders().set("2", 2))
+    ZmqHeaders headers = new ZmqHeaders().copy(new ZmqHeaders().set("0", "0"))
+                                         .copy(new ZmqHeaders().set("1", "1"))
+                                         .copy(new ZmqHeaders().set("1", "1"))
+                                         .copy(new ZmqHeaders().set("2", "2"))
+                                         .copy(new ZmqHeaders().set("2", "2"))
                                          .set("3", "a")
                                          .set("3", "a")
                                          .set("4", "b")

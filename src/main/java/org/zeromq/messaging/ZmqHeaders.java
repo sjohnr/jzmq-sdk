@@ -20,14 +20,15 @@
 
 package org.zeromq.messaging;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Strings.isNullOrEmpty;
+import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
 import static org.zeromq.support.ZmqUtils.isEmptyFrame;
 
 /**
@@ -45,15 +46,18 @@ import static org.zeromq.support.ZmqUtils.isEmptyFrame;
 @SuppressWarnings("unchecked")
 public class ZmqHeaders<T extends ZmqHeaders> {
 
-  private static final Splitter.MapSplitter DEFAULT_SPLITTER = Splitter.on(",").withKeyValueSeparator("=");
-  private static final Joiner.MapJoiner DEFAULT_JOINER = Joiner.on(",").withKeyValueSeparator("=");
+  private static final Pattern commaSign = Pattern.compile(",");
+  private static final Pattern equalSign = Pattern.compile("=");
 
   private final Map<String, String> _map = new TreeMap<String, String>();
+  private int _charCounter = 0;
 
   //// METHODS
 
   public final T copy(ZmqHeaders headers) {
-    _map.putAll(headers._map);
+    for (Map.Entry<String, String> entry : (Set<Map.Entry<String, String>>) headers._map.entrySet()) {
+      set(entry.getKey(), entry.getValue());
+    }
     return (T) this;
   }
 
@@ -61,21 +65,27 @@ public class ZmqHeaders<T extends ZmqHeaders> {
     if (isEmptyFrame(headers)) {
       return (T) this;
     }
-    _map.putAll(DEFAULT_SPLITTER.split(new String(headers)));
+
+    for (String pair : commaSign.split(new String(headers))) {
+      String[] kv = equalSign.split(pair);
+      set(kv[0], kv.length == 1 ? "" : kv[1]);
+    }
+
     return (T) this;
   }
 
   public final T set(String k, String v) {
-    checkArgument(!isNullOrEmpty(k));
+    checkArgument(k != null);
     checkArgument(v != null);
-    _map.put(k, v);
-    return (T) this;
-  }
 
-  public final T set(String k, Number v) {
-    checkArgument(!isNullOrEmpty(k));
-    checkArgument(v != null);
-    _map.put(k, v.toString());
+    String prev_v = _map.put(k, v);
+    if (prev_v != null) {
+      _charCounter += (v.length() - prev_v.length());
+    }
+    else {
+      _charCounter += (k.length() + v.length());
+    }
+
     return (T) this;
   }
 
@@ -84,7 +94,11 @@ public class ZmqHeaders<T extends ZmqHeaders> {
    * @return removed header content. <b>Null if there's no header by given id.</b>
    */
   public final String remove(String k) {
-    return _map.remove(k);
+    String v = _map.remove(k);
+    if (v != null) {
+      _charCounter -= (k.length() + v.length());
+    }
+    return v;
   }
 
   /**
@@ -114,8 +128,25 @@ public class ZmqHeaders<T extends ZmqHeaders> {
    */
   public final byte[] asBinary() {
     if (_map.isEmpty()) {
-      return ZmqMessage.EMPTY_FRAME;
+      return EMPTY_FRAME;
     }
-    return DEFAULT_JOINER.join(_map.entrySet()).getBytes();
+
+    Set<Map.Entry<String, String>> entries = _map.entrySet();
+    int entriesSize = entries.size();
+    int equalSignsNum = entriesSize;
+    int commaSignsNum = entriesSize - 1;
+    CharBuffer buffer = CharBuffer.allocate(_charCounter + equalSignsNum + commaSignsNum);
+    int i = 0;
+    for (Map.Entry<String, String> entry : entries) {
+      buffer.put(entry.getKey());
+      buffer.put("=");
+      buffer.put(entry.getValue());
+      if (i != entriesSize - 1) {
+        buffer.put(",");
+      }
+      i++;
+    }
+
+    return Charset.forName("ISO-8859-1").encode((CharBuffer) buffer.flip()).array();
   }
 }
