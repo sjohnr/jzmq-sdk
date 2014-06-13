@@ -169,9 +169,8 @@ public final class ZmqMessage {
     return headers.asBinary();
   }
 
-  @SuppressWarnings("unchecked")
-  public <T extends ZmqHeaders> T headers() {
-    return (T) new ZmqHeaders().copy(headers);
+  public ZmqHeaders headers() {
+    return headers;
   }
 
   public byte[] payload() {
