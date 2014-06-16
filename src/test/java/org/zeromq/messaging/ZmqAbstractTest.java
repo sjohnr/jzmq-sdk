@@ -61,8 +61,8 @@ public abstract class ZmqAbstractTest {
     return ZmqMessage.builder().withHeaders(HEADERS()).withPayload("shirt".getBytes()).build();
   }
 
-  public static ZmqHeaders HEADERS() {
-    return new ZmqHeaders().set("zmq", "is").set("so", "much").set("co", "col");
+  public static byte[] HEADERS() {
+    return ZmqHeaders.builder().set("zmq", "is").set("so", "much").set("co", "col").build().asBinary();
   }
 
   public static void assertPayload(String payload, ZmqMessage message) {

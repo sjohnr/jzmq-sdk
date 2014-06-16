@@ -41,7 +41,7 @@ public final class ZmqMessage {
     private Builder(ZmqMessage message) {
       _target.topic = message.topic;
       _target.identities = new ZmqFrames(message.identities);
-      _target.headers = new ZmqHeaders().copy(message.headers);
+      _target.headers = message.headers;
       _target.payload = message.payload;
     }
 
@@ -65,13 +65,9 @@ public final class ZmqMessage {
       return this;
     }
 
-    public Builder withHeaders(ZmqHeaders headers) {
-      _target.headers = new ZmqHeaders().copy(headers);
-      return this;
-    }
-
     public Builder withHeaders(byte[] headers) {
-      _target.headers = new ZmqHeaders().copy(headers);
+      checkArgument(headers != null);
+      _target.headers = headers;
       return this;
     }
 
@@ -113,21 +109,11 @@ public final class ZmqMessage {
    */
   private ZmqFrames identities = new ZmqFrames();
   /**
-   * SPI headers container. Headers contain info which is needed for framework to function.
-   * Different devices may put their auxiliary info in headers. With that said, headers should be
-   * treated as something which allow certain type of devices to function.
+   * Headers container. Headers contain info which is needed for framework to function.
    * <p/>
-   * By default, headers initialized to empty structure.
-   * Use {@link Builder#withHeaders(byte[])} or {@link Builder#withHeaders(ZmqHeaders)}.
-   * <p/>
-   * <b>
-   * NOTE: end user applications should not access headers!
-   * Clients may want to  access/modify/create_their_own  headers when they need to
-   * construct new devices, or <i>calling patterns</i>.
-   * This field is optional.
-   * </b>
+   * <b>NOTE: this field is optional.</b>
    */
-  private ZmqHeaders headers = new ZmqHeaders();
+  private byte[] headers = EMPTY_FRAME;
   /**
    * The BLOB or aka PAYLOAD. Contains end user application data.
    * <p/>
@@ -165,11 +151,7 @@ public final class ZmqMessage {
     return new ZmqFrames(identities);
   }
 
-  public byte[] headersAsBinary() {
-    return headers.asBinary();
-  }
-
-  public ZmqHeaders headers() {
+  public byte[] headers() {
     return headers;
   }
 

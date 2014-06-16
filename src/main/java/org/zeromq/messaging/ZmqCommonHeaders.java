@@ -20,44 +20,33 @@
 
 package org.zeromq.messaging;
 
-import static org.zeromq.messaging.ZmqCommonHeaders.HeaderName.ZMQ_MESSAGE_CID;
-import static org.zeromq.messaging.ZmqCommonHeaders.HeaderName.ZMQ_MESSAGE_TYPE;
+import java.util.regex.Pattern;
 
 /** Common ZMQ message headers. */
-public final class ZmqCommonHeaders extends ZmqHeaders<ZmqCommonHeaders> {
+public final class ZmqCommonHeaders {
 
-  public static enum HeaderName {
-    ZMQ_MESSAGE_TYPE,
-    ZMQ_MESSAGE_CID
+  public static final String ZMQ_MESSAGE_TYPE_PING = "PING";
+
+  public static enum Header {
+    ZMQ_MESSAGE_TYPE("zmq_msg_type", Pattern.compile("zmq_msg_type=(\\w*+)[,]?"));
+
+    private final String id;
+    private final Pattern pattern;
+
+    private Header(String id, Pattern pattern) {
+      this.id = id;
+      this.pattern = pattern;
+    }
+
+    public String id() {
+      return id;
+    }
+
+    public Pattern pattern() {
+      return pattern;
+    }
   }
 
-  public static enum MessageType {
-    PING,
-    PONG
-  }
-
-  //// METHODS
-
-  public ZmqCommonHeaders setMessageType(MessageType messageType) {
-    set(ZMQ_MESSAGE_TYPE.name(), messageType.name());
-    return this;
-  }
-
-  public MessageType getMessageType() {
-    String messageType = getHeaderOrNull(ZMQ_MESSAGE_TYPE.name());
-    return messageType != null ? MessageType.valueOf(messageType) : null;
-  }
-
-  public boolean isMessageTypeNotSet() {
-    return getHeaderOrNull(ZMQ_MESSAGE_TYPE.name()) == null;
-  }
-
-  public ZmqCommonHeaders setCid(String cid) {
-    set(ZMQ_MESSAGE_CID.name(), cid);
-    return this;
-  }
-
-  public String getCid() {
-    return getHeaderOrNull(ZMQ_MESSAGE_CID.name());
+  private ZmqCommonHeaders() {
   }
 }

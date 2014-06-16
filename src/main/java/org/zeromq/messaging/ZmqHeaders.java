@@ -20,16 +20,18 @@
 
 package org.zeromq.messaging;
 
+import org.zeromq.support.ObjectBuilder;
+
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
-import static org.zeromq.support.ZmqUtils.isEmptyFrame;
 
 /**
  * Map data structure for <i>generic headers</i>:
@@ -43,90 +45,92 @@ import static org.zeromq.support.ZmqUtils.isEmptyFrame;
  *   header_id_0=header_value_0,...,header_id_m=header_value_m
  * </pre>
  */
-@SuppressWarnings("unchecked")
-public class ZmqHeaders<T extends ZmqHeaders> {
+public final class ZmqHeaders {
 
-  private static final Pattern commaSign = Pattern.compile(",");
-  private static final Pattern equalSign = Pattern.compile("=");
-
+  /** Outbound key-value string map. */
   private final Map<String, String> _map = new LinkedHashMap<String, String>();
-  private int _charCounter = 0;
+  /** Helper attribute for optimal building binary format of {@link #_map}. */
+  private int _mapCharCounter = 0;
+  /** Inbound key-value comma separated string. */
+  private String _headers;
+
+  public static final class Builder implements ObjectBuilder<ZmqHeaders> {
+
+    private final ZmqHeaders _target = new ZmqHeaders();
+
+    private Builder() {
+      // no-op.
+    }
+
+    private Builder(byte[] headers) {
+      checkArgument(headers != null);
+      _target._headers = new String(headers);
+    }
+
+    public Builder set(String k, String v) {
+      checkArgument(k != null);
+      checkArgument(v != null);
+
+      String prev = _target._map.put(k, v);
+      if (prev != null) {
+        _target._mapCharCounter += (v.length() - prev.length());
+      }
+      else {
+        _target._mapCharCounter += (k.length() + v.length());
+      }
+
+      return this;
+    }
+
+    @Override
+    public ZmqHeaders build() {
+      return _target;
+    }
+  }
+
+  //// CONSTRUCTORS
+
+  private ZmqHeaders() {
+  }
 
   //// METHODS
 
-  public final T copy(ZmqHeaders headers) {
-    for (Map.Entry<String, String> entry : (Set<Map.Entry<String, String>>) headers._map.entrySet()) {
-      set(entry.getKey(), entry.getValue());
-    }
-    return (T) this;
+  public static Builder builder() {
+    return new Builder();
   }
 
-  public final T copy(byte[] headers) {
-    if (isEmptyFrame(headers)) {
-      return (T) this;
-    }
-
-    for (String pair : commaSign.split(new String(headers))) {
-      String[] kv = equalSign.split(pair);
-      set(kv[0], kv.length == 1 ? "" : kv[1]);
-    }
-
-    return (T) this;
-  }
-
-  public final T set(String k, String v) {
-    checkArgument(k != null);
-    checkArgument(v != null);
-
-    String prev_v = _map.put(k, v);
-    if (prev_v != null) {
-      _charCounter += (v.length() - prev_v.length());
-    }
-    else {
-      _charCounter += (k.length() + v.length());
-    }
-
-    return (T) this;
+  public static Builder builder(byte[] headers) {
+    return new Builder(headers);
   }
 
   /**
-   * @param k header id.
-   * @return removed header content. <b>Null if there's no header by given id.</b>
+   * Getting outbound header value by header name.
+   *
+   * @param k header name or id.
+   * @return null or header value from internal outbound {@link #_map}.
    */
-  public final String remove(String k) {
-    String v = _map.remove(k);
-    if (v != null) {
-      _charCounter -= (k.length() + v.length());
-    }
-    return v;
-  }
-
-  /**
-   * @param k header id.
-   * @return header content. <b>Null if there's no header by given id.</b>
-   */
-  public final String getHeaderOrNull(String k) {
+  public String getHeader(String k) {
     return _map.get(k);
   }
 
   /**
-   * @param k header id.
-   * @return header content. <b>Never null.</b>
+   * Getting inbound header value by header name.
+   *
+   * @param pair regexp pattern representing match for header name and value.
+   * @return null or header value from internal inbound key-value {@link #_headers}.
    */
-  public final String getHeaderOrException(String k) {
-    String v = getHeaderOrNull(k);
-    if (v == null) {
-      throw ZmqException.headerIsNotSet();
+  public String getHeader(Pattern pair) {
+    if (_headers == null) {
+      return null;
     }
-    return v;
+    Matcher m = pair.matcher(_headers);
+    if (!m.find()) {
+      return null;
+    }
+    return m.group(1);
   }
 
-  /**
-   * Converts headers to "headers" string.
-   *
-   * @return "headers" string.
-   */
-  public final byte[] asBinary() {
+  public byte[] asBinary() {
     if (_map.isEmpty()) {
       return EMPTY_FRAME;
     }
@@ -135,7 +139,19 @@ public class ZmqHeaders<T extends ZmqHeaders> {
     int entriesSize = entries.size();
     int equalSignsNum = entriesSize;
     int commaSignsNum = entriesSize - 1;
-    CharBuffer buffer = CharBuffer.allocate(_charCounter + equalSignsNum + commaSignsNum);
+
+    // if inbound headers are present -- then add them as well.
+    int headersLen = 0;
+    if (_headers != null && _headers.length() > 0) {
+      headersLen = _headers.length() + 1 /* one more comma character */;
+    }
+    CharBuffer buffer = CharBuffer.allocate(headersLen + _mapCharCounter + equalSignsNum + commaSignsNum);
+    if (_headers != null) {
+      buffer.put(_headers);
+      if (entriesSize > 0) {
+        buffer.put(",");
+      }
+    }
     int i = 0;
     for (Map.Entry<String, String> entry : entries) {
       buffer.put(entry.getKey());

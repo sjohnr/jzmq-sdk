@@ -135,7 +135,7 @@ class OutputAdapter implements ObjectAdapter<ZmqMessage, ZmqFrames> {
 
       // --- headers_size, headers, payload_size, payload
 
-      byte[] headers = message.headersAsBinary();
+      byte[] headers = message.headers();
       byte[] payload = message.payload();
       ByteBuffer buf = ByteBuffer.allocate(4/* sizeOf headers.len */ + headers.length + 4/* sizeOf payload.len */ + payload.length);
       buf.putInt(headers.length).put(headers).putInt(payload.length).put(payload);

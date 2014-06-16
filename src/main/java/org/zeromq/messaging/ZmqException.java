@@ -33,9 +33,6 @@ public final class ZmqException extends RuntimeException {
     SEE_CAUSE,
     FATAL,
     CONTEXT_NOT_ACCESSIBLE,
-    HEADER_IS_NOT_SET,
-    WRONG_HEADER,
-    WRONG_MESSAGE,
     NATIVE_ERROR
   }
 
@@ -74,18 +71,6 @@ public final class ZmqException extends RuntimeException {
 
   public static ZmqException contextNotAccessible() {
     return new ZmqException(ErrorCode.CONTEXT_NOT_ACCESSIBLE);
-  }
-
-  public static ZmqException headerIsNotSet() {
-    return new ZmqException(ErrorCode.HEADER_IS_NOT_SET);
-  }
-
-  public static ZmqException wrongHeader() {
-    return new ZmqException(ErrorCode.WRONG_HEADER);
-  }
-
-  public static ZmqException wrongMessage() {
-    return new ZmqException(ErrorCode.WRONG_MESSAGE);
   }
 
   public static ZmqException wrappedNative(ZMQ.Error nativeError) {

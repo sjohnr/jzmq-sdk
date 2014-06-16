@@ -22,107 +22,68 @@ package org.zeromq.messaging;
 
 import org.junit.Test;
 
+import static java.util.regex.Pattern.compile;
 import static junit.framework.Assert.assertNull;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static org.zeromq.messaging.ZmqException.ErrorCode.HEADER_IS_NOT_SET;
 import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
 
 public class ZmqHeadersTest {
 
   @Test
   public void t0() {
-    ZmqHeaders headers = new ZmqHeaders();
+    ZmqHeaders headers = ZmqHeaders.builder().build(); // empty headers.
 
-    assertArrayEquals(EMPTY_FRAME, headers.asBinary());
-
-    assertNull(headers.remove(""));
-    assertNull(headers.getHeaderOrNull(""));
+    assertNull(headers.getHeader(""));
+    assertEquals("", new String(headers.asBinary()));
   }
 
   @Test
   public void t1() {
-    ZmqHeaders headers = new ZmqHeaders().copy("0=abc".getBytes());
+    ZmqHeaders headers = ZmqHeaders.builder("h0=abc,h1=xyz789,h2=,h3=".getBytes()).build();
 
-    headers.getHeaderOrException("0"); // expecting header.
-    assertNull(headers.getHeaderOrNull("1")); // not expecting header.
-    try {
-      headers.getHeaderOrException("2"); // expecting exception.
-      fail();
-    }
-    catch (ZmqException e) {
-      assertEquals(HEADER_IS_NOT_SET, e.code());
-    }
+    assertEquals("abc", headers.getHeader(compile("h0=(\\w*+)[,]?"))); // expecting header by regexp.
+    assertEquals("xyz789", headers.getHeader(compile("h1=(\\w*+)[,]?"))); // expecting header by regexp.
+    assertEquals("", headers.getHeader(compile("h2=(\\w*+)[,]?"))); // expecting header by regexp.
+    assertEquals("", headers.getHeader(compile("h3=(\\w*+)[,]?"))); // expecting header by regexp.
+    assertNull(headers.getHeader(compile("h4=(\\w*+)[,]?"))); // not expecting header even by regexp.
+    assertNull(headers.getHeader("h0")); // not expecting header by header name.
   }
 
   @Test
   public void t2() {
-    ZmqHeaders headers = new ZmqHeaders().copy(new ZmqHeaders())
-                                         .copy(new ZmqHeaders())
-                                         .copy(new ZmqHeaders())
-                                         .copy(new ZmqHeaders());
+    ZmqHeaders.builder(EMPTY_FRAME);
+    ZmqHeaders.builder(new byte[0]);
 
-    assertArrayEquals(EMPTY_FRAME, headers.asBinary());
+    ZmqHeaders headers = ZmqHeaders.builder("0=,1=,2=".getBytes()).build();
+    assertEquals("", headers.getHeader(compile("0=(\\w*+)[,]?"))); // expecting header by regexp.
+    assertEquals("", headers.getHeader(compile("1=(\\w*+)[,]?"))); // expecting header by regexp.
+    assertEquals("", headers.getHeader(compile("2=(\\w*+)[,]?"))); // expecting header by regexp.
   }
 
   @Test
   public void t3() {
-    ZmqHeaders headers = new ZmqHeaders().copy(new ZmqHeaders().set("0", "0"))
-                                         .copy(new ZmqHeaders().set("1", "1"))
-                                         .copy(new ZmqHeaders().set("1", "1"))
-                                         .copy(new ZmqHeaders().set("2", "2"))
-                                         .copy(new ZmqHeaders().set("2", "2"))
-                                         .set("3", "a")
-                                         .set("3", "a")
-                                         .set("4", "b")
-                                         .set("4", "b")
-                                         .set("5", "c");
+    ZmqHeaders headers = ZmqHeaders.builder().set("a", "a").set("b", "b").build();
+    assertEquals("a=a,b=b", new String(headers.asBinary()));
+    assertEquals("a", headers.getHeader("a"));
+    assertEquals("b", headers.getHeader("b"));
 
-    assertEquals("0", headers.getHeaderOrNull("0"));
-    assertEquals("1", headers.getHeaderOrNull("1"));
-    assertEquals("2", headers.getHeaderOrNull("2"));
-    assertEquals("a", headers.getHeaderOrNull("3"));
-    assertEquals("b", headers.getHeaderOrNull("4"));
-    assertEquals("c", headers.getHeaderOrNull("5"));
+    ZmqHeaders reset = ZmqHeaders.builder().set("a", "x").set("b", "").set("1", "1").build();
+    assertEquals("x", reset.getHeader("a"));
+    assertEquals("", reset.getHeader("b"));
+    assertEquals("1", reset.getHeader("1"));
+    assertEquals("a=x,b=,1=1", new String(reset.asBinary()));
   }
 
   @Test
   public void t4() {
-    new ZmqHeaders().copy(EMPTY_FRAME);
+    ZmqHeaders headers = ZmqHeaders.builder().set("a", "a").set("b", "b").build();
+    assertEquals("a=a,b=b", new String(headers.asBinary()));
 
-    new ZmqHeaders().copy(new byte[0]);
-
-    assertEquals("", new ZmqHeaders().copy("0=".getBytes()).getHeaderOrNull("0"));
-  }
-
-  @Test
-  public void t5() {
-    ZmqHeaders headers = new ZmqHeaders().set("a", "a")
-                                         .set("b", "b")
-                                         .set("c", "c");
-
-    assertArrayEquals("a=a,b=b,c=c".getBytes(), headers.asBinary());
-
-    ZmqHeaders copy = headers
-        .copy("a=x".getBytes())
-        .copy(new ZmqHeaders().set("c", "y"));
-
-    assertArrayEquals("a=x,b=b,c=y".getBytes(), copy.asBinary());
-  }
-
-  @Test
-  public void t6() {
-    ZmqHeaders headers = new ZmqHeaders().set("a", "A")
-                                         .set("b", "B")
-                                         .set("c", "C");
-
-    assertArrayEquals("a=A,b=B,c=C".getBytes(), headers.asBinary());
-
-    ZmqHeaders copy = headers.copy("a=AA".getBytes())
-                             .copy(new ZmqHeaders().set("b", "BB"))
-                             .copy("c=CC".getBytes());
-
-    assertArrayEquals("a=AA,b=BB,c=CC".getBytes(), copy.asBinary());
+    ZmqHeaders merge = ZmqHeaders.builder(headers.asBinary()).set("c", "c").set("d", "d").build();
+    assertEquals("a=a,b=b,c=c,d=d", new String(merge.asBinary()));
+    assertEquals("a", merge.getHeader(compile("a=(\\w*+)[,]?")));
+    assertEquals("b", merge.getHeader(compile("b=(\\w*+)[,]?")));
+    assertEquals("c", merge.getHeader("c"));
+    assertEquals("d", merge.getHeader("d"));
   }
 }

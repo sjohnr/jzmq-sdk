@@ -96,7 +96,7 @@ public class InputOutputAdapterTest {
     InputAdapter input = InputAdapter.builder()
                                      .awareOfTopicFrame()
                                      .build();
-    assertEq(message, input.convert(frames));
+    assertMessage(message, input.convert(frames));
   }
 
   @Test
@@ -124,7 +124,7 @@ public class InputOutputAdapterTest {
     assert !framesIter.hasNext();
 
     InputAdapter input = InputAdapter.builder().build();
-    assertEq(message, input.convert(frames));
+    assertMessage(message, input.convert(frames));
   }
 
   @Test
@@ -164,7 +164,7 @@ public class InputOutputAdapterTest {
     InputAdapter input = InputAdapter.builder()
                                      .expectIdentities()
                                      .build();
-    assertEq(message, input.convert(frames));
+    assertMessage(message, input.convert(frames));
   }
 
   @Test
@@ -206,7 +206,7 @@ public class InputOutputAdapterTest {
     InputAdapter input = InputAdapter.builder()
                                      .expectIdentities()
                                      .build();
-    assertEq(message, input.convert(frames));
+    assertMessage(message, input.convert(frames));
   }
 
   @Test
@@ -232,7 +232,7 @@ public class InputOutputAdapterTest {
                                      .awareOfExtendedPubSub()
                                      .build();
 
-    assertEq(message, input.convert(frames));
+    assertMessage(message, input.convert(frames));
   }
 
   @Test
@@ -258,7 +258,7 @@ public class InputOutputAdapterTest {
                                      .awareOfExtendedPubSub()
                                      .build();
 
-    assertEq(message, input.convert(frames));
+    assertMessage(message, input.convert(frames));
   }
 
   private void assertNextFrame(byte[] frame, Iterator<byte[]> it) {
@@ -269,7 +269,7 @@ public class InputOutputAdapterTest {
     assert Arrays.equals(a, b);
   }
 
-  private void assertEq(ZmqMessage a, ZmqMessage b) {
+  private void assertMessage(ZmqMessage a, ZmqMessage b) {
     assert a != b;
     assertEq(a.topic(), b.topic());
     assertEquals(a.extendedPubSubFlag(), b.extendedPubSubFlag());
@@ -282,6 +282,6 @@ public class InputOutputAdapterTest {
       assertEq(a_identities.get(i), b_identities.get(i));
     }
 
-    assertArrayEquals(a.headersAsBinary(), b.headersAsBinary());
+    assertArrayEquals(a.headers(), b.headers());
   }
 }
