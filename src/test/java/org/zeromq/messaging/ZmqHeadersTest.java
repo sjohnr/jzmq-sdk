@@ -41,11 +41,11 @@ public class ZmqHeadersTest {
   public void t1() {
     ZmqHeaders headers = ZmqHeaders.builder("h0=abc,h1=xyz789,h2=,h3=".getBytes()).build();
 
-    assertEquals("abc", headers.getHeader(compile("h0=(\\w*+)[,]?"))); // expecting header by regexp.
-    assertEquals("xyz789", headers.getHeader(compile("h1=(\\w*+)[,]?"))); // expecting header by regexp.
-    assertEquals("", headers.getHeader(compile("h2=(\\w*+)[,]?"))); // expecting header by regexp.
-    assertEquals("", headers.getHeader(compile("h3=(\\w*+)[,]?"))); // expecting header by regexp.
-    assertNull(headers.getHeader(compile("h4=(\\w*+)[,]?"))); // not expecting header even by regexp.
+    assertEquals("abc", headers.getHeader(compile("h0=(\\w*)[,]?"))); // expecting header by regexp.
+    assertEquals("xyz789", headers.getHeader(compile("h1=(\\w*)[,]?"))); // expecting header by regexp.
+    assertEquals("", headers.getHeader(compile("h2=(\\w*)[,]?"))); // expecting header by regexp.
+    assertEquals("", headers.getHeader(compile("h3=(\\w*)[,]?"))); // expecting header by regexp.
+    assertNull(headers.getHeader(compile("h4=(\\w*)[,]?"))); // not expecting header even by regexp.
     assertNull(headers.getHeader("h0")); // not expecting header by header name.
   }
 
@@ -55,9 +55,9 @@ public class ZmqHeadersTest {
     ZmqHeaders.builder(new byte[0]);
 
     ZmqHeaders headers = ZmqHeaders.builder("0=,1=,2=".getBytes()).build();
-    assertEquals("", headers.getHeader(compile("0=(\\w*+)[,]?"))); // expecting header by regexp.
-    assertEquals("", headers.getHeader(compile("1=(\\w*+)[,]?"))); // expecting header by regexp.
-    assertEquals("", headers.getHeader(compile("2=(\\w*+)[,]?"))); // expecting header by regexp.
+    assertEquals("", headers.getHeader(compile("0=(\\w*)[,]?"))); // expecting header by regexp.
+    assertEquals("", headers.getHeader(compile("1=(\\w*)[,]?"))); // expecting header by regexp.
+    assertEquals("", headers.getHeader(compile("2=(\\w*)[,]?"))); // expecting header by regexp.
   }
 
   @Test
@@ -81,8 +81,8 @@ public class ZmqHeadersTest {
 
     ZmqHeaders merge = ZmqHeaders.builder(headers.asBinary()).set("c", "c").set("d", "d").build();
     assertEquals("a=a,b=b,c=c,d=d", new String(merge.asBinary()));
-    assertEquals("a", merge.getHeader(compile("a=(\\w*+)[,]?")));
-    assertEquals("b", merge.getHeader(compile("b=(\\w*+)[,]?")));
+    assertEquals("a", merge.getHeader(compile("a=(\\w*)[,]?")));
+    assertEquals("b", merge.getHeader(compile("b=(\\w*)[,]?")));
     assertEquals("c", merge.getHeader("c"));
     assertEquals("d", merge.getHeader("d"));
   }

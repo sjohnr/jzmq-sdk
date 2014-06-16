@@ -28,7 +28,7 @@ public final class ZmqCommonHeaders {
   public static final String ZMQ_MESSAGE_TYPE_PING = "PING";
 
   public static enum Header {
-    ZMQ_MESSAGE_TYPE("zmq_msg_type", Pattern.compile("zmq_msg_type=(\\w*+)[,]?"));
+    ZMQ_MESSAGE_TYPE("zmq_msg_type", Pattern.compile("zmq_msg_type=(\\w*)[,]?"));
 
     private final String id;
     private final Pattern pattern;
