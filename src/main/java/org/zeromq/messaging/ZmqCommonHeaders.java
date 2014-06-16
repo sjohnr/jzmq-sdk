@@ -20,30 +20,28 @@
 
 package org.zeromq.messaging;
 
-import java.util.regex.Pattern;
-
 /** Common ZMQ message headers. */
 public final class ZmqCommonHeaders {
 
   public static final String ZMQ_MESSAGE_TYPE_PING = "PING";
 
   public static enum Header {
-    ZMQ_MESSAGE_TYPE("zmq_msg_type", Pattern.compile("zmq_msg_type=(\\w*)[,]?"));
+    ZMQ_MESSAGE_TYPE("zmq_msg_type");
 
     private final String id;
-    private final Pattern pattern;
+    private final byte[] bin;
 
-    private Header(String id, Pattern pattern) {
+    private Header(String id) {
       this.id = id;
-      this.pattern = pattern;
+      this.bin = id.getBytes();
     }
 
     public String id() {
       return id;
     }
 
-    public Pattern pattern() {
-      return pattern;
+    public byte[] bin() {
+      return bin;
     }
   }
 

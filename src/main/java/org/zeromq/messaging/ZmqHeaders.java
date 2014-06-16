@@ -22,15 +22,16 @@ package org.zeromq.messaging;
 
 import org.zeromq.support.ObjectBuilder;
 
+import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
 
 /**
@@ -47,12 +48,15 @@ import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
  */
 public final class ZmqHeaders {
 
+  private static final byte EQ = "=".getBytes()[0];
+  private static final byte COMMA = ",".getBytes()[0];
+
   /** Outbound key-value string map. */
   private final Map<String, String> _map = new LinkedHashMap<String, String>();
   /** Helper attribute for optimal building binary format of {@link #_map}. */
   private int _mapCharCounter = 0;
   /** Inbound key-value comma separated string. */
-  private String _headers;
+  private byte[] _headers;
 
   public static final class Builder implements ObjectBuilder<ZmqHeaders> {
 
@@ -64,7 +68,7 @@ public final class ZmqHeaders {
 
     private Builder(byte[] headers) {
       checkArgument(headers != null);
-      _target._headers = new String(headers);
+      _target._headers = headers;
     }
 
     public Builder set(String k, String v) {
@@ -106,28 +110,53 @@ public final class ZmqHeaders {
   /**
    * Getting outbound header value by header name.
    *
-   * @param k header name or id.
+   * @param k header name.
    * @return null or header value from internal outbound {@link #_map}.
    */
   public String getHeader(String k) {
+    checkArgument(k != null);
     return _map.get(k);
   }
 
   /**
    * Getting inbound header value by header name.
    *
-   * @param pair regexp pattern representing match for header name and value.
+   * @param k header name.
    * @return null or header value from internal inbound key-value {@link #_headers}.
    */
-  public String getHeader(Pattern pair) {
+  public String getHeader(byte[] k) {
     if (_headers == null) {
       return null;
     }
-    Matcher m = pair.matcher(_headers);
-    if (!m.find()) {
-      return null;
+    int start = -1;
+    for (int i = 0; i < _headers.length; ) {
+      int j = 0;
+      for (; j < k.length; j++) {
+        if (k[j] != _headers[i++]) {
+          break;
+        }
+      }
+      if (j == k.length) {
+        checkState(EQ == _headers[i]); // check that "=" was matched.
+        start = i + 1; // match beginning of the value.
+        break;
+      }
     }
-    return m.group(1);
+    if (start != -1) {
+      if (start == _headers.length) {
+        return "";
+      }
+      int end = _headers.length;
+      for (int i = start; i < end; i++) {
+        // find "," or the end of string.
+        if (COMMA == _headers[i]) {
+          end = i;
+          break;
+        }
+      }
+      return new String(Arrays.copyOfRange(_headers, start, end));
+    }
+    return null;
   }
 
   public byte[] asBinary() {
@@ -136,33 +165,37 @@ public final class ZmqHeaders {
     }
 
     Set<Map.Entry<String, String>> entries = _map.entrySet();
-    int entriesSize = entries.size();
-    int equalSignsNum = entriesSize;
-    int commaSignsNum = entriesSize - 1;
+    int mapSize = entries.size();
+    int equalSignsNum = mapSize;
+    int commaSignsNum = mapSize - 1;
 
-    // if inbound headers are present -- then add them as well.
-    int headersLen = 0;
-    if (_headers != null && _headers.length() > 0) {
-      headersLen = _headers.length() + 1 /* one more comma character */;
-    }
-    CharBuffer buffer = CharBuffer.allocate(headersLen + _mapCharCounter + equalSignsNum + commaSignsNum);
-    if (_headers != null) {
+    byte[] headers = new byte[0];
+    if (_headers != null && _headers.length > 0) {
+      ByteBuffer buffer = ByteBuffer.allocate(mapSize > 0 ? _headers.length + 1 : _headers.length);
       buffer.put(_headers);
-      if (entriesSize > 0) {
-        buffer.put(",");
+      if (mapSize > 0) {
+        buffer.put(COMMA);
       }
+      headers = buffer.array();
     }
+
     int i = 0;
+    CharBuffer buffer = CharBuffer.allocate(_mapCharCounter + equalSignsNum + commaSignsNum);
     for (Map.Entry<String, String> entry : entries) {
       buffer.put(entry.getKey());
       buffer.put("=");
       buffer.put(entry.getValue());
-      if (i != entriesSize - 1) {
+      if (i != mapSize - 1) {
         buffer.put(",");
       }
       i++;
     }
+    byte[] map = Charset.forName("ISO-8859-1").encode((CharBuffer) buffer.flip()).array();
 
-    return Charset.forName("ISO-8859-1").encode((CharBuffer) buffer.flip()).array();
+    byte[] bin = new byte[headers.length + map.length];
+    System.arraycopy(headers, 0, bin, 0, headers.length);
+    System.arraycopy(map, 0, bin, headers.length, map.length);
+
+    return bin;
   }
 }
