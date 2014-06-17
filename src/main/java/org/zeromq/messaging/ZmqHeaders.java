@@ -146,7 +146,12 @@ public final class ZmqHeaders {
           break;
         }
       }
-      h++;
+      // progress header index until next "," or the end of string.
+      for (;h < headersLen;) {
+        if (COMMA == _headers[h++]) {
+          break;
+        }
+      }
     }
     if (start == -1) {
       return null;
