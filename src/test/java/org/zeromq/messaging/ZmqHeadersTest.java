@@ -33,15 +33,18 @@ public class ZmqHeadersTest {
     ZmqHeaders headers = ZmqHeaders.builder().build(); // empty headers.
 
     assertNull(headers.getHeader(""));
+    assertNull(headers.getHeader("".getBytes()));
+    assertNull(headers.getHeader("h0".getBytes()));
     assertEquals("", new String(headers.asBinary()));
   }
 
   @Test
   public void t1() {
-    ZmqHeaders headers = ZmqHeaders.builder("h0=abc,h1=xyz789,h2=,h3=,h737=v737".getBytes()).build();
+    ZmqHeaders headers = ZmqHeaders.builder("ctx_id=abc,h111=xyz789,cnx_id=11rr,h2=,h3=,h737=v737".getBytes()).build();
 
-    assertEquals("abc", headers.getHeader("h0".getBytes())); // expecting header.
-    assertEquals("xyz789", headers.getHeader("h1".getBytes())); // expecting header.
+    assertEquals("11rr", headers.getHeader("cnx_id".getBytes())); // expecting header.
+    assertEquals("abc", headers.getHeader("ctx_id".getBytes())); // expecting header.
+    assertEquals("xyz789", headers.getHeader("h111".getBytes())); // expecting header.
     assertEquals("", headers.getHeader("h2".getBytes())); // expecting header.
     assertEquals("", headers.getHeader("h3".getBytes())); // expecting header.
     assertEquals("v737", headers.getHeader("h737".getBytes())); // expecting header.
@@ -85,5 +88,11 @@ public class ZmqHeadersTest {
     assertEquals("d", merge.getHeader("d"));
     assertEquals("a", merge.getHeader("a".getBytes()));
     assertEquals("b", merge.getHeader("b".getBytes()));
+  }
+
+  @Test
+  public void t5() {
+    ZmqHeaders headers = ZmqHeaders.builder("h0=v0,h1=v1".getBytes()).build();
+    assertEquals("h0=v0,h1=v1", new String(headers.asBinary()));
   }
 }
