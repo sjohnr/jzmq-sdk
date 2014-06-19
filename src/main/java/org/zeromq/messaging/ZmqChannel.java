@@ -1,5 +1,7 @@
 package org.zeromq.messaging;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +15,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.zeromq.support.ZmqUtils.makeHash;
-import static org.zeromq.support.ZmqUtils.mapAsJson;
 
 public final class ZmqChannel implements HasDestroy {
 
@@ -193,7 +194,14 @@ public final class ZmqChannel implements HasDestroy {
       }
       opts.put("proc_limit", _target.props.procLimit());
 
-      LOG.info("Created socket: {}.", mapAsJson(opts));
+      String result;
+      try {
+        result = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(opts);
+      }
+      catch (JsonProcessingException e) {
+        throw ZmqException.seeCause(e);
+      }
+      LOG.info("Created socket: {}.", result);
     }
 
     String getLoggableSocketType() {

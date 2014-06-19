@@ -3,7 +3,6 @@ package org.zeromq.messaging;
 import org.zeromq.support.ObjectBuilder;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.zeromq.support.ZmqUtils.isEmptyFrame;
 
 public final class ZmqMessage {
 
@@ -39,7 +38,6 @@ public final class ZmqMessage {
     public Builder withIdentities(ZmqFrames frames) {
       _target.identities = new ZmqFrames(frames.size());
       for (byte[] identity : frames) {
-        checkArgument(!isEmptyFrame(identity));
         _target.identities.add(identity);
       }
       return this;
