@@ -1,23 +1,3 @@
-/*
- * Copyright (c) 2012 artem.vysochyn@gmail.com
- * Copyright (c) 2013 Other contributors as noted in the AUTHORS file
- *
- * jzmq-sdk is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * jzmq-sdk is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * jzmq-sdk became possible because of jzmq binding and zmq library itself.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package org.zeromq.messaging;
 
 import org.junit.Test;
@@ -61,7 +41,9 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
     ZmqChannel.DEALER(ctx())
               .withProps(Props.builder().withConnectAddr(inprocAddr("service")).build())
-              .withProps(Props.builder().withConnectAddr(inprocAddr("service-noabc")) /* not available inproc address */.build())
+              .withProps(Props.builder()
+                             .withConnectAddr(inprocAddr("service-noabc")) /* not available inproc address */
+                             .build())
               .build();
   }
 
@@ -167,8 +149,12 @@ public class ZmqChannelTest extends ZmqAbstractTest {
   public void t6() {
     LOG.info("Test poller operations on connected channel.");
 
-    ZmqChannel client = ZmqChannel.DEALER(ctx()).withProps(Props.builder().withConnectAddr(connAddr(6677)).build()).build();
-    ZmqChannel server = ZmqChannel.ROUTER(ctx()).withProps(Props.builder().withBindAddr(bindAddr(6677)).build()).build();
+    ZmqChannel client = ZmqChannel.DEALER(ctx())
+                                  .withProps(Props.builder().withConnectAddr(connAddr(6677)).build())
+                                  .build();
+    ZmqChannel server = ZmqChannel.ROUTER(ctx())
+                                  .withProps(Props.builder().withBindAddr(bindAddr(6677)).build())
+                                  .build();
 
     ZMQ.Poller clientPoller = new ZMQ.Poller(1);
     client.watchRecv(clientPoller);
@@ -212,8 +198,12 @@ public class ZmqChannelTest extends ZmqAbstractTest {
   public void t7() {
     LOG.info("Test .recvDontWait()/.recv() operations.");
 
-    ZmqChannel client = ZmqChannel.DEALER(ctx()).withProps(Props.builder().withConnectAddr(connAddr(6677)).build()).build();
-    ZmqChannel server = ZmqChannel.ROUTER(ctx()).withProps(Props.builder().withBindAddr(bindAddr(6677)).build()).build();
+    ZmqChannel client = ZmqChannel.DEALER(ctx())
+                                  .withProps(Props.builder().withConnectAddr(connAddr(6677)).build())
+                                  .build();
+    ZmqChannel server = ZmqChannel.ROUTER(ctx())
+                                  .withProps(Props.builder().withBindAddr(bindAddr(6677)).build())
+                                  .build();
 
     assert client.send(HELLO());
     assert server.recvDontWait() == null; // at this point non-blocking .recv() returns null.
@@ -266,7 +256,9 @@ public class ZmqChannelTest extends ZmqAbstractTest {
   public void t10() {
     LOG.info("Test that you can register/unregister channel on pollers several times.");
 
-    ZmqChannel channel = ZmqChannel.ROUTER(ctx()).withProps(Props.builder().withBindAddr(bindAddr(6677)).build()).build();
+    ZmqChannel channel = ZmqChannel.ROUTER(ctx())
+                                   .withProps(Props.builder().withBindAddr(bindAddr(6677)).build())
+                                   .build();
 
     ZMQ.Poller p = new ZMQ.Poller(1);
     channel.watchRecv(p);
