@@ -204,7 +204,7 @@ public class InputOutputAdapterTest {
     ZmqFrames frames = output.convert(message);
     Iterator<byte[]> framesIter = frames.iterator();
 
-    assertNextFrame(ZmqUtils.mergeBytes(Arrays.asList(new byte[]{BYTE_SUB}, topic)), framesIter);
+    assertNextFrame(ZmqUtils.mergeBytes(new byte[]{BYTE_SUB}, topic), framesIter);
     assert !framesIter.hasNext();
 
     InputAdapter input = InputAdapter.builder()
@@ -230,7 +230,7 @@ public class InputOutputAdapterTest {
     ZmqFrames frames = output.convert(message);
     Iterator<byte[]> framesIter = frames.iterator();
 
-    assertNextFrame(ZmqUtils.mergeBytes(Arrays.asList(new byte[]{BYTE_UNSUB}, EMPTY_FRAME)), framesIter);
+    assertNextFrame(ZmqUtils.mergeBytes(new byte[]{BYTE_UNSUB}, EMPTY_FRAME), framesIter);
     assert !framesIter.hasNext();
 
     InputAdapter input = InputAdapter.builder()

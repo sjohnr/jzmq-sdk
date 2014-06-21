@@ -2,13 +2,11 @@ package org.zeromq.messaging;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
 import org.zeromq.support.HasDestroy;
 import org.zeromq.support.HasInvariant;
-import org.zeromq.support.ObjectAdapter;
 import org.zeromq.support.ObjectBuilder;
 
 import java.util.LinkedHashMap;
@@ -179,7 +177,7 @@ public final class ZmqChannel implements HasDestroy {
       Map<String, Object> opts = new LinkedHashMap<String, Object>();
 
       opts.put("type", getLoggableSocketType());
-      opts.put("custom_identity", makeHash(ImmutableList.of(socket.getIdentity())));
+      opts.put("custom_identity", makeHash(socket.getIdentity()));
       opts.put("hwm_send", socket.getSndHWM());
       opts.put("hwm_recv", socket.getRcvHWM());
       opts.put("linger", socket.getLinger());
@@ -243,8 +241,8 @@ public final class ZmqChannel implements HasDestroy {
   private Props props;
 
   private ZMQ.Socket _socket;
-  private ObjectAdapter<ZmqFrames, ZmqMessage> _inputAdapter;
-  private ObjectAdapter<ZmqMessage, ZmqFrames> _outputAdapter;
+  private InputAdapter _inputAdapter;
+  private OutputAdapter _outputAdapter;
   private ZMQ.Poller _poller;
   private int _pollableInd = POLLABLE_IND_NOT_INITIALIZED;
 
@@ -302,17 +300,18 @@ public final class ZmqChannel implements HasDestroy {
    */
   public boolean send(ZmqMessage message) {
     assertSocket();
-    ZmqFrames output = _outputAdapter.convert(message);
-    int outputSize = output.size();
-    int i = 0;
-    boolean sent = false;
-    for (byte[] frame : output) {
-      sent = _socket.send(frame, ++i < outputSize ? ZMQ.SNDMORE : ZMQ.DONTWAIT);
-      if (!sent) {
-        return false;
-      }
-    }
-    return sent;
+    return send(_outputAdapter.convert(message));
+  }
+
+  /**
+   * Sends a message. May block if send_timeout on socket has been specified.
+   *
+   * @param message message to send.
+   * @return flag indicating success or fail for send operation.
+   */
+  public boolean sendInprocRef(ZmqMessage message) {
+    assertSocket();
+    return send(_outputAdapter.convertInprocRef(message));
   }
 
   /**
@@ -321,7 +320,7 @@ public final class ZmqChannel implements HasDestroy {
    * @return a message or null.
    */
   public ZmqMessage recv() {
-    return recv(0 /* block if necessary */);
+    return _inputAdapter.convert(recv(0 /* block if necessary */));
   }
 
   /**
@@ -330,7 +329,25 @@ public final class ZmqChannel implements HasDestroy {
    * @return a message or null.
    */
   public ZmqMessage recvDontWait() {
-    return recv(ZMQ.DONTWAIT);
+    return _inputAdapter.convert(recv(ZMQ.DONTWAIT));
+  }
+
+  /**
+   * Receives a message. May block if recv_timeout on socket has been specified.
+   *
+   * @return a message or null.
+   */
+  public ZmqMessage recvInprocRef() {
+    return _inputAdapter.convertInprocRef(recv(0 /* block if necessary */));
+  }
+
+  /**
+   * Receives a message. Doesn't block. Doesn't respect recv_timeout on socket if it has been specified.
+   *
+   * @return a message or null.
+   */
+  public ZmqMessage recvInprocRefDontWait() {
+    return _inputAdapter.convertInprocRef(recv(ZMQ.DONTWAIT));
   }
 
   /**
@@ -443,7 +460,17 @@ public final class ZmqChannel implements HasDestroy {
     return _pollableInd != POLLABLE_IND_NOT_INITIALIZED;
   }
 
-  private ZmqMessage recv(int flag) {
+  private boolean send(ZmqFrames output) {
+    int outputSize = output.size();
+    int i = 0;
+    boolean sent = false;
+    for (byte[] frame : output) {
+      sent = _socket.send(frame, ++i < outputSize ? ZMQ.SNDMORE : ZMQ.DONTWAIT);
+    }
+    return sent;
+  }
+
+  private ZmqFrames recv(int flag) {
     assertSocket();
     ZmqFrames input = new ZmqFrames();
     for (; ; ) {
@@ -456,6 +483,6 @@ public final class ZmqChannel implements HasDestroy {
         break;
       }
     }
-    return _inputAdapter.convert(input);
+    return input;
   }
 }

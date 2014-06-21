@@ -30,7 +30,6 @@ public final class ZmqMessage {
     }
 
     public Builder withTopic(byte[] topic) {
-      checkArgument(topic != null);
       _target.topic = topic;
       return this;
     }
@@ -44,14 +43,24 @@ public final class ZmqMessage {
     }
 
     public Builder withHeaders(byte[] headers) {
-      checkArgument(headers != null);
       _target.headers = headers;
       return this;
     }
 
     public Builder withPayload(byte[] payload) {
-      checkArgument(payload != null);
       _target.payload = payload;
+      return this;
+    }
+
+    public Builder withInprocRef(int i) {
+      checkArgument(i >= 0);
+      _target.inprocRef = i;
+      return this;
+    }
+
+    public Builder withInprocRef(byte[] buf) {
+      checkArgument(buf.length == 4);
+      _target.inprocRef = ((buf[0] & 0xFF) << 24) | ((buf[1] & 0xFF) << 16) | ((buf[2] & 0xFF) << 8) | buf[3] & 0xFF;
       return this;
     }
 
@@ -105,6 +114,12 @@ public final class ZmqMessage {
    * <b>NOTE: this field is optional.</b>
    */
   private byte extendedPubSubFlag = -1;
+  /**
+   * Integer value for efficient inproc multithreading communication.
+   * <p/>
+   * <b>NOTE: this field is optional.</b>
+   */
+  private int inprocRef = -1;
 
   //// CONSTRUCTORS
 
@@ -135,6 +150,10 @@ public final class ZmqMessage {
 
   public byte[] payload() {
     return payload;
+  }
+
+  public int inprocRef() {
+    return inprocRef;
   }
 
   public boolean isSubscribe() {

@@ -25,6 +25,18 @@ public abstract class ZmqAbstractTest {
     _ctx.destroy();
   }
 
+  public static ZmqMessage REF0() {
+    return ZmqMessage.builder().withInprocRef(0).build();
+  }
+
+  public static ZmqMessage REF42() {
+    return ZmqMessage.builder().withInprocRef(42).build();
+  }
+
+  public static ZmqMessage REFMax() {
+    return ZmqMessage.builder().withInprocRef(Integer.MAX_VALUE).build();
+  }
+
   public static ZmqMessage HELLO() {
     return ZmqMessage.builder().withHeaders(HEADERS()).withPayload("hello".getBytes()).build();
   }
@@ -57,14 +69,6 @@ public abstract class ZmqAbstractTest {
 
   public static String bindAddr(int port) {
     return "tcp://*:" + port;
-  }
-
-  public static String notAvailConnAddr0() {
-    return "tcp://localhost:667";
-  }
-
-  public static String notAvailConnAddr1() {
-    return "tcp://localhost:670";
   }
 
   public static String inprocAddr(String addr) {

@@ -1,9 +1,6 @@
 package org.zeromq.messaging;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zeromq.support.HasInvariant;
-import org.zeromq.support.ObjectAdapter;
 import org.zeromq.support.ObjectBuilder;
 
 import java.nio.ByteBuffer;
@@ -22,28 +19,26 @@ import static org.zeromq.support.ZmqUtils.isEmptyFrame;
  * ZmqFrames([FRAME, ..., FRAME]) => ZmqMessage([TOPIC | [HEADER] | PAYLOAD]).
  * </pre>
  */
-class InputAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
+final class InputAdapter {
 
-  private static final Logger LOG = LoggerFactory.getLogger(InputAdapter.class);
-
-  public static class Builder implements ObjectBuilder<InputAdapter>, HasInvariant {
+  final static class Builder implements ObjectBuilder<InputAdapter>, HasInvariant {
 
     private final InputAdapter _target = new InputAdapter();
 
     private Builder() {
     }
 
-    public Builder awareOfTopicFrame() {
+    Builder awareOfTopicFrame() {
       _target.awareOfTopicFrame = true;
       return this;
     }
 
-    public Builder expectIdentities() {
+    Builder expectIdentities() {
       _target.expectIdentities = true;
       return this;
     }
 
-    public Builder awareOfExtendedPubSub() {
+    Builder awareOfExtendedPubSub() {
       _target.awareOfExtendedPubSub = true;
       return this;
     }
@@ -70,66 +65,108 @@ class InputAdapter implements ObjectAdapter<ZmqFrames, ZmqMessage> {
 
   //// METHODS
 
-  public static Builder builder() {
+  static Builder builder() {
     return new Builder();
   }
 
-  @Override
-  public ZmqMessage convert(ZmqFrames frames) {
-    try {
-      ZmqMessage.Builder builder = ZmqMessage.builder();
+  ZmqMessage convert(ZmqFrames frames) {
+    if (frames == null || frames.isEmpty()) {
+      return null;
+    }
 
-      // -- if this is XPUB or XSUB then handle frames accordingly.
-      if (awareOfExtendedPubSub) {
-        byte[] buf = frames.poll();
-        builder.withExtendedPubSubFlag(buf[0]);
-        builder.withTopic(buf.length > 1 ? Arrays.copyOfRange(buf, 1, buf.length) : EMPTY_FRAME);
-        return builder.build();
-      }
+    ZmqMessage.Builder builder = ZmqMessage.builder();
 
-      // --- topic
-
-      if (awareOfTopicFrame) {
-        builder.withTopic(frames.poll());
-      }
-
-      // --- identities
-
-      if (expectIdentities) {
-        ZmqFrames identities = new ZmqFrames();
-        for (int emptyFrameSeen = 0; ; ) {
-          byte[] frame = frames.poll();
-          if (isEmptyFrame(frame)) {
-            ++emptyFrameSeen;
-          }
-          if (emptyFrameSeen == 2) {
-            break;
-          }
-          if (!isEmptyFrame(frame)) {
-            emptyFrameSeen = 0;
-            identities.add(frame);
-          }
-        }
-        builder.withIdentities(identities);
-      }
-
-      // --- headers_size, headers, payload_size, payload
-
-      ByteBuffer buf = ByteBuffer.wrap(frames.poll());
-
-      byte[] headers = new byte[buf.getInt()];
-      buf.get(headers);
-      builder.withHeaders(headers);
-
-      byte[] payload = new byte[buf.getInt()];
-      buf.get(payload);
-      builder.withPayload(payload);
-
+    // -- if this is XPUB or XSUB then handle frames accordingly.
+    if (awareOfExtendedPubSub) {
+      byte[] buf = frames.poll();
+      builder.withExtendedPubSubFlag(buf[0]);
+      builder.withTopic(buf.length > 1 ? Arrays.copyOfRange(buf, 1, buf.length) : EMPTY_FRAME);
       return builder.build();
     }
-    catch (Exception e) {
-      LOG.error("!!! Failed to convert incoming ZmqFrames: " + e, e);
-      throw ZmqException.seeCause(e);
+
+    // --- topic
+
+    if (awareOfTopicFrame) {
+      builder.withTopic(frames.poll());
     }
+
+    // --- identities
+
+    if (expectIdentities) {
+      ZmqFrames identities = new ZmqFrames();
+      for (int emptyFrameSeen = 0; ; ) {
+        byte[] frame = frames.poll();
+        if (isEmptyFrame(frame)) {
+          ++emptyFrameSeen;
+        }
+        if (emptyFrameSeen == 2) {
+          break;
+        }
+        if (!isEmptyFrame(frame)) {
+          emptyFrameSeen = 0;
+          identities.add(frame);
+        }
+      }
+      builder.withIdentities(identities);
+    }
+
+    // --- headers_size, headers, payload_size, payload
+
+    ByteBuffer buf = ByteBuffer.wrap(frames.poll());
+
+    byte[] headers = new byte[buf.getInt()];
+    buf.get(headers);
+    builder.withHeaders(headers);
+
+    byte[] payload = new byte[buf.getInt()];
+    buf.get(payload);
+    builder.withPayload(payload);
+
+    return builder.build();
+  }
+
+  ZmqMessage convertInprocRef(ZmqFrames frames) {
+    if (frames == null || frames.isEmpty()) {
+      return null;
+    }
+
+    ZmqMessage.Builder builder = ZmqMessage.builder();
+
+    // -- if this is XPUB or XSUB then handle frames accordingly --
+    if (awareOfExtendedPubSub) {
+      byte[] buf = frames.poll();
+      builder.withExtendedPubSubFlag(buf[0]);
+      builder.withTopic(buf.length > 1 ? Arrays.copyOfRange(buf, 1, buf.length) : EMPTY_FRAME);
+      return builder.build();
+    }
+
+    // --- topic --
+    if (awareOfTopicFrame) {
+      builder.withTopic(frames.poll());
+    }
+
+    // --- identities --
+    if (expectIdentities) {
+      ZmqFrames identities = new ZmqFrames();
+      for (int emptyFrameSeen = 0; ; ) {
+        byte[] frame = frames.poll();
+        if (isEmptyFrame(frame)) {
+          ++emptyFrameSeen;
+        }
+        if (emptyFrameSeen == 2) {
+          break;
+        }
+        if (!isEmptyFrame(frame)) {
+          emptyFrameSeen = 0;
+          identities.add(frame);
+        }
+      }
+      builder.withIdentities(identities);
+    }
+
+    // --- inprocRef --
+    builder.withInprocRef(frames.poll());
+
+    return builder.build();
   }
 }

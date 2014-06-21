@@ -14,7 +14,7 @@ public class ZmqUtils {
     return frame.length == 0;
   }
 
-  public static long makeHash(Iterable<byte[]> buf) {
+  public static long makeHash(byte[]... buf) {
     CRC32 hashFunction = new CRC32();
     for (byte[] b : buf) {
       hashFunction.update(b);
@@ -22,7 +22,7 @@ public class ZmqUtils {
     return hashFunction.getValue();
   }
 
-  public static byte[] mergeBytes(Iterable<byte[]> bufs) {
+  public static byte[] mergeBytes(byte[]... bufs) {
     int totalLen = 0;
     for (byte[] buf : bufs) {
       totalLen += buf.length;

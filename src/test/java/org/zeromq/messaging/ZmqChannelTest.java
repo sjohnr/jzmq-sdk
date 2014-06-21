@@ -7,6 +7,7 @@ import org.zeromq.ZMQ;
 import org.zeromq.support.exception.JniExceptionHandler;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.zeromq.messaging.ZmqException.ErrorCode.FATAL;
 
@@ -305,5 +306,39 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     assert client.recv() != null;
     assert client.recv() == null; // second message has been silently dropped.
     assert client.recv() == null; // thrird message has been silently dropped.
+  }
+
+  @Test
+  public void t12() {
+    LOG.info("Test inprocRef: basic functioning.");
+
+    ZmqChannel server = ZmqChannel.ROUTER(ctx())
+                                  .withProps(Props.builder()
+                                                  .withBindAddr(inprocAddr("inprocRefTest"))
+                                                  .withRouterMandatory()
+                                                  .build())
+                                  .build();
+
+    ZmqChannel client = ZmqChannel.DEALER(ctx())
+                                  .withProps(Props.builder()
+                                                  .withConnectAddr(inprocAddr("inprocRefTest"))
+                                                  .build())
+                                  .build();
+
+    client.sendInprocRef(REF0());
+    client.sendInprocRef(REF42());
+    client.sendInprocRef(REFMax());
+
+    ZmqMessage ref0 = server.recvInprocRef();
+    assertNotNull(ref0);
+    assertEquals(0, ref0.inprocRef());
+
+    ZmqMessage ref42 = server.recvInprocRef();
+    assertNotNull(ref42);
+    assertEquals(42, ref42.inprocRef());
+
+    ZmqMessage refMax = server.recvInprocRef();
+    assertNotNull(refMax);
+    assertEquals(Integer.MAX_VALUE, refMax.inprocRef());
   }
 }
