@@ -1,9 +1,9 @@
 package org.zeromq.messaging;
 
+import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.support.ZmqUtils;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -17,6 +17,7 @@ import static org.junit.Assert.assertEquals;
 import static org.zeromq.messaging.ZmqMessage.BYTE_SUB;
 import static org.zeromq.messaging.ZmqMessage.BYTE_UNSUB;
 import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
+import static org.zeromq.support.ZmqUtils.mergeBytes;
 
 public class InputOutputAdapterTest {
 
@@ -204,7 +205,7 @@ public class InputOutputAdapterTest {
     ZmqFrames frames = output.convert(message);
     Iterator<byte[]> framesIter = frames.iterator();
 
-    assertNextFrame(ZmqUtils.mergeBytes(new byte[]{BYTE_SUB}, topic), framesIter);
+    assertNextFrame(mergeBytes(ImmutableList.of(new byte[]{BYTE_SUB}, topic)), framesIter);
     assert !framesIter.hasNext();
 
     InputAdapter input = InputAdapter.builder()
@@ -230,7 +231,7 @@ public class InputOutputAdapterTest {
     ZmqFrames frames = output.convert(message);
     Iterator<byte[]> framesIter = frames.iterator();
 
-    assertNextFrame(ZmqUtils.mergeBytes(new byte[]{BYTE_UNSUB}, EMPTY_FRAME), framesIter);
+    assertNextFrame(mergeBytes(ImmutableList.of(new byte[]{BYTE_UNSUB}, EMPTY_FRAME)), framesIter);
     assert !framesIter.hasNext();
 
     InputAdapter input = InputAdapter.builder()

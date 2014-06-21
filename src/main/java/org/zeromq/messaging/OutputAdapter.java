@@ -1,5 +1,6 @@
 package org.zeromq.messaging;
 
+import com.google.common.collect.ImmutableList;
 import org.zeromq.support.HasInvariant;
 import org.zeromq.support.ObjectBuilder;
 
@@ -83,7 +84,7 @@ final class OutputAdapter {
     if (awareOfExtendedPubSub) {
       byte[] flag = {message.extendedPubSubFlag()};
       byte[] topic = message.topic();
-      target.add(mergeBytes(flag, topic));
+      target.add(mergeBytes(ImmutableList.of(flag, topic)));
       return target;
     }
 
@@ -128,7 +129,7 @@ final class OutputAdapter {
     if (awareOfExtendedPubSub) {
       byte[] flag = {message.extendedPubSubFlag()};
       byte[] topic = message.topic();
-      target.add(mergeBytes(flag, topic));
+      target.add(mergeBytes(ImmutableList.of(flag, topic)));
       return target;
     }
 

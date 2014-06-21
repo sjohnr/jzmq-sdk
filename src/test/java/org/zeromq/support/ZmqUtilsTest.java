@@ -1,5 +1,6 @@
 package org.zeromq.support;
 
+import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -9,7 +10,7 @@ public class ZmqUtilsTest {
 
   @Test
   public void t0() {
-    byte[] bytes = mergeBytes("AAA".getBytes(), "BBB".getBytes(), "CCC".getBytes());
+    byte[] bytes = mergeBytes(ImmutableList.of("AAA".getBytes(), "BBB".getBytes(), "CCC".getBytes()));
     // AAA
     assertEquals(65, bytes[0]);
     assertEquals(65, bytes[1]);

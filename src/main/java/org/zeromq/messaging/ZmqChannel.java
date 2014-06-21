@@ -2,6 +2,7 @@ package org.zeromq.messaging;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
@@ -177,7 +178,7 @@ public final class ZmqChannel implements HasDestroy {
       Map<String, Object> opts = new LinkedHashMap<String, Object>();
 
       opts.put("type", getLoggableSocketType());
-      opts.put("custom_identity", makeHash(socket.getIdentity()));
+      opts.put("custom_identity", makeHash(ImmutableList.of(socket.getIdentity())));
       opts.put("hwm_send", socket.getSndHWM());
       opts.put("hwm_recv", socket.getRcvHWM());
       opts.put("linger", socket.getLinger());
