@@ -341,4 +341,36 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     assertNotNull(refMax);
     assertEquals(Integer.MAX_VALUE, refMax.inprocRef());
   }
+
+  @Test
+  public void t13() throws InterruptedException {
+    LOG.info("Test dealer: basic functioning.");
+
+    ZmqChannel server = ZmqChannel.ROUTER(ctx())
+                                  .withProps(Props.builder()
+                                                  .withBindAddr(bindAddr(6677))
+                                                  .withRouterMandatory()
+                                                  .build())
+                                  .build();
+
+    ZmqChannel client = ZmqChannel.DEALER(ctx())
+                                  .withProps(Props.builder()
+                                                  .withConnectAddr(connAddr(6677))
+                                                  .withHwmSend(HWM_ONE)
+                                                  .withHwmRecv(HWM_ONE)
+                                                  .build())
+                                  .build();
+
+    waitSec();
+
+    client.send(HELLO());
+    client.send(CARP());
+    client.send(SHIRT());
+
+    assert server.recv() != null;
+    assert server.recv() != null;
+    assert server.recv() != null;
+
+    assert server.recv() == null;
+  }
 }
