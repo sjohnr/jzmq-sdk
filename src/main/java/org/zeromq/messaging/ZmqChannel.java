@@ -321,6 +321,7 @@ public final class ZmqChannel implements HasDestroy {
    * @return a message or null.
    */
   public ZmqMessage recv() {
+    assertSocket();
     return _inputAdapter.convert(recv(0 /* block if necessary */));
   }
 
@@ -330,6 +331,7 @@ public final class ZmqChannel implements HasDestroy {
    * @return a message or null.
    */
   public ZmqMessage recvDontWait() {
+    assertSocket();
     return _inputAdapter.convert(recv(ZMQ.DONTWAIT));
   }
 
@@ -339,6 +341,7 @@ public final class ZmqChannel implements HasDestroy {
    * @return a message or null.
    */
   public ZmqMessage recvInprocRef() {
+    assertSocket();
     return _inputAdapter.convertInprocRef(recv(0 /* block if necessary */));
   }
 
@@ -348,6 +351,7 @@ public final class ZmqChannel implements HasDestroy {
    * @return a message or null.
    */
   public ZmqMessage recvInprocRefDontWait() {
+    assertSocket();
     return _inputAdapter.convertInprocRef(recv(ZMQ.DONTWAIT));
   }
 
@@ -467,12 +471,14 @@ public final class ZmqChannel implements HasDestroy {
     boolean sent = false;
     for (byte[] frame : output) {
       sent = _socket.send(frame, ++i < outputSize ? ZMQ.SNDMORE : ZMQ.DONTWAIT);
+      if (!sent) {
+        return false;
+      }
     }
     return sent;
   }
 
   private ZmqFrames recv(int flag) {
-    assertSocket();
     ZmqFrames input = new ZmqFrames();
     for (; ; ) {
       byte[] frame = _socket.recv(flag);
