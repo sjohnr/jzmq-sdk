@@ -5,7 +5,7 @@ import org.junit.Before;
 
 import java.util.concurrent.TimeUnit;
 
-import static org.zeromq.support.ZmqUtils.EMPTY_FRAME;
+import static org.zeromq.messaging.ZmqFrames.EMPTY_FRAME;
 
 public abstract class ZmqAbstractTest {
 

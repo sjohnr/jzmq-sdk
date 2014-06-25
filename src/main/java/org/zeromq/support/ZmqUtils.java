@@ -8,12 +8,11 @@ import java.util.Iterator;
 import java.util.zip.CRC32;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static org.zeromq.messaging.ZmqFrames.BYTE_SUB;
+import static org.zeromq.messaging.ZmqFrames.BYTE_UNSUB;
+import static org.zeromq.messaging.ZmqFrames.EMPTY_FRAME;
 
 public class ZmqUtils {
-
-  public static final byte[] EMPTY_FRAME = "".getBytes();
-  public static final byte BYTE_SUB = 1; // denotes subscribe request.
-  public static final byte BYTE_UNSUB = 0; // denotes unsubscribe request.
 
   private ZmqUtils() {
   }
@@ -45,17 +44,17 @@ public class ZmqUtils {
     return target;
   }
 
-  public static byte matchExtPubSub(ZmqFrames frames) {
+  public static byte getExtPubSub(ZmqFrames frames) {
     checkArgument(frames != null);
     checkArgument(frames.size() == 1, "Wrong frames.size: " + frames.size());
 
     byte b = frames.get(0)[0];
-    checkArgument(BYTE_SUB == b || BYTE_UNSUB == b);
+    checkArgument(BYTE_SUB == b || BYTE_UNSUB == b, "Unrecognized ExtPubSub byte: " + b);
 
     return b;
   }
 
-  public static byte[] matchExtPubSubTopic(ZmqFrames frames) {
+  public static byte[] getExtPubSubTopic(ZmqFrames frames) {
     checkArgument(frames != null);
     checkArgument(frames.size() == 1, "Wrong frames.size: " + frames.size());
 
@@ -63,14 +62,14 @@ public class ZmqUtils {
     return buf.length > 1 ? Arrays.copyOfRange(buf, 1, buf.length) : EMPTY_FRAME;
   }
 
-  public static byte[] matchTopic(ZmqFrames frames) {
+  public static byte[] getTopic(ZmqFrames frames) {
     checkArgument(frames != null);
     checkArgument(frames.size() > 0, "Wrong frames.size: " + frames.size());
 
     return frames.get(0);
   }
 
-  public static ZmqFrames matchIdentities(ZmqFrames frames) {
+  public static ZmqFrames getIdentities(ZmqFrames frames) {
     checkArgument(frames != null);
 
     ZmqFrames identities = new ZmqFrames();
@@ -92,7 +91,7 @@ public class ZmqUtils {
     return identities;
   }
 
-  public static byte[] matchHeaders(ZmqFrames frames) {
+  public static byte[] getHeaders(ZmqFrames frames) {
     checkArgument(frames != null);
     checkArgument(frames.size() > 0, "Wrong frames.size: " + frames.size());
 
@@ -102,7 +101,7 @@ public class ZmqUtils {
     return headers;
   }
 
-  public static byte[] matchPayload(ZmqFrames frames) {
+  public static byte[] getPayload(ZmqFrames frames) {
     checkArgument(frames != null);
     checkArgument(frames.size() > 0, "Wrong frames.size: " + frames.size());
 
@@ -115,7 +114,7 @@ public class ZmqUtils {
     return payload;
   }
 
-  public static int matchInprocRef(ZmqFrames frames) {
+  public static int getInprocRef(ZmqFrames frames) {
     checkArgument(frames != null);
     checkArgument(frames.size() > 0, "Wrong frames.size: " + frames.size());
 

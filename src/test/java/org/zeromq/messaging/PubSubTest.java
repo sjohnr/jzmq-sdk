@@ -4,7 +4,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.zeromq.support.ZmqUtils.EMPTY_FRAME;
+import static org.zeromq.messaging.ZmqFrames.EMPTY_FRAME;
 
 public class PubSubTest extends ZmqAbstractTest {
 

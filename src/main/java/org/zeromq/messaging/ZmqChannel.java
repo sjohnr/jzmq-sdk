@@ -14,7 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.zeromq.ZMQ.SNDMORE;
-import static org.zeromq.support.ZmqUtils.EMPTY_FRAME;
+import static org.zeromq.messaging.ZmqFrames.EMPTY_FRAME;
 import static org.zeromq.support.ZmqUtils.makeHash;
 
 public final class ZmqChannel implements HasDestroy {
