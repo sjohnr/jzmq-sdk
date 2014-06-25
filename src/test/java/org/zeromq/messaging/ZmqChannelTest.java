@@ -11,10 +11,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.zeromq.ZMQ.DONTWAIT;
 import static org.zeromq.messaging.ZmqException.ErrorCode.FATAL;
-import static org.zeromq.support.ZmqUtils.getHeaders;
-import static org.zeromq.support.ZmqUtils.getIdentities;
-import static org.zeromq.support.ZmqUtils.getInprocRef;
-import static org.zeromq.support.ZmqUtils.getPayload;
 
 public class ZmqChannelTest extends ZmqAbstractTest {
 
@@ -277,15 +273,15 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
     ZmqFrames ref0 = server.recv(0);
     assertNotNull(ref0);
-    assertEquals(0, getInprocRef(ref0));
+    assertEquals(0, ref0.getInprocRef());
 
     ZmqFrames ref42 = server.recv(0);
     assertNotNull(ref42);
-    assertEquals(42, getInprocRef(ref42));
+    assertEquals(42, ref42.getInprocRef());
 
     ZmqFrames refMax = server.recv(0);
     assertNotNull(refMax);
-    assertEquals(Integer.MAX_VALUE, getInprocRef(refMax));
+    assertEquals(Integer.MAX_VALUE, refMax.getInprocRef());
   }
 
   @Test
@@ -346,27 +342,27 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     assert client.route(emptyIdentities(), emptyHeaders(), emptyPayload(), 0);
 
     ZmqFrames recv0 = server.recv(0);
-    assertEquals("client", new String(getIdentities(recv0).get(0)));
-    assertEquals("x=x,y=y,z=z", new String(getHeaders(recv0)));
-    assertEquals("payload", new String(getPayload(recv0)));
+    assertEquals("client", new String(recv0.getIdentities().get(0)));
+    assertEquals("x=x,y=y,z=z", new String(recv0.getHeaders()));
+    assertEquals("payload", new String(recv0.getPayload()));
     assert server.sendFrames(recv0, 0);
 
     ZmqFrames recv1 = server.recv(0);
-    assertEquals("client", new String(getIdentities(recv1).get(0)));
-    assertEquals("", new String(getHeaders(recv1)));
-    assertEquals("payload", new String(getPayload(recv1)));
+    assertEquals("client", new String(recv1.getIdentities().get(0)));
+    assertEquals("", new String(recv1.getHeaders()));
+    assertEquals("payload", new String(recv1.getPayload()));
     assert server.sendFrames(recv1, 0);
 
     ZmqFrames recv2 = server.recv(0);
-    assertEquals("client", new String(getIdentities(recv2).get(0)));
-    assertEquals("x=x,y=y,z=z", new String(getHeaders(recv2)));
-    assertEquals("", new String(getPayload(recv2)));
+    assertEquals("client", new String(recv2.getIdentities().get(0)));
+    assertEquals("x=x,y=y,z=z", new String(recv2.getHeaders()));
+    assertEquals("", new String(recv2.getPayload()));
     assert server.sendFrames(recv2, 0);
 
     ZmqFrames recv3 = server.recv(0);
-    assertEquals("client", new String(getIdentities(recv3).get(0)));
-    assertEquals("", new String(getHeaders(recv3)));
-    assertEquals("", new String(getPayload(recv3)));
+    assertEquals("client", new String(recv3.getIdentities().get(0)));
+    assertEquals("", new String(recv3.getHeaders()));
+    assertEquals("", new String(recv3.getPayload()));
     assert server.sendFrames(recv3, 0);
 
     recv0 = client.recv(0);
@@ -374,20 +370,20 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     recv2 = client.recv(0);
     recv3 = client.recv(0);
 
-    assertEquals(0, getIdentities(recv0).size());
-    assertEquals("x=x,y=y,z=z", new String(getHeaders(recv0)));
-    assertEquals("payload", new String(getPayload(recv0)));
+    assertEquals(0, recv0.getIdentities().size());
+    assertEquals("x=x,y=y,z=z", new String(recv0.getHeaders()));
+    assertEquals("payload", new String(recv0.getPayload()));
 
-    assertEquals(0, getIdentities(recv1).size());
-    assertEquals("", new String(getHeaders(recv1)));
-    assertEquals("payload", new String(getPayload(recv1)));
+    assertEquals(0, recv1.getIdentities().size());
+    assertEquals("", new String(recv1.getHeaders()));
+    assertEquals("payload", new String(recv1.getPayload()));
 
-    assertEquals(0, getIdentities(recv2).size());
-    assertEquals("x=x,y=y,z=z", new String(getHeaders(recv2)));
-    assertEquals("", new String(getPayload(recv2)));
+    assertEquals(0, recv2.getIdentities().size());
+    assertEquals("x=x,y=y,z=z", new String(recv2.getHeaders()));
+    assertEquals("", new String(recv2.getPayload()));
 
-    assertEquals(0, getIdentities(recv3).size());
-    assertEquals("", new String(getHeaders(recv3)));
-    assertEquals("", new String(getPayload(recv3)));
+    assertEquals(0, recv3.getIdentities().size());
+    assertEquals("", new String(recv3.getHeaders()));
+    assertEquals("", new String(recv3.getPayload()));
   }
 }

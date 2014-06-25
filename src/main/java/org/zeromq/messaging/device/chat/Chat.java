@@ -11,10 +11,6 @@ import org.zeromq.messaging.device.ZmqAbstractActor;
 import static org.zeromq.ZMQ.DONTWAIT;
 import static org.zeromq.messaging.ZmqFrames.BYTE_SUB;
 import static org.zeromq.messaging.ZmqFrames.BYTE_UNSUB;
-import static org.zeromq.support.ZmqUtils.getExtPubSub;
-import static org.zeromq.support.ZmqUtils.getExtPubSubTopic;
-import static org.zeromq.support.ZmqUtils.getPayload;
-import static org.zeromq.support.ZmqUtils.getTopic;
 
 public final class Chat extends ZmqAbstractActor {
 
@@ -173,8 +169,8 @@ public final class Chat extends ZmqAbstractActor {
           break;
         }
         frontendPub.sendFrames(frames, DONTWAIT);
-        byte b = getExtPubSub(frames);
-        byte[] topic = getExtPubSubTopic(frames);
+        byte b = frames.getExtPubSub();
+        byte[] topic = frames.getExtPubSubTopic();
         if (b == BYTE_SUB) {
           logSubscribe("local <-- cluster", topic);
         }
@@ -200,8 +196,8 @@ public final class Chat extends ZmqAbstractActor {
           break;
         }
         clusterSub.sendFrames(frames, DONTWAIT);
-        byte b = getExtPubSub(frames);
-        byte[] topic = getExtPubSubTopic(frames);
+        byte b = frames.getExtPubSub();
+        byte[] topic = frames.getExtPubSubTopic();
         if (b == BYTE_SUB) {
           logSubscribe("local --> cluster", topic);
         }
@@ -214,8 +210,8 @@ public final class Chat extends ZmqAbstractActor {
 
   private void logMessage(String direction, ZmqFrames frames) {
     if (LOG.isDebugEnabled()) {
-      byte[] topic = getTopic(frames);
-      byte[] payload = getPayload(frames);
+      byte[] topic = frames.getTopic();
+      byte[] payload = frames.getPayload();
       LOG.debug("Message: {} (topic={} bytes, payload={} bytes).", direction, topic.length, payload.length);
     }
   }
