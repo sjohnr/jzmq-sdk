@@ -4,7 +4,7 @@ import org.junit.Test;
 
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
-import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
+import static org.zeromq.support.ZmqUtils.EMPTY_FRAME;
 
 public class ZmqHeadersTest {
 

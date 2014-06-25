@@ -83,7 +83,7 @@ public abstract class ZmqAbstractActor implements ZmqActor, HasInvariant {
     _channels.clear();
   }
 
-  protected final void reg(String id, ZmqChannel channel) {
+  protected final void register(String id, ZmqChannel channel) {
     if (channel == null) {
       throw ZmqException.fatal();
     }

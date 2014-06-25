@@ -5,7 +5,7 @@ import org.junit.Before;
 
 import java.util.concurrent.TimeUnit;
 
-import static junit.framework.Assert.assertEquals;
+import static org.zeromq.support.ZmqUtils.EMPTY_FRAME;
 
 public abstract class ZmqAbstractTest {
 
@@ -25,42 +25,24 @@ public abstract class ZmqAbstractTest {
     _ctx.destroy();
   }
 
-  public static ZmqMessage REF0() {
-    return ZmqMessage.builder().withInprocRef(0).build();
+  public static ZmqFrames emptyIdentities() {
+    return new ZmqFrames();
   }
 
-  public static ZmqMessage REF42() {
-    return ZmqMessage.builder().withInprocRef(42).build();
+  public static byte[] emptyPayload() {
+    return EMPTY_FRAME;
   }
 
-  public static ZmqMessage REFMax() {
-    return ZmqMessage.builder().withInprocRef(Integer.MAX_VALUE).build();
+  public static byte[] payload() {
+    return "payload".getBytes();
   }
 
-  public static ZmqMessage HELLO() {
-    return ZmqMessage.builder().withHeaders(HEADERS()).withPayload("hello".getBytes()).build();
+  public static byte[] emptyHeaders() {
+    return EMPTY_FRAME;
   }
 
-  public static ZmqMessage WORLD() {
-    return ZmqMessage.builder().withHeaders(HEADERS()).withPayload("world".getBytes()).build();
-  }
-
-  public static ZmqMessage CARP() {
-    return ZmqMessage.builder().withHeaders(HEADERS()).withPayload("carp".getBytes()).build();
-  }
-
-  public static ZmqMessage SHIRT() {
-    return ZmqMessage.builder().withHeaders(HEADERS()).withPayload("shirt".getBytes()).build();
-  }
-
-  public static byte[] HEADERS() {
-    return ZmqHeaders.builder().set("zmq", "is").set("so", "much").set("co", "col").build().asBinary();
-  }
-
-  public static void assertPayload(String payload, ZmqMessage message) {
-    assert message != null;
-    assert message.payload() != null;
-    assertEquals(payload, new String(message.payload()));
+  public static byte[] headers() {
+    return ZmqHeaders.builder().set("x", "x").set("y", "y").set("z", "z").build().asBinary();
   }
 
   public static String connAddr(int port) {

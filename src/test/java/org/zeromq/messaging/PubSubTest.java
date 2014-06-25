@@ -4,7 +4,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.zeromq.messaging.ZmqMessage.EMPTY_FRAME;
+import static org.zeromq.support.ZmqUtils.EMPTY_FRAME;
 
 public class PubSubTest extends ZmqAbstractTest {
 
@@ -29,7 +29,7 @@ public class PubSubTest extends ZmqAbstractTest {
 
   @Test
   public void t0() throws InterruptedException {
-    LOG.info("Testing .send()/.recv() .");
+    LOG.info("Test send/recv.");
 
     Fixture f = new Fixture(ctx());
     ZmqChannel publisher = f.newPublisher();
@@ -45,23 +45,23 @@ public class PubSubTest extends ZmqAbstractTest {
       subscriber.subscribe(topicC);
 
       // send message with topic A.
-      publisher.send(ZmqMessage.builder(HELLO()).withTopic(topicA).build());
+      publisher.pub(topicA, emptyHeaders(), payload(), 0);
       // send message with topic B.
-      publisher.send(ZmqMessage.builder(HELLO()).withTopic(topicB).build());
+      publisher.pub(topicB, emptyHeaders(), payload(), 0);
       // send message with topic C.
-      publisher.send(ZmqMessage.builder(HELLO()).withTopic(topicC).build());
+      publisher.pub(topicC, emptyHeaders(), payload(), 0);
 
       // send other messages.
       for (int i = 0; i < 3; i++) {
-        publisher.send(ZmqMessage.builder(HELLO()).withTopic(EMPTY_FRAME).build());
+        publisher.pub(EMPTY_FRAME/*empty topic*/, emptyHeaders(), payload(), 0);
       }
 
       // receive three messages.
-      assert subscriber.recv() != null;
-      assert subscriber.recv() != null;
-      assert subscriber.recv() != null;
+      assert subscriber.recv(0) != null;
+      assert subscriber.recv(0) != null;
+      assert subscriber.recv(0) != null;
       // assert that other messages can't be received because of topic subscription.
-      assert subscriber.recv() == null;
+      assert subscriber.recv(0) == null;
     }
     finally {
       subscriber.destroy();
@@ -84,17 +84,17 @@ public class PubSubTest extends ZmqAbstractTest {
 
       // send messages with topic.
       for (int i = 0; i < 4; i++) {
-        publisher.send(ZmqMessage.builder(HELLO()).withTopic(topic).build());
+        publisher.pub(topic, emptyHeaders(), payload(), 0);
       }
 
       // receive only three messages.
-      assert subscriber.recv() != null;
-      assert subscriber.recv() != null;
-      assert subscriber.recv() != null;
+      assert subscriber.recv(0) != null;
+      assert subscriber.recv(0) != null;
+      assert subscriber.recv(0) != null;
       // unsubscribe just once.
       subscriber.unsubscribe(topic);
       // assert that messages can't be received.
-      assert subscriber.recv() == null;
+      assert subscriber.recv(0) == null;
     }
     finally {
       subscriber.destroy();
@@ -121,27 +121,27 @@ public class PubSubTest extends ZmqAbstractTest {
 
       // send messages with topic.
       for (int i = 0; i < 6; i++) {
-        publisher.send(ZmqMessage.builder(HELLO()).withTopic(topic).build());
+        publisher.pub(topic, emptyHeaders(), payload(), 0);
       }
 
       // receive only three messages.
-      assert subscriber.recv() != null;
-      assert subscriber.recv() != null;
-      assert subscriber.recv() != null;
+      assert subscriber.recv(0) != null;
+      assert subscriber.recv(0) != null;
+      assert subscriber.recv(0) != null;
       // unsubscribe just once.
       subscriber.unsubscribe(topic);
       // check that you can get messages because subscriptions are there yet.
-      assert subscriber.recv() != null;
+      assert subscriber.recv(0) != null;
       // unsubscribe again.
       subscriber.unsubscribe(topic);
       // check again.
-      assert subscriber.recv() != null;
+      assert subscriber.recv(0) != null;
       // unsubscribe fully.
       for (int i = 0; i < numOfSubscr; i++) {
         subscriber.unsubscribe(topic);
       }
       // assert that messages can't be received.
-      assert subscriber.recv() == null;
+      assert subscriber.recv(0) == null;
     }
     finally {
       subscriber.destroy();

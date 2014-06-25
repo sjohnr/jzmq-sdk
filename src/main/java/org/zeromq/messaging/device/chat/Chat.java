@@ -5,8 +5,16 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.messaging.Props;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
-import org.zeromq.messaging.ZmqMessage;
+import org.zeromq.messaging.ZmqFrames;
 import org.zeromq.messaging.device.ZmqAbstractActor;
+
+import static org.zeromq.ZMQ.DONTWAIT;
+import static org.zeromq.support.ZmqUtils.BYTE_SUB;
+import static org.zeromq.support.ZmqUtils.BYTE_UNSUB;
+import static org.zeromq.support.ZmqUtils.matchExtPubSub;
+import static org.zeromq.support.ZmqUtils.matchExtPubSubTopic;
+import static org.zeromq.support.ZmqUtils.matchPayload;
+import static org.zeromq.support.ZmqUtils.matchTopic;
 
 public final class Chat extends ZmqAbstractActor {
 
@@ -124,10 +132,10 @@ public final class Chat extends ZmqAbstractActor {
   public void init() {
     checkInvariant();
 
-    reg(CHANNEL_ID_FRONTEND_PUB, ZmqChannel.XSUB(ctx).withProps(frontendPubProps).build());
-    reg(CHANNEL_ID_CLUSTER_PUB, ZmqChannel.XPUB(ctx).withProps(clusterPubProps).build());
-    reg(CHANNEL_ID_FRONTEND_SUB, ZmqChannel.XPUB(ctx).withProps(frontendSubProps).build());
-    reg(CHANNEL_ID_CLUSTER_SUB, ZmqChannel.XSUB(ctx).withProps(clusterSubProps).build());
+    register(CHANNEL_ID_FRONTEND_PUB, ZmqChannel.XSUB(ctx).withProps(frontendPubProps).build());
+    register(CHANNEL_ID_CLUSTER_PUB, ZmqChannel.XPUB(ctx).withProps(clusterPubProps).build());
+    register(CHANNEL_ID_FRONTEND_SUB, ZmqChannel.XPUB(ctx).withProps(frontendSubProps).build());
+    register(CHANNEL_ID_CLUSTER_SUB, ZmqChannel.XSUB(ctx).withProps(clusterSubProps).build());
 
     // By default, unconditionally, Chat is set to handle duplicate subscriptions/unsubscriptions.
     channel(CHANNEL_ID_CLUSTER_PUB).setExtendedPubSubVerbose();
@@ -150,60 +158,64 @@ public final class Chat extends ZmqAbstractActor {
 
     if (frontendPub.canRecv()) {
       for (; ; ) {
-        ZmqMessage message = frontendPub.recvDontWait();
-        if (message == null) {
+        ZmqFrames frames = frontendPub.recv(DONTWAIT);
+        if (frames == null) {
           break;
         }
-        clusterPub.send(message);
-        logMessage("local --> cluster", message);
+        clusterPub.sendFrames(frames, DONTWAIT);
+        logMessage("local --> cluster", frames);
       }
     }
     if (clusterPub.canRecv()) {
       for (; ; ) {
-        ZmqMessage message = clusterPub.recvDontWait();
-        if (message == null) {
+        ZmqFrames frames = clusterPub.recv(DONTWAIT);
+        if (frames == null) {
           break;
         }
-        frontendPub.send(message);
-        if (message.isSubscribe()) {
-          logSubscribe("local <-- cluster", message.topic());
+        frontendPub.sendFrames(frames, DONTWAIT);
+        byte b = matchExtPubSub(frames);
+        byte[] topic = matchExtPubSubTopic(frames);
+        if (b == BYTE_SUB) {
+          logSubscribe("local <-- cluster", topic);
         }
-        else if (message.isUnsubscribe()) {
-          logUnsubscribe("local <-- cluster", message.topic());
+        else if (b == BYTE_UNSUB) {
+          logUnsubscribe("local <-- cluster", topic);
         }
       }
     }
     if (clusterSub.canRecv()) {
       for (; ; ) {
-        ZmqMessage message = clusterSub.recvDontWait();
-        if (message == null) {
+        ZmqFrames frames = clusterSub.recv(DONTWAIT);
+        if (frames == null) {
           break;
         }
-        frontendSub.send(message);
-        logMessage("local <-- cluster", message);
+        frontendSub.sendFrames(frames, DONTWAIT);
+        logMessage("local <-- cluster", frames);
       }
     }
     if (frontendSub.canRecv()) {
       for (; ; ) {
-        ZmqMessage message = frontendSub.recvDontWait();
-        if (message == null) {
+        ZmqFrames frames = frontendSub.recv(DONTWAIT);
+        if (frames == null) {
           break;
         }
-        clusterSub.send(message);
-        if (message.isSubscribe()) {
-          logSubscribe("local --> cluster", message.topic());
+        clusterSub.sendFrames(frames, DONTWAIT);
+        byte b = matchExtPubSub(frames);
+        byte[] topic = matchExtPubSubTopic(frames);
+        if (b == BYTE_SUB) {
+          logSubscribe("local --> cluster", topic);
         }
-        else if (message.isUnsubscribe()) {
-          logUnsubscribe("local --> cluster", message.topic());
+        else if (b == BYTE_UNSUB) {
+          logUnsubscribe("local --> cluster", topic);
         }
       }
     }
   }
 
-  private void logMessage(String direction, ZmqMessage message) {
+  private void logMessage(String direction, ZmqFrames frames) {
     if (LOG.isDebugEnabled()) {
-      byte[] topic = message.topic();
-      byte[] payload = message.payload();
+      byte[] topic = matchTopic(frames);
+      byte[] payload = matchPayload(frames);
       LOG.debug("Message: {} (topic={} bytes, payload={} bytes).", direction, topic.length, payload.length);
     }
   }

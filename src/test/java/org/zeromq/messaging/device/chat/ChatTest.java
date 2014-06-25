@@ -4,7 +4,6 @@ import org.junit.Test;
 import org.zeromq.messaging.Props;
 import org.zeromq.messaging.ZmqAbstractTest;
 import org.zeromq.messaging.ZmqChannel;
-import org.zeromq.messaging.ZmqMessage;
 
 public class ChatTest extends ZmqAbstractTest {
 
@@ -20,27 +19,17 @@ public class ChatTest extends ZmqAbstractTest {
     f.init();
 
     try {
-      ZmqChannel pub = ZmqChannel.PUB(ctx())
-                                 .withProps(Props.builder()
-                                                 .withConnectAddr(inprocAddr("p>>"))
-                                                 .build())
-                                 .build();
-
-      ZmqChannel sub = ZmqChannel.SUB(ctx())
-                                 .withProps(Props.builder()
-                                                 .withConnectAddr(inprocAddr("s<<"))
-                                                 .build())
-                                 .build();
+      ZmqChannel pub = ZmqChannel.PUB(ctx()).withProps(Props.builder().withConnectAddr(inprocAddr("p>>")).build()).build();
+      ZmqChannel sub = ZmqChannel.SUB(ctx()).withProps(Props.builder().withConnectAddr(inprocAddr("s<<")).build()).build();
 
       byte[] topic = "xxx".getBytes();
       sub.subscribe(topic);
 
       waitSec(); // wait a second.
 
-      pub.send(ZmqMessage.builder(HELLO()).withTopic(topic).build());
-      assertPayload("hello", sub.recv());
-
-      assert sub.recv() == null;
+      pub.pub(topic, emptyHeaders(), payload(), 0);
+      assert sub.recv(0) != null;
+      assert sub.recv(0) == null;
     }
     finally {
       f.destroy();
@@ -64,29 +53,11 @@ public class ChatTest extends ZmqAbstractTest {
     f.init();
 
     try {
-      ZmqChannel galaSays = ZmqChannel.PUB(ctx())
-                                      .withProps(Props.builder()
-                                                      .withConnectAddr(inprocAddr("gala>>"))
-                                                      .build())
-                                      .build();
+      ZmqChannel galaSays = ZmqChannel.PUB(ctx()).withProps(Props.builder().withConnectAddr(inprocAddr("gala>>")).build()).build();
+      ZmqChannel galaListens = ZmqChannel.SUB(ctx()).withProps(Props.builder().withConnectAddr(inprocAddr("gala<<")).build()).build();
 
-      ZmqChannel galaListens = ZmqChannel.SUB(ctx())
-                                         .withProps(Props.builder()
-                                                         .withConnectAddr(inprocAddr("gala<<"))
-                                                         .build())
-                                         .build();
-
-      ZmqChannel alenkaSays = ZmqChannel.PUB(ctx())
-                                        .withProps(Props.builder()
-                                                        .withConnectAddr(inprocAddr("alenka>>"))
-                                                        .build())
-                                        .build();
-
-      ZmqChannel alenkaListens = ZmqChannel.SUB(ctx())
-                                           .withProps(Props.builder()
-                                                           .withConnectAddr(inprocAddr("alenka<<"))
-                                                           .build())
-                                           .build();
+      ZmqChannel alenkaSays = ZmqChannel.PUB(ctx()).withProps(Props.builder().withConnectAddr(inprocAddr("alenka>>")).build()).build();
+      ZmqChannel alenkaListens = ZmqChannel.SUB(ctx()).withProps(Props.builder().withConnectAddr(inprocAddr("alenka<<")).build()).build();
 
       byte[] topic = "xxx".getBytes();
       galaListens.subscribe(topic);
@@ -94,14 +65,14 @@ public class ChatTest extends ZmqAbstractTest {
 
       waitSec(); // wait a second.
 
-      galaSays.send(ZmqMessage.builder(CARP()).withTopic(topic).build());
-      alenkaSays.send(ZmqMessage.builder(SHIRT()).withTopic(topic).build());
+      galaSays.pub(topic, emptyHeaders(), payload(), 0);
+      alenkaSays.pub(topic, emptyHeaders(), payload(), 0);
 
-      assertPayload("shirt", galaListens.recv());
-      assertPayload("carp", alenkaListens.recv());
+      assert galaListens.recv(0) != null;
+      assert alenkaListens.recv(0) != null;
 
-      assert galaListens.recv() == null;
-      assert alenkaListens.recv() == null;
+      assert galaListens.recv(0) == null;
+      assert alenkaListens.recv(0) == null;
     }
     finally {
       f.destroy();
@@ -120,39 +91,29 @@ public class ChatTest extends ZmqAbstractTest {
     f.init();
 
     try {
-      ZmqChannel pub = ZmqChannel.PUB(ctx())
-                                 .withProps(Props.builder()
-                                                 .withConnectAddr(inprocAddr("p>>"))
-                                                 .build())
-                                 .build();
+      ZmqChannel pub = ZmqChannel.PUB(ctx()).withProps(Props.builder().withConnectAddr(inprocAddr("p>>")).build()).build();
+      ZmqChannel sub = ZmqChannel.SUB(ctx()).withProps(Props.builder().withConnectAddr(inprocAddr("s<<")).build()).build();
 
-      ZmqChannel sub = ZmqChannel.SUB(ctx())
-                                 .withProps(Props.builder()
-                                                 .withConnectAddr(inprocAddr("s<<"))
-                                                 .build())
-                                 .build();
+      byte[] topicXXX = "xxx".getBytes();
 
-      byte[] topic = "xxx".getBytes();
-
-      sub.subscribe(topic); // subscribe first time.
-      sub.subscribe(topic); // subscribe second time.
+      sub.subscribe(topicXXX); // subscribe first time.
+      sub.subscribe(topicXXX); // subscribe second time.
 
       waitSec(); // wait a second.
 
-      pub.send(ZmqMessage.builder(HELLO()).withTopic(topic).build());
-      assertPayload("hello", sub.recv());
+      pub.pub(topicXXX, emptyHeaders(), payload(), 0);
+      assert sub.recv(0) != null;
 
       // unsubscribe first time.
-      sub.unsubscribe(topic);
+      sub.unsubscribe(topicXXX);
       // ensure that you still get message since one subscription remains.
-      pub.send(ZmqMessage.builder(HELLO()).withTopic(topic).build());
-      assertPayload("hello", sub.recv());
+      pub.pub(topicXXX, emptyHeaders(), emptyPayload(), 0);
 
       // unsubscribe last time.
-      sub.unsubscribe(topic);
+      sub.unsubscribe(topicXXX);
       // ensure that you will not receive a message since all subscriptions are unsubscribed.
-      pub.send(ZmqMessage.builder(HELLO()).withTopic(topic).build());
-      assert sub.recv() == null;
+      pub.pub(topicXXX, emptyHeaders(), emptyPayload(), 0);
+      assert sub.recv(0) == null;
     }
     finally {
       f.destroy();

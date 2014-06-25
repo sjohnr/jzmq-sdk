@@ -9,7 +9,12 @@ import org.zeromq.support.exception.JniExceptionHandler;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import static org.zeromq.ZMQ.DONTWAIT;
 import static org.zeromq.messaging.ZmqException.ErrorCode.FATAL;
+import static org.zeromq.support.ZmqUtils.matchHeaders;
+import static org.zeromq.support.ZmqUtils.matchIdentities;
+import static org.zeromq.support.ZmqUtils.matchInprocRef;
+import static org.zeromq.support.ZmqUtils.matchPayload;
 
 public class ZmqChannelTest extends ZmqAbstractTest {
 
@@ -42,71 +47,15 @@ public class ZmqChannelTest extends ZmqAbstractTest {
 
     ZmqChannel.DEALER(ctx())
               .withProps(Props.builder().withConnectAddr(inprocAddr("service")).build())
-              .withProps(Props.builder()
-                             .withConnectAddr(inprocAddr("service-noabc")) /* not available inproc address */
-                             .build())
+              .withProps(Props.builder().withConnectAddr(inprocAddr("service-not-available")).build())
               .build();
   }
 
   @Test
   public void t3() {
-    LOG.info("Test edge settings: HWM_UNLIMITED.");
-
-    ZmqChannel req = ZmqChannel.DEALER(ctx())
-                               .withProps(Props.builder()
-                                               .withHwmRecv(HWM_UNLIMITED)
-                                               .withHwmSend(HWM_UNLIMITED)
-                                               .withSendTimeout(-1)
-                                               .withConnectAddr(connAddr(4466))
-                                               .build())
-                               .build();
-
-    ZMQ.Poller p = new ZMQ.Poller(1);
-    req.watchSendRecv(p);
-
-    assert req.send(HELLO()); // you can send.
-    assert req.send(HELLO()); // you can send.
-    assert req.send(HELLO()); // you can send.
-
-    p.poll(100);
-    assert !req.canRecv(); // you don't have input.
-    assert req.recv() == null; // ... and you will not get it :|
-  }
-
-  @Test
-  public void t4() {
-    LOG.info("Test edge settings: HWM_ONE.");
-
-    ZmqChannel req = ZmqChannel.DEALER(ctx())
-                               .withProps(Props.builder()
-                                               .withHwmRecv(HWM_ONE)
-                                               .withHwmSend(HWM_ONE)
-                                               .withSendTimeout(0)
-                                               .withRecvTimeout(0)
-                                               .withConnectAddr(connAddr(4466))
-                                               .build())
-                               .build();
-
-    ZMQ.Poller p = new ZMQ.Poller(1);
-    req.watchSendRecv(p);
-
-    p.poll(100);
-    assert req.canSend();
-    assert req.send(HELLO()); // you can send w/o blocking once :|
-
-    p.poll(100);
-    assert !req.canSend();
-    assert !req.send(HELLO()); // here, you will not block and will not send :|
-
-    assert !req.canRecv(); // obviously you don't have input.
-    assert req.recv() == null; // ... and you will not get it :|
-  }
-
-  @Test
-  public void t5() {
     LOG.info("Test wrong attempts to use channel: register channel on poller twice, " +
              "destroy channel and access it, " +
-             "call poller' based functions w/o registering channel on poller.");
+             "call poller functions w/o registering channel on poller.");
 
     ZmqChannel rep = ZmqChannel.ROUTER(ctx()).withProps(Props.builder().withBindAddr(bindAddr(6633)).build()).build();
 
@@ -147,73 +96,69 @@ public class ZmqChannelTest extends ZmqAbstractTest {
   }
 
   @Test
-  public void t6() {
-    LOG.info("Test poller operations on connected channel.");
+  public void t4() {
+    LOG.info("Test poller operations on connected DEALER/ROUTER channels.");
 
-    ZmqChannel client = ZmqChannel.DEALER(ctx())
-                                  .withProps(Props.builder().withConnectAddr(connAddr(6677)).build())
-                                  .build();
-    ZmqChannel server = ZmqChannel.ROUTER(ctx())
-                                  .withProps(Props.builder().withBindAddr(bindAddr(6677)).build())
-                                  .build();
+    ZmqChannel client = ZmqChannel.DEALER(ctx()).withProps(Props.builder()
+                                                                .withConnectAddr(connAddr(6677))
+                                                                .build()).build();
+    ZmqChannel server = ZmqChannel.ROUTER(ctx()).withProps(Props.builder().withBindAddr(bindAddr(6677)).build()).build();
 
-    ZMQ.Poller clientPoller = new ZMQ.Poller(1);
-    client.watchRecv(clientPoller);
+    ZMQ.Poller client_poller = new ZMQ.Poller(1);
+    client.watchRecv(client_poller);
 
-    ZMQ.Poller serverPoller = new ZMQ.Poller(1);
-    server.watchRecv(serverPoller);
+    ZMQ.Poller server_poller = new ZMQ.Poller(1);
+    server.watchRecv(server_poller);
 
     int timeout = 10;
 
-    clientPoller.poll(timeout);
+    client_poller.poll(timeout);
     assert !client.canRecv(); // no input initially.
 
-    serverPoller.poll(timeout);
+    server_poller.poll(timeout);
     assert !server.canRecv(); // no input initially.
 
-    assert client.send(HELLO()); // send once.
-    assert client.send(HELLO()); // send twice.
-    clientPoller.poll(timeout);
+    assert client.route(emptyIdentities(), emptyHeaders(), payload(), 0); // send once.
+    assert client.route(emptyIdentities(), emptyHeaders(), payload(), 0); // send twice.
+    client_poller.poll(timeout);
     assert !client.canRecv(); // you don't have input yet (server not replied at this point).
 
-    serverPoller.poll(-1);
+    server_poller.poll(-1);
     assert server.canRecv(); // at this point server has input.
-    assert server.recv() != null; // recv once.
+    assert server.recv(0) != null; // recv once.
     assert server.canRecv(); // still server has input.
-    ZmqMessage req = server.recv(); // recv twice.
+    ZmqFrames req = server.recv(0); // recv twice.
     assert req != null;
-    serverPoller.poll(timeout); // clear poller events and get new ones.
+    server_poller.poll(timeout); // clear poller events and get new ones.
     assert !server.canRecv(); // no more input for server.
-    assert server.recv() == null; // and ofcourse you can't get input for server :|
+    assert server.recv(0) == null; // and ofcourse you can't get input for server :|
 
     // send reply to client.
-    ZmqMessage reply = ZmqMessage.builder(req).withPayload(WORLD().payload()).build();
-    assert server.send(reply);
+    assert server.sendFrames(req, 0);
 
-    clientPoller.poll(timeout); // checkout client!
+    client_poller.poll(timeout); // checkout client!
     assert client.canRecv(); // yes, client has input.
-    assert client.recv() != null;
+    ZmqFrames recv = client.recv(0);
+    assert recv != null;
   }
 
   @Test
-  public void t7() {
-    LOG.info("Test .recvDontWait()/.recv() operations.");
+  public void t5() {
+    LOG.info("Test send/recv on connected DEALER/ROUTER channels.");
 
-    ZmqChannel client = ZmqChannel.DEALER(ctx())
-                                  .withProps(Props.builder().withConnectAddr(connAddr(6677)).build())
-                                  .build();
-    ZmqChannel server = ZmqChannel.ROUTER(ctx())
-                                  .withProps(Props.builder().withBindAddr(bindAddr(6677)).build())
-                                  .build();
+    ZmqChannel client = ZmqChannel.DEALER(ctx()).withProps(Props.builder()
+                                                                .withConnectAddr(connAddr(6677))
+                                                                .build()).build();
+    ZmqChannel server = ZmqChannel.ROUTER(ctx()).withProps(Props.builder().withBindAddr(bindAddr(6677)).build()).build();
 
-    assert client.send(HELLO());
-    assert server.recvDontWait() == null; // at this point non-blocking .recv() returns null.
-    assert server.recv() != null; // by turn, blocking .recv() blocks a bit and returns message.
+    assert client.route(emptyIdentities(), emptyHeaders(), payload(), 0);
+    assert server.recv(DONTWAIT) == null; // at this point non-blocking .recv() returns null.
+    assert server.recv(0) != null; // by turn, blocking .recv() blocks a bit and returns message.
   }
 
   @Test
-  public void t8() {
-    LOG.info("Test .send() with DONT_WAIT operations and HWM_ONE.");
+  public void t6() {
+    LOG.info("Test send with not-connected DEALER.");
 
     ZmqChannel client = ZmqChannel.DEALER(ctx())
                                   .withProps(Props.builder()
@@ -222,23 +167,24 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                                   .build())
                                   .build();
 
-    assert client.send(HELLO()); // you can send once.
-    assert !client.send(HELLO()); // yout can't send twice ;|
+    assert client.route(emptyIdentities(), emptyHeaders(), payload(), 0); // you can send once.
+    assert !client.route(emptyIdentities(), emptyHeaders(), payload(), DONTWAIT); // yout can't send twice ;|
   }
 
   @Test
-  public void t9() {
-    LOG.info("Test router_mandatory setting: what happens when it comes that destination unreachable.");
+  public void t7() {
+    LOG.info("Test send with not-connected ROUTER.");
 
     ZmqChannel server = ZmqChannel.ROUTER(ctx())
                                   .withProps(Props.builder()
                                                   .withBindAddr(bindAddr(6677))
                                                   .withRouterMandatory()
+                                                  .withHwmSend(HWM_ONE)
                                                   .build())
                                   .build();
 
     try {
-      server.send(HELLO());
+      server.route(emptyIdentities(), emptyHeaders(), payload(), DONTWAIT);
       fail();
     }
     catch (Exception e) {
@@ -254,8 +200,8 @@ public class ZmqChannelTest extends ZmqAbstractTest {
   }
 
   @Test
-  public void t10() {
-    LOG.info("Test that you can register/unregister channel on pollers several times.");
+  public void t8() {
+    LOG.info("Test register/unregister channel on poller(s).");
 
     ZmqChannel channel = ZmqChannel.ROUTER(ctx())
                                    .withProps(Props.builder().withBindAddr(bindAddr(6677)).build())
@@ -275,8 +221,8 @@ public class ZmqChannelTest extends ZmqAbstractTest {
   }
 
   @Test
-  public void t11() {
-    LOG.info("Test router: what happens when its queue is full.");
+  public void t9() {
+    LOG.info("Test connected ROUTER/DEALER: what happens when its queue is full.");
 
     ZmqChannel server = ZmqChannel.ROUTER(ctx())
                                   .withProps(Props.builder()
@@ -295,21 +241,21 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                                   .build())
                                   .build();
 
-    client.send(HELLO());
-    ZmqMessage hello = server.recv();
-    assert hello != null;
+    assert client.route(emptyIdentities(), emptyHeaders(), payload(), 0);
+    ZmqFrames req = server.recv(0);
+    assert req != null;
 
-    server.send(ZmqMessage.builder(WORLD()).withIdentities(hello.identityFrames()).build());
-    server.send(ZmqMessage.builder(WORLD()).withIdentities(hello.identityFrames()).build()); // send second message.
-    server.send(ZmqMessage.builder(WORLD()).withIdentities(hello.identityFrames()).build()); // send third message.
+    assert server.sendFrames(req, 0);
+    assert server.sendFrames(req, 0); // send second message (but in fact it doesn't).
+    assert server.sendFrames(req, 0); // send third message (but in fact it doesn't).
 
-    assert client.recv() != null;
-    assert client.recv() == null; // second message has been silently dropped.
-    assert client.recv() == null; // thrird message has been silently dropped.
+    assert client.recv(0) != null;
+    assert client.recv(0) == null; // second message has been silently dropped.
+    assert client.recv(0) == null; // thrird message has been silently dropped.
   }
 
   @Test
-  public void t12() {
+  public void t10() {
     LOG.info("Test inprocRef: basic functioning.");
 
     ZmqChannel server = ZmqChannel.ROUTER(ctx())
@@ -325,31 +271,32 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                                   .build())
                                   .build();
 
-    client.sendInprocRef(REF0());
-    client.sendInprocRef(REF42());
-    client.sendInprocRef(REFMax());
+    client.sendInprocRef(0, DONTWAIT);
+    client.sendInprocRef(42, DONTWAIT);
+    client.sendInprocRef(Integer.MAX_VALUE, DONTWAIT);
 
-    ZmqMessage ref0 = server.recvInprocRef();
+    ZmqFrames ref0 = server.recv(0);
     assertNotNull(ref0);
-    assertEquals(0, ref0.inprocRef());
+    assertEquals(0, matchInprocRef(ref0));
 
-    ZmqMessage ref42 = server.recvInprocRef();
+    ZmqFrames ref42 = server.recv(0);
     assertNotNull(ref42);
-    assertEquals(42, ref42.inprocRef());
+    assertEquals(42, matchInprocRef(ref42));
 
-    ZmqMessage refMax = server.recvInprocRef();
+    ZmqFrames refMax = server.recv(0);
     assertNotNull(refMax);
-    assertEquals(Integer.MAX_VALUE, refMax.inprocRef());
+    assertEquals(Integer.MAX_VALUE, matchInprocRef(refMax));
   }
 
   @Test
-  public void t13() throws InterruptedException {
-    LOG.info("Test dealer: basic functioning.");
+  public void t11() {
+    LOG.info("Test connected ROUTER/DEALER: what happens when its queue is 1.");
 
     ZmqChannel server = ZmqChannel.ROUTER(ctx())
                                   .withProps(Props.builder()
                                                   .withBindAddr(bindAddr(6677))
-                                                  .withRouterMandatory()
+                                                  .withHwmSend(HWM_UNLIMITED)
+                                                  .withHwmRecv(HWM_UNLIMITED)
                                                   .build())
                                   .build();
 
@@ -361,16 +308,86 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                                   .build())
                                   .build();
 
-    waitSec();
+    assert client.route(emptyIdentities(), emptyHeaders(), payload(), 0);
+    assert server.recv(0) != null;
 
-    client.send(HELLO());
-    client.send(CARP());
-    client.send(SHIRT());
+    assert client.route(emptyIdentities(), emptyHeaders(), payload(), 0);
+    assert server.recv(0) != null;
 
-    assert server.recv() != null;
-    assert server.recv() != null;
-    assert server.recv() != null;
+    assert client.route(emptyIdentities(), emptyHeaders(), payload(), 0);
+    assert server.recv(0) != null;
+  }
 
-    assert server.recv() == null;
+  @Test
+  public void t12() {
+    LOG.info("Test matching content on connected DEALER/ROUTER: " +
+             "[identities|headers|payload], " +
+             "[identities|[]|payload], " +
+             "[identities|headers|[]], " +
+             "[identities|[]|[]].");
+
+    ZmqChannel server = ZmqChannel.ROUTER(ctx())
+                                  .withProps(Props.builder()
+                                                  .withBindAddr(bindAddr(6677))
+                                                  .withRouterMandatory()
+                                                  .build())
+                                  .build();
+
+    ZmqChannel client = ZmqChannel.DEALER(ctx())
+                                  .withProps(Props.builder()
+                                                  .withConnectAddr(connAddr(6677))
+                                                  .withIdentity("client")
+                                                  .build())
+                                  .build();
+
+    assert client.route(emptyIdentities(), headers(), payload(), 0);
+    assert client.route(emptyIdentities(), emptyHeaders(), payload(), 0);
+    assert client.route(emptyIdentities(), headers(), emptyPayload(), 0);
+    assert client.route(emptyIdentities(), emptyHeaders(), emptyPayload(), 0);
+
+    ZmqFrames recv0 = server.recv(0);
+    assertEquals("client", new String(matchIdentities(recv0).get(0)));
+    assertEquals("x=x,y=y,z=z", new String(matchHeaders(recv0)));
+    assertEquals("payload", new String(matchPayload(recv0)));
+    assert server.sendFrames(recv0, 0);
+
+    ZmqFrames recv1 = server.recv(0);
+    assertEquals("client", new String(matchIdentities(recv1).get(0)));
+    assertEquals("", new String(matchHeaders(recv1)));
+    assertEquals("payload", new String(matchPayload(recv1)));
+    assert server.sendFrames(recv1, 0);
+
+    ZmqFrames recv2 = server.recv(0);
+    assertEquals("client", new String(matchIdentities(recv2).get(0)));
+    assertEquals("x=x,y=y,z=z", new String(matchHeaders(recv2)));
+    assertEquals("", new String(matchPayload(recv2)));
+    assert server.sendFrames(recv2, 0);
+
+    ZmqFrames recv3 = server.recv(0);
+    assertEquals("client", new String(matchIdentities(recv3).get(0)));
+    assertEquals("", new String(matchHeaders(recv3)));
+    assertEquals("", new String(matchPayload(recv3)));
+    assert server.sendFrames(recv3, 0);
+
+    recv0 = client.recv(0);
+    recv1 = client.recv(0);
+    recv2 = client.recv(0);
+    recv3 = client.recv(0);
+
+    assertEquals(0, matchIdentities(recv0).size());
+    assertEquals("x=x,y=y,z=z", new String(matchHeaders(recv0)));
+    assertEquals("payload", new String(matchPayload(recv0)));
+
+    assertEquals(0, matchIdentities(recv1).size());
+    assertEquals("", new String(matchHeaders(recv1)));
+    assertEquals("payload", new String(matchPayload(recv1)));
+
+    assertEquals(0, matchIdentities(recv2).size());
+    assertEquals("x=x,y=y,z=z", new String(matchHeaders(recv2)));
+    assertEquals("", new String(matchPayload(recv2)));
+
+    assertEquals(0, matchIdentities(recv3).size());
+    assertEquals("", new String(matchHeaders(recv3)));
+    assertEquals("", new String(matchPayload(recv3)));
   }
 }

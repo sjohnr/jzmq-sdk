@@ -13,6 +13,8 @@ import org.zeromq.support.ObjectBuilder;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static org.zeromq.ZMQ.SNDMORE;
+import static org.zeromq.support.ZmqUtils.EMPTY_FRAME;
 import static org.zeromq.support.ZmqUtils.makeHash;
 
 public final class ZmqChannel implements HasDestroy {
@@ -63,46 +65,9 @@ public final class ZmqChannel implements HasDestroy {
     public ZmqChannel build() {
       checkInvariant();
 
-      if (_target.socketType == ZMQ.ROUTER) {
-        _target._inputAdapter = InputAdapter.builder().expectIdentities().build();
-        _target._outputAdapter = OutputAdapter.builder().expectIdentities().build();
-      }
-      if (_target.socketType == ZMQ.DEALER) {
-        _target._inputAdapter = InputAdapter.builder().expectIdentities().build();
-        _target._outputAdapter = OutputAdapter.builder().awareOfDEALERType().expectIdentities().build();
-      }
-      if (_target.socketType == ZMQ.PUB) {
-        _target._inputAdapter = null;
-        _target._outputAdapter = OutputAdapter.builder().awareOfTopicFrame().build();
-      }
-      if (_target.socketType == ZMQ.PUSH) {
-        _target._inputAdapter = null;
-        _target._outputAdapter = OutputAdapter.builder().build();
-      }
-      if (_target.socketType == ZMQ.SUB) {
-        _target._outputAdapter = null;
-        _target._inputAdapter = InputAdapter.builder().awareOfTopicFrame().build();
-      }
-      if (_target.socketType == ZMQ.PULL) {
-        _target._outputAdapter = null;
-        _target._inputAdapter = InputAdapter.builder().build();
-      }
-      if (_target.socketType == ZMQ.XPUB) {
-        _target._inputAdapter = InputAdapter.builder().awareOfTopicFrame().awareOfExtendedPubSub().build();
-        _target._outputAdapter = OutputAdapter.builder().awareOfTopicFrame().build();
-      }
-      if (_target.socketType == ZMQ.XSUB) {
-        _target._inputAdapter = InputAdapter.builder().awareOfTopicFrame().build();
-        _target._outputAdapter = OutputAdapter.builder().awareOfTopicFrame().awareOfExtendedPubSub().build();
-      }
+      _target._chunkBuf = new byte[_target.props.chunkBufCapacity()];
+      _target._inprocRefBuf = new byte[4/*integer*/];
 
-      _target._socket = createSocket();
-
-      return _target;
-    }
-
-    /** @return connected and/or bound {@link ZMQ.Socket} object. */
-    ZMQ.Socket createSocket() {
       ZMQ.Socket socket = _target.ctx.newSocket(_target.socketType);
 
       {
@@ -134,7 +99,7 @@ public final class ZmqChannel implements HasDestroy {
           socket.bind(addr);
         }
         catch (Exception e) {
-          LOG.error("!!! Got error at .bind(" + addr + "): " + e, e);
+          LOG.error("!!! Got error at .bind(addr=" + addr + "): " + e, e);
           throw ZmqException.seeCause(e);
         }
       }
@@ -152,7 +117,7 @@ public final class ZmqChannel implements HasDestroy {
             catch (Exception e) {
               int timeout = INPROC_CONN_TIMEOUT;
               if (System.currentTimeMillis() - timer > timeout) {
-                LOG.error("!!! Can't .connect(" + addr + ")." + " Gave up after " + timeout + " sec.");
+                LOG.error("!!! Can't .connect(addr=" + addr + ")." + " Gave up after " + timeout + " sec.");
                 throw ZmqException.seeCause(e);
               }
             }
@@ -171,7 +136,9 @@ public final class ZmqChannel implements HasDestroy {
 
       logOpts(socket);
 
-      return socket;
+      _target._socket = socket;
+
+      return _target;
     }
 
     void logOpts(ZMQ.Socket socket) {
@@ -192,6 +159,7 @@ public final class ZmqChannel implements HasDestroy {
         opts.put("router_mandatory", _target.props.isRouterMandatory());
       }
       opts.put("proc_limit", _target.props.procLimit());
+      opts.put("chunk_buf_capacity", _target.props.chunkBufCapacity());
 
       String result;
       try {
@@ -242,10 +210,10 @@ public final class ZmqChannel implements HasDestroy {
   private Props props;
 
   private ZMQ.Socket _socket;
-  private InputAdapter _inputAdapter;
-  private OutputAdapter _outputAdapter;
   private ZMQ.Poller _poller;
   private int _pollableInd = POLLABLE_IND_NOT_INITIALIZED;
+  private byte[] _chunkBuf;
+  private byte[] _inprocRefBuf;
 
   //// CONSTRUCTORS
 
@@ -293,70 +261,87 @@ public final class ZmqChannel implements HasDestroy {
     _socket = null; // invalidates socket.
   }
 
-  /**
-   * Sends a message. May block if send_timeout on socket has been specified.
-   *
-   * @param message message to send.
-   * @return flag indicating success or fail for send operation.
-   */
-  public boolean send(ZmqMessage message) {
+  public boolean sendFrames(ZmqFrames frames, int flag) {
     assertSocket();
-    return send(_outputAdapter.convert(message));
+    int size = frames.size();
+    int i = 0;
+    boolean sent = false;
+    for (byte[] frame : frames) {
+      sent = _socket.send(frame, ++i < size ? SNDMORE : flag);
+      if (!sent) {
+        return false;
+      }
+    }
+    return sent;
+  }
+
+  public boolean pub(byte[] topic, byte[] headers, byte[] payload, int flag) {
+    assertSocket();
+    if (!_socket.send(topic, SNDMORE)) {
+      return false;
+    }
+    int len = putContent(headers, payload);
+    return _socket.send(_chunkBuf, 0, len, flag);
+  }
+
+  public boolean pubInprocRef(byte[] topic, int i, int flag) {
+    assertSocket();
+    if (!_socket.send(topic, SNDMORE)) {
+      return false;
+    }
+    putInt(_inprocRefBuf, 0, i);
+    return _socket.send(_inprocRefBuf, flag);
+  }
+
+  public boolean send(byte[] headers, byte[] payload, int flag) {
+    assertSocket();
+    int len = putContent(headers, payload);
+    return _socket.send(_chunkBuf, 0, len, flag);
+  }
+
+  public boolean sendInprocRef(int i, int flag) {
+    assertSocket();
+    putInt(_inprocRefBuf, 0, i);
+    return _socket.send(_inprocRefBuf, flag);
+  }
+
+  public boolean route(ZmqFrames identities, byte[] headers, byte[] payload, int flag) {
+    assertSocket();
+    putIdentities(identities);
+    int len = putContent(headers, payload);
+    return _socket.send(_chunkBuf, 0, len, flag);
+  }
+
+  public boolean routeInprocRef(ZmqFrames identities, int i, int flag) {
+    assertSocket();
+    putIdentities(identities);
+    putInt(_inprocRefBuf, 0, i);
+    return _socket.send(_inprocRefBuf, flag);
   }
 
   /**
-   * Sends a message. May block if send_timeout on socket has been specified.
+   * Receives frames.
    *
-   * @param message message to send.
-   * @return flag indicating success or fail for send operation.
+   * @param flag block/dont block flag. See {@link ZMQ#DONTWAIT}, {@link ZMQ#NOBLOCK} and {@code 0}(for block).
+   * @return frames or null.
    */
-  public boolean sendInprocRef(ZmqMessage message) {
-    assertSocket();
-    return send(_outputAdapter.convertInprocRef(message));
+  public ZmqFrames recv(int flag) {
+    ZmqFrames input = new ZmqFrames();
+    for (; ; ) {
+      byte[] frame = _socket.recv(flag);
+      if (frame == null) {
+        return null;
+      }
+      input.add(frame);
+      if (!_socket.hasReceiveMore()) {
+        break;
+      }
+    }
+    return input;
   }
 
   /**
-   * Receives a message. May block if recv_timeout on socket has been specified.
-   *
-   * @return a message or null.
-   */
-  public ZmqMessage recv() {
-    assertSocket();
-    return _inputAdapter.convert(recv(0 /* block if necessary */));
-  }
-
-  /**
-   * Receives a message. Doesn't block. Doesn't respect recv_timeout on socket if it has been specified.
-   *
-   * @return a message or null.
-   */
-  public ZmqMessage recvDontWait() {
-    assertSocket();
-    return _inputAdapter.convert(recv(ZMQ.DONTWAIT));
-  }
-
-  /**
-   * Receives a message. May block if recv_timeout on socket has been specified.
-   *
-   * @return a message or null.
-   */
-  public ZmqMessage recvInprocRef() {
-    assertSocket();
-    return _inputAdapter.convertInprocRef(recv(0 /* block if necessary */));
-  }
-
-  /**
-   * Receives a message. Doesn't block. Doesn't respect recv_timeout on socket if it has been specified.
-   *
-   * @return a message or null.
-   */
-  public ZmqMessage recvInprocRefDontWait() {
-    assertSocket();
-    return _inputAdapter.convertInprocRef(recv(ZMQ.DONTWAIT));
-  }
-
-  /**
-   * Subscribe function.
+   * Subscribe on topic.
    *
    * @param topic the "topic" to subscribe on.
    */
@@ -366,7 +351,7 @@ public final class ZmqChannel implements HasDestroy {
   }
 
   /**
-   * Unsubscribe function.
+   * Unsubscribe from topic.
    *
    * @param topic the "topic" to unsubscribe from.
    */
@@ -465,31 +450,32 @@ public final class ZmqChannel implements HasDestroy {
     return _pollableInd != POLLABLE_IND_NOT_INITIALIZED;
   }
 
-  private boolean send(ZmqFrames output) {
-    int outputSize = output.size();
-    int i = 0;
-    boolean sent = false;
-    for (byte[] frame : output) {
-      sent = _socket.send(frame, ++i < outputSize ? ZMQ.SNDMORE : ZMQ.DONTWAIT);
-      if (!sent) {
-        return false;
-      }
+  private void putIdentities(ZmqFrames identities) {
+    if (socketType == ZMQ.DEALER) {
+      _socket.send(EMPTY_FRAME, SNDMORE);
     }
-    return sent;
+    for (byte[] frame : identities) {
+      _socket.send(frame, SNDMORE);
+      _socket.send(EMPTY_FRAME, SNDMORE);
+    }
+    _socket.send(EMPTY_FRAME, SNDMORE);
   }
 
-  private ZmqFrames recv(int flag) {
-    ZmqFrames input = new ZmqFrames();
-    for (; ; ) {
-      byte[] frame = _socket.recv(flag);
-      if (frame == null) {
-        return null;
-      }
-      input.add(frame);
-      if (!_socket.hasReceiveMore()) {
-        break;
-      }
-    }
-    return input;
+  private int putContent(byte[] headers, byte[] payload) {
+    putInt(_chunkBuf, 0, headers.length);
+    System.arraycopy(headers, 0, _chunkBuf, 4, headers.length);
+
+    int offset = 4 + headers.length;
+    putInt(_chunkBuf, offset, payload.length);
+    System.arraycopy(payload, 0, _chunkBuf, offset + 4, payload.length);
+
+    return 4 + headers.length + 4 + payload.length;
+  }
+
+  private void putInt(byte[] buf, int offset, int i) {
+    buf[offset] = (byte) (i >> 24);
+    buf[++offset] = (byte) (i >> 16);
+    buf[++offset] = (byte) (i >> 8);
+    buf[++offset] = (byte) i;
   }
 }

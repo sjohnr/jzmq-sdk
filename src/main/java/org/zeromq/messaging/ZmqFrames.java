@@ -1,9 +1,9 @@
 package org.zeromq.messaging;
 
-import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
 
-public final class ZmqFrames extends ArrayDeque<byte[]> {
+public final class ZmqFrames extends ArrayList<byte[]> {
 
   public ZmqFrames(int initialCapacity) {
     super(initialCapacity);

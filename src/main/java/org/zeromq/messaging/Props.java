@@ -14,6 +14,7 @@ public final class Props {
   private static final long DEFAULT_HWM_SEND = 1000; // HWM, best guess.
   private static final long DEFAULT_HWM_RECV = 1000; // HWM, best guess.
   private static final int DEFAULT_PROC_LIMIT = 1000;
+  private static final int DEFAULT_CHUNK_BUF_CAPACITY = 8192; // buffer capacity for content, best guess.
 
   public static final class Builder implements ObjectBuilder<Props> {
 
@@ -91,6 +92,11 @@ public final class Props {
       return this;
     }
 
+    public final Builder withChunkBufCapacity(int contentBufCapacity) {
+      _target.setChunkBufCapacity(contentBufCapacity);
+      return this;
+    }
+
     @Override
     public Props build() {
       return _target;
@@ -107,6 +113,7 @@ public final class Props {
   private int recvTimeout = DEFAULT_RECV_TIMEOUT;
   private boolean routerMandatory;
   private int procLimit = DEFAULT_PROC_LIMIT;
+  private int chunkBufCapacity = DEFAULT_CHUNK_BUF_CAPACITY;
 
   //// CONSTRUCTORS
 
@@ -207,5 +214,13 @@ public final class Props {
 
   public int procLimit() {
     return procLimit;
+  }
+
+  public void setChunkBufCapacity(int chunkBufCapacity) {
+    this.chunkBufCapacity = chunkBufCapacity;
+  }
+
+  public int chunkBufCapacity() {
+    return chunkBufCapacity;
   }
 }
