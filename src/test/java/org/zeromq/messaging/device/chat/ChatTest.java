@@ -27,7 +27,7 @@ public class ChatTest extends ZmqAbstractTest {
 
       waitSec(); // wait a second.
 
-      pub.pub(topic, emptyHeaders(), payload(), 0);
+      pub.pub(topic, payload(), 0);
       assert sub.recv(0) != null;
       assert sub.recv(0) == null;
     }
@@ -65,8 +65,8 @@ public class ChatTest extends ZmqAbstractTest {
 
       waitSec(); // wait a second.
 
-      galaSays.pub(topic, emptyHeaders(), payload(), 0);
-      alenkaSays.pub(topic, emptyHeaders(), payload(), 0);
+      galaSays.pub(topic, payload(), 0);
+      alenkaSays.pub(topic, payload(), 0);
 
       assert galaListens.recv(0) != null;
       assert alenkaListens.recv(0) != null;
@@ -101,18 +101,18 @@ public class ChatTest extends ZmqAbstractTest {
 
       waitSec(); // wait a second.
 
-      pub.pub(topicXXX, emptyHeaders(), payload(), 0);
+      pub.pub(topicXXX, payload(), 0);
       assert sub.recv(0) != null;
 
       // unsubscribe first time.
       sub.unsubscribe(topicXXX);
       // ensure that you still get message since one subscription remains.
-      pub.pub(topicXXX, emptyHeaders(), emptyPayload(), 0);
+      pub.pub(topicXXX, emptyPayload(), 0);
 
       // unsubscribe last time.
       sub.unsubscribe(topicXXX);
       // ensure that you will not receive a message since all subscriptions are unsubscribed.
-      pub.pub(topicXXX, emptyHeaders(), emptyPayload(), 0);
+      pub.pub(topicXXX, emptyPayload(), 0);
       assert sub.recv(0) == null;
     }
     finally {

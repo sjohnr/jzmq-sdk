@@ -37,14 +37,6 @@ public abstract class ZmqAbstractTest {
     return "payload".getBytes();
   }
 
-  public static byte[] emptyHeaders() {
-    return EMPTY_FRAME;
-  }
-
-  public static byte[] headers() {
-    return ZmqHeaders.builder().set("x", "x").set("y", "y").set("z", "z").build().asBinary();
-  }
-
   public static String connAddr(int port) {
     return "tcp://localhost:" + port;
   }

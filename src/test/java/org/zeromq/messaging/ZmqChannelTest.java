@@ -114,8 +114,8 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     server_poller.poll(timeout);
     assert !server.canRecv(); // no input initially.
 
-    assert client.route(emptyIdentities(), emptyHeaders(), payload(), 0); // send once.
-    assert client.route(emptyIdentities(), emptyHeaders(), payload(), 0); // send twice.
+    assert client.route(emptyIdentities(), payload(), 0); // send once.
+    assert client.route(emptyIdentities(), payload(), 0); // send twice.
     client_poller.poll(timeout);
     assert !client.canRecv(); // you don't have input yet (server not replied at this point).
 
@@ -147,7 +147,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                                                 .build()).build();
     ZmqChannel server = ZmqChannel.ROUTER(ctx()).withProps(Props.builder().withBindAddr(bindAddr(6677)).build()).build();
 
-    assert client.route(emptyIdentities(), emptyHeaders(), payload(), 0);
+    assert client.route(emptyIdentities(), payload(), 0);
     assert server.recv(DONTWAIT) == null; // at this point non-blocking .recv() returns null.
     assert server.recv(0) != null; // by turn, blocking .recv() blocks a bit and returns message.
   }
@@ -163,8 +163,8 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                                   .build())
                                   .build();
 
-    assert client.route(emptyIdentities(), emptyHeaders(), payload(), 0); // you can send once.
-    assert !client.route(emptyIdentities(), emptyHeaders(), payload(), DONTWAIT); // yout can't send twice ;|
+    assert client.route(emptyIdentities(), payload(), 0); // you can send once.
+    assert !client.route(emptyIdentities(), payload(), DONTWAIT); // yout can't send twice ;|
   }
 
   @Test
@@ -180,7 +180,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                   .build();
 
     try {
-      server.route(emptyIdentities(), emptyHeaders(), payload(), DONTWAIT);
+      server.route(emptyIdentities(), payload(), DONTWAIT);
       fail();
     }
     catch (Exception e) {
@@ -237,7 +237,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                                   .build())
                                   .build();
 
-    assert client.route(emptyIdentities(), emptyHeaders(), payload(), 0);
+    assert client.route(emptyIdentities(), payload(), 0);
     ZmqFrames req = server.recv(0);
     assert req != null;
 
@@ -304,23 +304,23 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                                   .build())
                                   .build();
 
-    assert client.route(emptyIdentities(), emptyHeaders(), payload(), 0);
+    assert client.route(emptyIdentities(), payload(), 0);
     assert server.recv(0) != null;
 
-    assert client.route(emptyIdentities(), emptyHeaders(), payload(), 0);
+    assert client.route(emptyIdentities(), payload(), 0);
     assert server.recv(0) != null;
 
-    assert client.route(emptyIdentities(), emptyHeaders(), payload(), 0);
+    assert client.route(emptyIdentities(), payload(), 0);
     assert server.recv(0) != null;
   }
 
   @Test
   public void t12() {
     LOG.info("Test matching content on connected DEALER/ROUTER: " +
-             "[identities|headers|payload], " +
-             "[identities|[]|payload], " +
-             "[identities|headers|[]], " +
-             "[identities|[]|[]].");
+             "[identities|payload], " +
+             "[identities|payload], " +
+             "[identities|[]], " +
+             "[identities|[]].");
 
     ZmqChannel server = ZmqChannel.ROUTER(ctx())
                                   .withProps(Props.builder()
@@ -336,32 +336,28 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                                   .build())
                                   .build();
 
-    assert client.route(emptyIdentities(), headers(), payload(), 0);
-    assert client.route(emptyIdentities(), emptyHeaders(), payload(), 0);
-    assert client.route(emptyIdentities(), headers(), emptyPayload(), 0);
-    assert client.route(emptyIdentities(), emptyHeaders(), emptyPayload(), 0);
+    assert client.route(emptyIdentities(), payload(), 0);
+    assert client.route(emptyIdentities(), payload(), 0);
+    assert client.route(emptyIdentities(), emptyPayload(), 0);
+    assert client.route(emptyIdentities(), emptyPayload(), 0);
 
     ZmqFrames recv0 = server.recv(0);
     assertEquals("client", new String(recv0.getIdentities().get(0)));
-    assertEquals("x=x,y=y,z=z", new String(recv0.getHeaders()));
     assertEquals("payload", new String(recv0.getPayload()));
     assert server.sendFrames(recv0, 0);
 
     ZmqFrames recv1 = server.recv(0);
     assertEquals("client", new String(recv1.getIdentities().get(0)));
-    assertEquals("", new String(recv1.getHeaders()));
     assertEquals("payload", new String(recv1.getPayload()));
     assert server.sendFrames(recv1, 0);
 
     ZmqFrames recv2 = server.recv(0);
     assertEquals("client", new String(recv2.getIdentities().get(0)));
-    assertEquals("x=x,y=y,z=z", new String(recv2.getHeaders()));
     assertEquals("", new String(recv2.getPayload()));
     assert server.sendFrames(recv2, 0);
 
     ZmqFrames recv3 = server.recv(0);
     assertEquals("client", new String(recv3.getIdentities().get(0)));
-    assertEquals("", new String(recv3.getHeaders()));
     assertEquals("", new String(recv3.getPayload()));
     assert server.sendFrames(recv3, 0);
 
@@ -371,19 +367,15 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     recv3 = client.recv(0);
 
     assertEquals(0, recv0.getIdentities().size());
-    assertEquals("x=x,y=y,z=z", new String(recv0.getHeaders()));
     assertEquals("payload", new String(recv0.getPayload()));
 
     assertEquals(0, recv1.getIdentities().size());
-    assertEquals("", new String(recv1.getHeaders()));
     assertEquals("payload", new String(recv1.getPayload()));
 
     assertEquals(0, recv2.getIdentities().size());
-    assertEquals("x=x,y=y,z=z", new String(recv2.getHeaders()));
     assertEquals("", new String(recv2.getPayload()));
 
     assertEquals(0, recv3.getIdentities().size());
-    assertEquals("", new String(recv3.getHeaders()));
     assertEquals("", new String(recv3.getPayload()));
   }
 }

@@ -45,15 +45,15 @@ public class PubSubTest extends ZmqAbstractTest {
       subscriber.subscribe(topicC);
 
       // send message with topic A.
-      publisher.pub(topicA, emptyHeaders(), payload(), 0);
+      publisher.pub(topicA, payload(), 0);
       // send message with topic B.
-      publisher.pub(topicB, emptyHeaders(), payload(), 0);
+      publisher.pub(topicB, payload(), 0);
       // send message with topic C.
-      publisher.pub(topicC, emptyHeaders(), payload(), 0);
+      publisher.pub(topicC, payload(), 0);
 
       // send other messages.
       for (int i = 0; i < 3; i++) {
-        publisher.pub(EMPTY_FRAME/*empty topic*/, emptyHeaders(), payload(), 0);
+        publisher.pub(EMPTY_FRAME/*empty topic*/, payload(), 0);
       }
 
       // receive three messages.
@@ -84,7 +84,7 @@ public class PubSubTest extends ZmqAbstractTest {
 
       // send messages with topic.
       for (int i = 0; i < 4; i++) {
-        publisher.pub(topic, emptyHeaders(), payload(), 0);
+        publisher.pub(topic, payload(), 0);
       }
 
       // receive only three messages.
@@ -121,7 +121,7 @@ public class PubSubTest extends ZmqAbstractTest {
 
       // send messages with topic.
       for (int i = 0; i < 6; i++) {
-        publisher.pub(topic, emptyHeaders(), payload(), 0);
+        publisher.pub(topic, payload(), 0);
       }
 
       // receive only three messages.

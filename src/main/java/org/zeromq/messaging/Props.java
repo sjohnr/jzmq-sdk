@@ -8,13 +8,18 @@ import java.util.List;
 
 public final class Props {
 
-  private static final int DEFAULT_LINGER = 0; // by default it's allowed to close socket and not be blocked.
-  private static final int DEFAULT_SEND_TIMEOUT = 1000; // how long to wait on .send(), best guess.
-  private static final int DEFAULT_RECV_TIMEOUT = 1000; // how long to wait on .recv(), best guess.
-  private static final long DEFAULT_HWM_SEND = 1000; // HWM, best guess.
-  private static final long DEFAULT_HWM_RECV = 1000; // HWM, best guess.
-  private static final int DEFAULT_PROC_LIMIT = 1000;
-  private static final int DEFAULT_CHUNK_BUF_CAPACITY = 8192; // buffer capacity for content, best guess.
+  /** By default it's allowed to close socket, lose unsent messages (if any), and not be blocked. */
+  private static final int DEFAULT_LINGER = 0;
+  /** How long to wait on .send(), best guess. */
+  private static final int DEFAULT_SEND_TIMEOUT = 1000;
+  /** How long to wait on .recv(), best guess. */
+  private static final int DEFAULT_RECV_TIMEOUT = 1000;
+  /** HWM on .send(), best guess. */
+  private static final long DEFAULT_HWM_SEND = 1000;
+  /** HWM on .recv(), best guess. */
+  private static final long DEFAULT_HWM_RECV = 1000;
+  /** Default buffer capacity for payload, best guess. */
+  private static final int DEFAULT_PAYLOAD_BUF_CAPACITY = 8192;
 
   public static final class Builder implements ObjectBuilder<Props> {
 
@@ -87,13 +92,8 @@ public final class Props {
       return this;
     }
 
-    public final Builder withProcLimit(int procLimit) {
-      _target.setProcLimit(procLimit);
-      return this;
-    }
-
-    public final Builder withChunkBufCapacity(int contentBufCapacity) {
-      _target.setChunkBufCapacity(contentBufCapacity);
+    public final Builder withPayloadBufCapacity(int payloadBufCapacity) {
+      _target.setPayloadBufCapacity(payloadBufCapacity);
       return this;
     }
 
@@ -112,8 +112,7 @@ public final class Props {
   private int sendTimeout = DEFAULT_SEND_TIMEOUT;
   private int recvTimeout = DEFAULT_RECV_TIMEOUT;
   private boolean routerMandatory;
-  private int procLimit = DEFAULT_PROC_LIMIT;
-  private int chunkBufCapacity = DEFAULT_CHUNK_BUF_CAPACITY;
+  private int payloadBufCapacity = DEFAULT_PAYLOAD_BUF_CAPACITY;
 
   //// CONSTRUCTORS
 
@@ -208,19 +207,11 @@ public final class Props {
     this.routerMandatory = routerMandatory;
   }
 
-  public void setProcLimit(int procLimit) {
-    this.procLimit = procLimit;
+  public void setPayloadBufCapacity(int payloadBufCapacity) {
+    this.payloadBufCapacity = payloadBufCapacity;
   }
 
-  public int procLimit() {
-    return procLimit;
-  }
-
-  public void setChunkBufCapacity(int chunkBufCapacity) {
-    this.chunkBufCapacity = chunkBufCapacity;
-  }
-
-  public int chunkBufCapacity() {
-    return chunkBufCapacity;
+  public int payloadBufCapacity() {
+    return payloadBufCapacity;
   }
 }

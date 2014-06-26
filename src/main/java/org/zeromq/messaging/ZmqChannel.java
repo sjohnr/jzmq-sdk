@@ -65,7 +65,7 @@ public final class ZmqChannel implements HasDestroy {
     public ZmqChannel build() {
       checkInvariant();
 
-      _target._chunkBuf = new byte[_target.props.chunkBufCapacity()];
+      _target._payloadBuf = new byte[_target.props.payloadBufCapacity()];
       _target._inprocRefBuf = new byte[4/*integer*/];
 
       ZMQ.Socket socket = _target.ctx.newSocket(_target.socketType);
@@ -145,21 +145,20 @@ public final class ZmqChannel implements HasDestroy {
       Map<String, Object> opts = new LinkedHashMap<String, Object>();
 
       opts.put("type", getLoggableSocketType());
-      opts.put("custom_identity", makeHash(ImmutableList.of(socket.getIdentity())));
-      opts.put("hwm_send", socket.getSndHWM());
-      opts.put("hwm_recv", socket.getRcvHWM());
-      opts.put("linger", socket.getLinger());
       opts.put("bind_addr", _target.props.bindAddr());
       opts.put("connect_addr", _target.props.connectAddr());
+      opts.put("hwm_send", socket.getSndHWM());
+      opts.put("hwm_recv", socket.getRcvHWM());
       opts.put("timeout_send", socket.getSendTimeOut());
       opts.put("timeout_recv", socket.getReceiveTimeOut());
+      opts.put("custom_identity", makeHash(ImmutableList.of(socket.getIdentity())));
       opts.put("reconn_intrvl", socket.getReconnectIVL());
       opts.put("reconn_intrvl_max", socket.getReconnectIVLMax());
+      opts.put("linger", socket.getLinger());
       if (_target.socketType == ZMQ.ROUTER) {
         opts.put("router_mandatory", _target.props.isRouterMandatory());
       }
-      opts.put("proc_limit", _target.props.procLimit());
-      opts.put("chunk_buf_capacity", _target.props.chunkBufCapacity());
+      opts.put("payload_buf_capacity", _target.props.payloadBufCapacity());
 
       String result;
       try {
@@ -212,7 +211,7 @@ public final class ZmqChannel implements HasDestroy {
   private ZMQ.Socket _socket;
   private ZMQ.Poller _poller;
   private int _pollableInd = POLLABLE_IND_NOT_INITIALIZED;
-  private byte[] _chunkBuf;
+  private byte[] _payloadBuf;
   private byte[] _inprocRefBuf;
 
   //// CONSTRUCTORS
@@ -275,13 +274,13 @@ public final class ZmqChannel implements HasDestroy {
     return sent;
   }
 
-  public boolean pub(byte[] topic, byte[] headers, byte[] payload, int flag) {
+  public boolean pub(byte[] topic, byte[] payload, int flag) {
     assertSocket();
     if (!_socket.send(topic, SNDMORE)) {
       return false;
     }
-    int len = putContent(headers, payload);
-    return _socket.send(_chunkBuf, 0, len, flag);
+    int len = putPayload(payload);
+    return _socket.send(_payloadBuf, 0, len, flag);
   }
 
   public boolean pubInprocRef(byte[] topic, int i, int flag) {
@@ -293,10 +292,10 @@ public final class ZmqChannel implements HasDestroy {
     return _socket.send(_inprocRefBuf, flag);
   }
 
-  public boolean send(byte[] headers, byte[] payload, int flag) {
+  public boolean send(byte[] payload, int flag) {
     assertSocket();
-    int len = putContent(headers, payload);
-    return _socket.send(_chunkBuf, 0, len, flag);
+    int len = putPayload(payload);
+    return _socket.send(_payloadBuf, 0, len, flag);
   }
 
   public boolean sendInprocRef(int i, int flag) {
@@ -305,11 +304,11 @@ public final class ZmqChannel implements HasDestroy {
     return _socket.send(_inprocRefBuf, flag);
   }
 
-  public boolean route(ZmqFrames identities, byte[] headers, byte[] payload, int flag) {
+  public boolean route(ZmqFrames identities, byte[] payload, int flag) {
     assertSocket();
     putIdentities(identities);
-    int len = putContent(headers, payload);
-    return _socket.send(_chunkBuf, 0, len, flag);
+    int len = putPayload(payload);
+    return _socket.send(_payloadBuf, 0, len, flag);
   }
 
   public boolean routeInprocRef(ZmqFrames identities, int i, int flag) {
@@ -461,15 +460,10 @@ public final class ZmqChannel implements HasDestroy {
     _socket.send(EMPTY_FRAME, SNDMORE);
   }
 
-  private int putContent(byte[] headers, byte[] payload) {
-    putInt(_chunkBuf, 0, headers.length);
-    System.arraycopy(headers, 0, _chunkBuf, 4, headers.length);
-
-    int offset = 4 + headers.length;
-    putInt(_chunkBuf, offset, payload.length);
-    System.arraycopy(payload, 0, _chunkBuf, offset + 4, payload.length);
-
-    return 4 + headers.length + 4 + payload.length;
+  private int putPayload(byte[] payload) {
+    putInt(_payloadBuf, 0, payload.length);
+    System.arraycopy(payload, 0, _payloadBuf, 4, payload.length);
+    return 4 + payload.length;
   }
 
   private void putInt(byte[] buf, int offset, int i) {

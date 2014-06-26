@@ -62,20 +62,9 @@ public final class ZmqFrames extends ArrayList<byte[]> {
     return identities;
   }
 
-  public byte[] getHeaders() {
-    checkArgument(size() > 0, "Wrong frames.size: " + size());
-    ByteBuffer buf = ByteBuffer.wrap(get(size() - 1));
-    byte[] headers = new byte[buf.getInt()];
-    buf.get(headers);
-    return headers;
-  }
-
   public byte[] getPayload() {
     checkArgument(size() > 0, "Wrong frames.size: " + size());
     ByteBuffer buf = ByteBuffer.wrap(get(size() - 1));
-    int headersLen = buf.getInt();
-    buf.position(4 + headersLen);
-
     byte[] payload = new byte[buf.getInt()];
     buf.get(payload);
     return payload;
