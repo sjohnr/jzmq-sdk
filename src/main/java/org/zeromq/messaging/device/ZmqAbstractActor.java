@@ -71,7 +71,7 @@ public abstract class ZmqAbstractActor implements ZmqActor, HasInvariant {
   }
 
   @Override
-  public void exec() {
+  public void exec() throws Exception {
     _poller.poll(pollTimeout);
   }
 
@@ -83,11 +83,12 @@ public abstract class ZmqAbstractActor implements ZmqActor, HasInvariant {
     _channels.clear();
   }
 
-  protected final void register(String id, ZmqChannel channel) {
+  protected final ZmqChannel register(String id, ZmqChannel channel) {
     if (channel == null) {
       throw ZmqException.fatal();
     }
     _channels.put(id, channel);
+    return channel;
   }
 
   protected final ZmqChannel channel(String id) {

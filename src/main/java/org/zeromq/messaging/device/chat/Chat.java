@@ -24,7 +24,7 @@ public final class Chat extends ZmqAbstractActor {
    *    sub/unsub -->      <--conn-- PUB
    * </pre>
    */
-  private static final String CHANNEL_ID_FRONTEND_PUB = "frontendPub";
+  private static final String FRONTEND_PUB = "frontendPub";
   /**
    * XPUB -- for serving cluster wide subscribers:
    * <pre>
@@ -33,7 +33,7 @@ public final class Chat extends ZmqAbstractActor {
    *   sub/unsub <--      <--conn-- cluster XSUB
    * </pre>
    */
-  private static final String CHANNEL_ID_CLUSTER_PUB = "clusterPub";
+  private static final String CLUSTER_PUB = "clusterPub";
   /**
    * XPUB -- for serving connecting subscribers:
    * <pre>
@@ -42,7 +42,7 @@ public final class Chat extends ZmqAbstractActor {
    *       byte[] -->      <--conn-- SUB
    * </pre>
    */
-  private static final String CHANNEL_ID_FRONTEND_SUB = "frontendSub";
+  private static final String FRONTEND_SUB = "frontendSub";
   /**
    * XSUB -- for serving cluster wide publishers:
    * <pre>
@@ -51,7 +51,7 @@ public final class Chat extends ZmqAbstractActor {
    *   sub/unsub -->      --conn--> cluster XPUB
    * </pre>
    */
-  private static final String CHANNEL_ID_CLUSTER_SUB = "clusterSub";
+  private static final String CLUSTER_SUB = "clusterSub";
 
   public static final class Builder extends ZmqAbstractActor.Builder<Builder, Chat> {
 
@@ -128,29 +128,24 @@ public final class Chat extends ZmqAbstractActor {
   public void init() {
     checkInvariant();
 
-    register(CHANNEL_ID_FRONTEND_PUB, ZmqChannel.XSUB(ctx).withProps(frontendPubProps).build());
-    register(CHANNEL_ID_CLUSTER_PUB, ZmqChannel.XPUB(ctx).withProps(clusterPubProps).build());
-    register(CHANNEL_ID_FRONTEND_SUB, ZmqChannel.XPUB(ctx).withProps(frontendSubProps).build());
-    register(CHANNEL_ID_CLUSTER_SUB, ZmqChannel.XSUB(ctx).withProps(clusterSubProps).build());
+    register(FRONTEND_PUB, ZmqChannel.XSUB(ctx).withProps(frontendPubProps).build()).watchRecv(_poller);
+    register(CLUSTER_PUB, ZmqChannel.XPUB(ctx).withProps(clusterPubProps).build()).watchRecv(_poller);
+    register(FRONTEND_SUB, ZmqChannel.XPUB(ctx).withProps(frontendSubProps).build()).watchRecv(_poller);
+    register(CLUSTER_SUB, ZmqChannel.XSUB(ctx).withProps(clusterSubProps).build()).watchRecv(_poller);
 
     // By default, unconditionally, Chat is set to handle duplicate subscriptions/unsubscriptions.
-    channel(CHANNEL_ID_CLUSTER_PUB).setExtendedPubSubVerbose();
-    channel(CHANNEL_ID_FRONTEND_SUB).setExtendedPubSubVerbose();
-
-    channel(CHANNEL_ID_FRONTEND_PUB).watchRecv(_poller);
-    channel(CHANNEL_ID_CLUSTER_PUB).watchRecv(_poller);
-    channel(CHANNEL_ID_FRONTEND_SUB).watchRecv(_poller);
-    channel(CHANNEL_ID_CLUSTER_SUB).watchRecv(_poller);
+    channel(CLUSTER_PUB).setExtendedPubSubVerbose();
+    channel(FRONTEND_SUB).setExtendedPubSubVerbose();
   }
 
   @Override
-  public void exec() {
+  public void exec() throws Exception {
     super.exec();
 
-    ZmqChannel frontendPub = channel(CHANNEL_ID_FRONTEND_PUB);
-    ZmqChannel clusterPub = channel(CHANNEL_ID_CLUSTER_PUB);
-    ZmqChannel clusterSub = channel(CHANNEL_ID_CLUSTER_SUB);
-    ZmqChannel frontendSub = channel(CHANNEL_ID_FRONTEND_SUB);
+    ZmqChannel frontendPub = channel(FRONTEND_PUB);
+    ZmqChannel clusterPub = channel(CLUSTER_PUB);
+    ZmqChannel clusterSub = channel(CLUSTER_SUB);
+    ZmqChannel frontendSub = channel(FRONTEND_SUB);
 
     if (frontendPub.canRecv()) {
       for (; ; ) {
