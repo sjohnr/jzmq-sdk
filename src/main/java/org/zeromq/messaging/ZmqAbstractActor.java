@@ -1,9 +1,6 @@
-package org.zeromq.messaging.device;
+package org.zeromq.messaging;
 
 import org.zeromq.ZMQ;
-import org.zeromq.messaging.ZmqChannel;
-import org.zeromq.messaging.ZmqContext;
-import org.zeromq.messaging.ZmqException;
 import org.zeromq.support.HasInvariant;
 import org.zeromq.support.ObjectBuilder;
 import org.zeromq.support.thread.ZmqActor;

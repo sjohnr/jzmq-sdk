@@ -1,4 +1,4 @@
-package org.zeromq.messaging.device.chat;
+package org.zeromq.messaging.chat;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -6,7 +6,7 @@ import org.zeromq.messaging.Props;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqFrames;
-import org.zeromq.messaging.device.ZmqAbstractActor;
+import org.zeromq.messaging.ZmqAbstractActor;
 
 import static org.zeromq.ZMQ.DONTWAIT;
 import static org.zeromq.messaging.ZmqFrames.BYTE_SUB;

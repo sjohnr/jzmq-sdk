@@ -3,6 +3,7 @@ package org.zeromq.messaging.device.chat;
 import org.zeromq.messaging.BaseFixture;
 import org.zeromq.messaging.Props;
 import org.zeromq.messaging.ZmqContext;
+import org.zeromq.messaging.chat.Chat;
 import org.zeromq.support.thread.ZmqProcess;
 
 public class ChatFixture extends BaseFixture {
