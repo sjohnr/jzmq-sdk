@@ -7,7 +7,6 @@ import org.zeromq.support.ObjectBuilder;
 import org.zeromq.support.exception.ExceptionHandler;
 import org.zeromq.support.exception.InterruptedExceptionHandler;
 import org.zeromq.support.exception.JniExceptionHandler;
-import org.zeromq.support.exception.LoggingExceptionHandler;
 import org.zeromq.support.exception.RootExceptionHandler;
 
 import java.util.concurrent.CountDownLatch;
@@ -21,8 +20,7 @@ public final class ZmqProcess implements Runnable {
   private static final ExceptionHandler DEFAULT_EXCEPTION_HANDLER_CHAIN =
       new RootExceptionHandler()
           .withNext(new JniExceptionHandler()
-                        .withNext(new InterruptedExceptionHandler()
-                                      .withNext(new LoggingExceptionHandler())));
+                        .withNext(new InterruptedExceptionHandler()));
 
   public static class Builder implements ObjectBuilder<ZmqProcess>, HasInvariant {
 
