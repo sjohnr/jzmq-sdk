@@ -8,6 +8,8 @@ import org.zeromq.support.thread.ZmqActor;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 public abstract class ZmqAbstractActor implements ZmqActor, HasInvariant {
 
   private static final long DEFAULT_POLL_TIMEOUT = 1000;
@@ -62,9 +64,7 @@ public abstract class ZmqAbstractActor implements ZmqActor, HasInvariant {
 
   @Override
   public void checkInvariant() {
-    if (ctx == null) {
-      throw ZmqException.fatal();
-    }
+    checkArgument(ctx != null);
   }
 
   @Override
@@ -80,12 +80,8 @@ public abstract class ZmqAbstractActor implements ZmqActor, HasInvariant {
   }
 
   protected final ZmqChannel put(String id, ZmqChannel channel) {
-    if (id == null || id.isEmpty()) {
-      throw ZmqException.fatal();
-    }
-    if (channel == null) {
-      throw ZmqException.fatal();
-    }
+    checkArgument(id != null && !id.trim().isEmpty(), "Wrong channelId=" + id);
+    checkArgument(channel != null);
     _channels.put(id, channel);
     return channel;
   }

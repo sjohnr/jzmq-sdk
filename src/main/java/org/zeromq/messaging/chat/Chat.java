@@ -5,9 +5,9 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.messaging.Props;
 import org.zeromq.messaging.ZmqAbstractActor;
 import org.zeromq.messaging.ZmqChannel;
-import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqFrames;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.zeromq.ZMQ.DONTWAIT;
 import static org.zeromq.messaging.ZmqFrames.BYTE_SUB;
 import static org.zeromq.messaging.ZmqFrames.BYTE_UNSUB;
@@ -115,18 +115,10 @@ public final class Chat extends ZmqAbstractActor {
   @Override
   public void checkInvariant() {
     super.checkInvariant();
-    if (frontendPubProps.bindAddr().isEmpty()) {
-      throw ZmqException.fatal();
-    }
-    if (clusterPubProps.bindAddr().isEmpty()) {
-      throw ZmqException.fatal();
-    }
-    if (frontendSubProps.bindAddr().isEmpty()) {
-      throw ZmqException.fatal();
-    }
-    if (clusterSubProps.connectAddr().isEmpty()) {
-      throw ZmqException.fatal();
-    }
+    checkArgument(!frontendPubProps.bindAddr().isEmpty());
+    checkArgument(!clusterPubProps.bindAddr().isEmpty());
+    checkArgument(!frontendSubProps.bindAddr().isEmpty());
+    checkArgument(!clusterSubProps.connectAddr().isEmpty());
   }
 
   @Override

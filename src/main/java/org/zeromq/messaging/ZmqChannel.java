@@ -12,6 +12,8 @@ import org.zeromq.support.ObjectBuilder;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static org.zeromq.ZMQ.SNDMORE;
 import static org.zeromq.messaging.ZmqFrames.EMPTY_FRAME;
 import static org.zeromq.support.ZmqUtils.makeHash;
@@ -39,12 +41,9 @@ public final class ZmqChannel implements HasDestroy {
 
     @Override
     public void checkInvariant() {
-      if (_target.ctx == null) {
-        throw ZmqException.fatal();
-      }
-      if (_target.props == null) {
-        throw ZmqException.fatal();
-      }
+      checkArgument(_target.ctx != null);
+      checkArgument(_target.props != null);
+
       switch (_target.socketType) {
         case ZMQ.PUB:
         case ZMQ.SUB:
@@ -56,7 +55,7 @@ public final class ZmqChannel implements HasDestroy {
         case ZMQ.ROUTER:
           break;
         default:
-          throw ZmqException.fatal();
+          throw new IllegalArgumentException("Wrong socketType=" + _target.socketType);
       }
     }
 
@@ -197,7 +196,7 @@ public final class ZmqChannel implements HasDestroy {
           loggableSocketType = "ROUTER";
           break;
         default:
-          throw ZmqException.fatal();
+          throw new IllegalArgumentException("Wrong socketType=" + _target.socketType);
       }
       return loggableSocketType;
     }
@@ -256,11 +255,11 @@ public final class ZmqChannel implements HasDestroy {
   public void destroy() {
     unregister();
     ctx.closeSocket(_socket);
-    _socket = null; // invalidates socket.
+    _socket = null;
   }
 
   public boolean sendFrames(ZmqFrames frames, int flag) {
-    assertSocket();
+    checkState(_socket != null);
     int size = frames.size();
     int i = 0;
     boolean sent = false;
@@ -274,7 +273,7 @@ public final class ZmqChannel implements HasDestroy {
   }
 
   public boolean pub(byte[] topic, byte[] payload, int flag) {
-    assertSocket();
+    checkState(_socket != null);
     if (!_socket.send(topic, SNDMORE)) {
       return false;
     }
@@ -283,7 +282,7 @@ public final class ZmqChannel implements HasDestroy {
   }
 
   public boolean pubInprocRef(byte[] topic, int i, int flag) {
-    assertSocket();
+    checkState(_socket != null);
     if (!_socket.send(topic, SNDMORE)) {
       return false;
     }
@@ -292,26 +291,26 @@ public final class ZmqChannel implements HasDestroy {
   }
 
   public boolean send(byte[] payload, int flag) {
-    assertSocket();
+    checkState(_socket != null);
     int len = putPayload(payload);
     return _socket.send(_payloadBuf, 0, len, flag);
   }
 
   public boolean sendInprocRef(int i, int flag) {
-    assertSocket();
+    checkState(_socket != null);
     putInt(_inprocRefBuf, 0, i);
     return _socket.send(_inprocRefBuf, flag);
   }
 
   public boolean route(ZmqFrames identities, byte[] payload, int flag) {
-    assertSocket();
+    checkState(_socket != null);
     putIdentities(identities);
     int len = putPayload(payload);
     return _socket.send(_payloadBuf, 0, len, flag);
   }
 
   public boolean routeInprocRef(ZmqFrames identities, int i, int flag) {
-    assertSocket();
+    checkState(_socket != null);
     putIdentities(identities);
     putInt(_inprocRefBuf, 0, i);
     return _socket.send(_inprocRefBuf, flag);
@@ -344,7 +343,7 @@ public final class ZmqChannel implements HasDestroy {
    * @param topic the "topic" to subscribe on.
    */
   public void subscribe(byte[] topic) {
-    assertSocket();
+    checkState(_socket != null);
     _socket.subscribe(topic);
   }
 
@@ -354,7 +353,7 @@ public final class ZmqChannel implements HasDestroy {
    * @param topic the "topic" to unsubscribe from.
    */
   public void unsubscribe(byte[] topic) {
-    assertSocket();
+    checkState(_socket != null);
     _socket.unsubscribe(topic);
   }
 
@@ -365,7 +364,7 @@ public final class ZmqChannel implements HasDestroy {
    * <b>NOTE: this setting only makes sense on XPUB socket.</b>
    */
   public void setExtendedPubSubVerbose() {
-    assertSocket();
+    checkState(_socket != null);
     _socket.setXpubVerbose(true);
   }
 
@@ -376,43 +375,37 @@ public final class ZmqChannel implements HasDestroy {
    * <b>NOTE: this setting only makes sense on XPUB socket.</b>
    */
   public void unsetExtendedPubSubVerbose() {
-    assertSocket();
+    checkState(_socket != null);
     _socket.setXpubVerbose(false);
   }
 
   /** Registers internal {@link #_socket} on given poller instance. */
   public void watchSendRecv(ZMQ.Poller poller) {
-    assertSocket();
-    if (isRegistered()) {
-      throw ZmqException.fatal();
-    }
+    checkState(_socket != null);
+    checkState(!isRegistered());
     _poller = poller;
     _pollableInd = _poller.register(_socket, ZMQ.Poller.POLLOUT | ZMQ.Poller.POLLIN);
   }
 
   /** Registers internal {@link #_socket} on given poller instance. */
   public void watchSend(ZMQ.Poller poller) {
-    assertSocket();
-    if (isRegistered()) {
-      throw ZmqException.fatal();
-    }
+    checkState(_socket != null);
+    checkState(!isRegistered());
     _poller = poller;
     _pollableInd = _poller.register(_socket, ZMQ.Poller.POLLOUT);
   }
 
   /** Registers internal {@link #_socket} on given poller instance. */
   public void watchRecv(ZMQ.Poller poller) {
-    assertSocket();
-    if (isRegistered()) {
-      throw ZmqException.fatal();
-    }
+    checkState(_socket != null);
+    checkState(!isRegistered());
     _poller = poller;
     _pollableInd = _poller.register(_socket, ZMQ.Poller.POLLIN);
   }
 
   /** Clears internal poller on internal {@link #_socket}. */
   public void unregister() {
-    assertSocket();
+    checkState(_socket != null);
     if (_poller != null) {
       _poller.unregister(_socket);
       _poller = null;
@@ -422,26 +415,16 @@ public final class ZmqChannel implements HasDestroy {
 
   /** Determines whether internal {@link #_socket} is ready for reading message w/o blocking. */
   public boolean canRecv() {
-    assertSocket();
-    if (!isRegistered()) {
-      throw ZmqException.fatal();
-    }
+    checkState(_socket != null);
+    checkState(isRegistered());
     return _poller.pollin(_pollableInd);
   }
 
   /** Determines whether internal {@link #_socket} is ready for writing message w/o blocking. */
   public boolean canSend() {
-    assertSocket();
-    if (!isRegistered()) {
-      throw ZmqException.fatal();
-    }
+    checkState(_socket != null);
+    checkState(isRegistered());
     return _poller.pollout(_pollableInd);
-  }
-
-  private void assertSocket() {
-    if (_socket == null) {
-      throw ZmqException.fatal();
-    }
   }
 
   private boolean isRegistered() {

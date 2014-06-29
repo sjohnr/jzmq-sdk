@@ -2,25 +2,24 @@ package org.zeromq.support.thread;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.messaging.ZmqException;
 import org.zeromq.support.HasInvariant;
 import org.zeromq.support.ObjectBuilder;
-import org.zeromq.support.exception.AbstractExceptionHandlerInTheChain;
 import org.zeromq.support.exception.ExceptionHandler;
 import org.zeromq.support.exception.InterruptedExceptionHandler;
 import org.zeromq.support.exception.JniExceptionHandler;
 import org.zeromq.support.exception.LoggingExceptionHandler;
+import org.zeromq.support.exception.RootExceptionHandler;
 
 import java.util.concurrent.CountDownLatch;
 
-import static org.zeromq.messaging.ZmqException.ErrorCode;
+import static com.google.common.base.Preconditions.checkArgument;
 
 public final class ZmqProcess implements Runnable {
 
   private static final Logger LOG = LoggerFactory.getLogger(ZmqProcess.class);
 
-  private static final ExceptionHandler DEFAULT_EXCEPTION_HANDLER =
-      new InternalExceptionHandler()
+  private static final ExceptionHandler DEFAULT_EXCEPTION_HANDLER_CHAIN =
+      new RootExceptionHandler()
           .withNext(new JniExceptionHandler()
                         .withNext(new InterruptedExceptionHandler()
                                       .withNext(new LoggingExceptionHandler())));
@@ -44,9 +43,7 @@ public final class ZmqProcess implements Runnable {
 
     @Override
     public void checkInvariant() {
-      if (_target.actor == null) {
-        throw ZmqException.fatal();
-      }
+      checkArgument(_target.actor != null);
     }
 
     @Override
@@ -56,33 +53,13 @@ public final class ZmqProcess implements Runnable {
     }
   }
 
-  private static class InternalExceptionHandler extends AbstractExceptionHandlerInTheChain {
-    @Override
-    public void handleException(Throwable t) {
-      if (ZmqException.class.isAssignableFrom(t.getClass())) {
-        ZmqException e = (ZmqException) t;
-        if (e.code() == ErrorCode.SEE_CAUSE) {
-          handleException(e.getCause());
-          return;
-        }
-        else if (e.code() == ErrorCode.FATAL) {
-          throw e;
-        }
-        else {
-          LOG.error("Got unhandled issue: " + e, e);
-        }
-      }
-      next().handleException(t);
-    }
-  }
-
   /**
    * <b>Private</b> concurrent facility helping to stop threads more deterministically than usual
    * {@link java.util.concurrent.ExecutorService#shutdownNow()}.
    */
   private CountDownLatch destroyLatch;
   private ZmqActor actor;
-  private ExceptionHandler exceptionHandler = DEFAULT_EXCEPTION_HANDLER;
+  private ExceptionHandler exceptionHandler = DEFAULT_EXCEPTION_HANDLER_CHAIN;
 
   //// CONSTRUCTORS
 
@@ -121,7 +98,7 @@ public final class ZmqProcess implements Runnable {
       }
     }
     catch (Throwable e) {
-      LOG.error("!!! Fatal: " + e + ". Thank you. Good bye.", e);
+      LOG.error("Got: " + e + ". About to destroy actor. Thank you and good bye.", e);
     }
     finally {
       // this block is aimed to support following situations:

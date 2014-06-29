@@ -1,7 +1,8 @@
 package org.zeromq.support.exception;
 
-import com.google.common.base.Preconditions;
 import org.zeromq.support.InTheChain;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 public abstract class AbstractExceptionHandlerInTheChain implements ExceptionHandler, InTheChain<ExceptionHandler> {
 
@@ -14,7 +15,7 @@ public abstract class AbstractExceptionHandlerInTheChain implements ExceptionHan
 
   @Override
   public final AbstractExceptionHandlerInTheChain withNext(ExceptionHandler nextHandler) {
-    Preconditions.checkArgument(nextHandler != null);
+    checkArgument(nextHandler != null);
     this.nextHandler = nextHandler;
     return this;
   }

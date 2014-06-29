@@ -10,7 +10,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.zeromq.ZMQ.DONTWAIT;
-import static org.zeromq.messaging.ZmqException.ErrorCode.FATAL;
 
 public class ZmqChannelTest extends ZmqAbstractTest {
 
@@ -63,8 +62,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
         rep.watchSendRecv(poller); // reg twice.
         fail();
       }
-      catch (ZmqException e) {
-        assert e.code() == FATAL;
+      catch (IllegalStateException e) {
       }
     }
     // destroy channel and after that try to access it.
@@ -74,8 +72,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
         rep.canRecv();
         fail();
       }
-      catch (ZmqException e) {
-        assert e.code() == FATAL;
+      catch (IllegalStateException e) {
       }
     }
     // call .canRecv() without registering channel on poller.
@@ -85,8 +82,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
         rep.canRecv();
         fail();
       }
-      catch (ZmqException e) {
-        assert e.code() == FATAL;
+      catch (IllegalStateException e) {
       }
     }
   }

@@ -5,13 +5,12 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.messaging.Props;
 import org.zeromq.messaging.ZmqAbstractActor;
 import org.zeromq.messaging.ZmqChannel;
-import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqFrames;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.zeromq.ZMQ.DONTWAIT;
 import static org.zeromq.support.ZmqUtils.makeHash;
 
@@ -154,30 +153,14 @@ public final class Worker extends ZmqAbstractActor {
   @Override
   public void checkInvariant() {
     super.checkInvariant();
-    if (incomeProps == null) {
-      throw ZmqException.fatal();
-    }
-    if (incomeProps.bindAddr().size() > 1) {
-      throw ZmqException.fatal();
-    }
-    if (comebackIdentity == null) {
-      throw ZmqException.fatal();
-    }
-    if (acceptorIdentity == null) {
-      throw ZmqException.fatal();
-    }
-    if (outcomeProps == null) {
-      throw ZmqException.fatal();
-    }
-    if (outcomeProps.bindAddr().size() > 1) {
-      throw ZmqException.fatal();
-    }
-    if (outcomeRouting == null) {
-      throw ZmqException.fatal();
-    }
-    if (processor == null) {
-      throw ZmqException.fatal();
-    }
+    checkArgument(incomeProps != null);
+    checkArgument(incomeProps.bindAddr().size() <= 1);
+    checkArgument(comebackIdentity != null);
+    checkArgument(acceptorIdentity != null);
+    checkArgument(outcomeProps != null);
+    checkArgument(outcomeProps.bindAddr().size() <= 1);
+    checkArgument(outcomeRouting != null);
+    checkArgument(processor != null);
   }
 
   @Override
@@ -228,9 +211,13 @@ public final class Worker extends ZmqAbstractActor {
           byte[] payload = frames.getPayload();
           ZmqFrames route = frames.getIdentities();
           if (isPong(payload)) {
-            checkState(route.size() == 1, "Wrong PONG! Got route.size=" + route.size());
-            LOGGER.info("Got PONG, route.hash={}.", makeHash(route.get(0)));
-            outcomeRouting.putRouting(route);
+            if (route.size() != 1) {
+              LOGGER.error("Wrong PONG! Got route.size={}.", route.size());
+            }
+            else {
+              LOGGER.info("Got PONG, route.hash={}.", makeHash(route.get(0)));
+              outcomeRouting.putRouting(route);
+            }
           }
           else {
             if (LOGGER.isDebugEnabled()) {
@@ -252,15 +239,19 @@ public final class Worker extends ZmqAbstractActor {
         byte[] payload = frames.getPayload();
         ZmqFrames route = frames.getIdentities();
         if (isPing(payload)) {
-          checkState(route.size() == 1, "Wrong PING! Got route.size=" + route.size());
-          LOGGER.info("Got PING, route.hash={}.", makeHash(route.get(0)));
-          outcomeRouting.putRouting(route);
-          // Send PONG back, use identities [route|comebackIdentity].
-          ZmqFrames pongRoute = new ZmqFrames();
-          pongRoute.add(route.get(0));
-          pongRoute.add(comebackIdentity);
-          outcome.route(pongRoute, PONG, DONTWAIT);
-          LOGGER.info("Send PONG back, route.hash={}.", makeHash(comebackIdentity));
+          if (route.size() != 1) {
+            LOGGER.error("Wrong PING! Got route.size={}.", route.size());
+          }
+          else {
+            LOGGER.info("Got PING, route.hash={}.", makeHash(route.get(0)));
+            outcomeRouting.putRouting(route);
+            // Send PONG back, use identities [route|comebackIdentity].
+            ZmqFrames pongRoute = new ZmqFrames();
+            pongRoute.add(route.get(0));
+            pongRoute.add(comebackIdentity);
+            outcome.route(pongRoute, PONG, DONTWAIT);
+            LOGGER.info("Send PONG back, route.hash={}.", makeHash(comebackIdentity));
+          }
         }
       }
     }
