@@ -68,11 +68,6 @@ public abstract class ZmqAbstractActor implements ZmqActor, HasInvariant {
   }
 
   @Override
-  public void exec() throws Exception {
-    _poller.poll(pollTimeout);
-  }
-
-  @Override
   public final void destroy() {
     for (ZmqChannel channel : _channels.values()) {
       channel.destroy();
@@ -80,7 +75,14 @@ public abstract class ZmqAbstractActor implements ZmqActor, HasInvariant {
     _channels.clear();
   }
 
-  protected final ZmqChannel register(String id, ZmqChannel channel) {
+  protected final void poll() {
+    _poller.poll(pollTimeout);
+  }
+
+  protected final ZmqChannel put(String id, ZmqChannel channel) {
+    if (id == null || id.isEmpty()) {
+      throw ZmqException.fatal();
+    }
     if (channel == null) {
       throw ZmqException.fatal();
     }
@@ -89,10 +91,6 @@ public abstract class ZmqAbstractActor implements ZmqActor, HasInvariant {
   }
 
   protected final ZmqChannel channel(String id) {
-    ZmqChannel channel = _channels.get(id);
-    if (channel == null) {
-      throw ZmqException.fatal();
-    }
-    return channel;
+    return _channels.get(id);
   }
 }

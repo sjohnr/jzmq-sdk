@@ -3,10 +3,10 @@ package org.zeromq.messaging.chat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.messaging.Props;
+import org.zeromq.messaging.ZmqAbstractActor;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqException;
 import org.zeromq.messaging.ZmqFrames;
-import org.zeromq.messaging.ZmqAbstractActor;
 
 import static org.zeromq.ZMQ.DONTWAIT;
 import static org.zeromq.messaging.ZmqFrames.BYTE_SUB;
@@ -14,7 +14,7 @@ import static org.zeromq.messaging.ZmqFrames.BYTE_UNSUB;
 
 public final class Chat extends ZmqAbstractActor {
 
-  private static final Logger LOG = LoggerFactory.getLogger(Chat.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(Chat.class);
 
   /**
    * XSUB -- for serving connecting publishers:
@@ -85,6 +85,11 @@ public final class Chat extends ZmqAbstractActor {
   private Props frontendSubProps;
   private Props clusterSubProps;
 
+  //// CONSTRUCTORS
+
+  private Chat() {
+  }
+
   //// METHDOS
 
   public static Builder builder() {
@@ -128,10 +133,10 @@ public final class Chat extends ZmqAbstractActor {
   public void init() {
     checkInvariant();
 
-    register(FRONTEND_PUB, ZmqChannel.XSUB(ctx).withProps(frontendPubProps).build()).watchRecv(_poller);
-    register(CLUSTER_PUB, ZmqChannel.XPUB(ctx).withProps(clusterPubProps).build()).watchRecv(_poller);
-    register(FRONTEND_SUB, ZmqChannel.XPUB(ctx).withProps(frontendSubProps).build()).watchRecv(_poller);
-    register(CLUSTER_SUB, ZmqChannel.XSUB(ctx).withProps(clusterSubProps).build()).watchRecv(_poller);
+    put(FRONTEND_PUB, ZmqChannel.XSUB(ctx).withProps(frontendPubProps).build()).watchRecv(_poller);
+    put(CLUSTER_PUB, ZmqChannel.XPUB(ctx).withProps(clusterPubProps).build()).watchRecv(_poller);
+    put(FRONTEND_SUB, ZmqChannel.XPUB(ctx).withProps(frontendSubProps).build()).watchRecv(_poller);
+    put(CLUSTER_SUB, ZmqChannel.XSUB(ctx).withProps(clusterSubProps).build()).watchRecv(_poller);
 
     // By default, unconditionally, Chat is set to handle duplicate subscriptions/unsubscriptions.
     channel(CLUSTER_PUB).setExtendedPubSubVerbose();
@@ -140,7 +145,7 @@ public final class Chat extends ZmqAbstractActor {
 
   @Override
   public void exec() throws Exception {
-    super.exec();
+    poll();
 
     ZmqChannel frontendPub = channel(FRONTEND_PUB);
     ZmqChannel clusterPub = channel(CLUSTER_PUB);
@@ -150,19 +155,20 @@ public final class Chat extends ZmqAbstractActor {
     if (frontendPub.canRecv()) {
       for (; ; ) {
         ZmqFrames frames = frontendPub.recv(DONTWAIT);
-        if (frames == null) {
+        if (frames == null)
           break;
-        }
+
         clusterPub.sendFrames(frames, DONTWAIT);
         logMessage("local --> cluster", frames);
       }
     }
+
     if (clusterPub.canRecv()) {
       for (; ; ) {
         ZmqFrames frames = clusterPub.recv(DONTWAIT);
-        if (frames == null) {
+        if (frames == null)
           break;
-        }
+
         frontendPub.sendFrames(frames, DONTWAIT);
         byte b = frames.getExtPubSub();
         byte[] topic = frames.getExtPubSubTopic();
@@ -174,22 +180,24 @@ public final class Chat extends ZmqAbstractActor {
         }
       }
     }
+
     if (clusterSub.canRecv()) {
       for (; ; ) {
         ZmqFrames frames = clusterSub.recv(DONTWAIT);
-        if (frames == null) {
+        if (frames == null)
           break;
-        }
+
         frontendSub.sendFrames(frames, DONTWAIT);
         logMessage("local <-- cluster", frames);
       }
     }
+
     if (frontendSub.canRecv()) {
       for (; ; ) {
         ZmqFrames frames = frontendSub.recv(DONTWAIT);
-        if (frames == null) {
+        if (frames == null)
           break;
-        }
+
         clusterSub.sendFrames(frames, DONTWAIT);
         byte b = frames.getExtPubSub();
         byte[] topic = frames.getExtPubSubTopic();
@@ -204,22 +212,22 @@ public final class Chat extends ZmqAbstractActor {
   }
 
   private void logMessage(String direction, ZmqFrames frames) {
-    if (LOG.isDebugEnabled()) {
+    if (LOGGER.isDebugEnabled()) {
       byte[] topic = frames.getTopic();
       byte[] payload = frames.getPayload();
-      LOG.debug("Message: {} (topic={} bytes, payload={} bytes).", direction, topic.length, payload.length);
+      LOGGER.debug("Message: {} (topic={} bytes, payload={} bytes).", direction, topic.length, payload.length);
     }
   }
 
   private void logSubscribe(String direction, byte[] topic) {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("Subscribe: {} (topic={} bytes).", direction, topic.length);
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Subscribe: {} (topic={} bytes).", direction, topic.length);
     }
   }
 
   private void logUnsubscribe(String direction, byte[] topic) {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("Unsubscribe: {} (topic={} bytes).", direction, topic.length);
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Unsubscribe: {} (topic={} bytes).", direction, topic.length);
     }
   }
 }

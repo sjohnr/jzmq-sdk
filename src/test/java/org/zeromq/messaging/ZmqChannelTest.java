@@ -332,7 +332,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     ZmqChannel client = ZmqChannel.DEALER(ctx())
                                   .withProps(Props.builder()
                                                   .withConnectAddr(connAddr(6677))
-                                                  .withIdentity("client")
+                                                  .withIdentity("client".getBytes())
                                                   .build())
                                   .build();
 

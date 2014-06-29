@@ -22,6 +22,12 @@ public class ZmqUtils {
     return hashFunction.getValue();
   }
 
+  public static long makeHash(byte[] buf) {
+    CRC32 hashFunction = new CRC32();
+    hashFunction.update(buf);
+    return hashFunction.getValue();
+  }
+
   public static byte[] mergeBytes(Iterable<byte[]> bufs) {
     int totalLen = 0;
     for (byte[] buf : bufs) {

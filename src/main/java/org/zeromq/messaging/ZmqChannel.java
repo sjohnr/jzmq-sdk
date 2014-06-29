@@ -2,7 +2,6 @@ package org.zeromq.messaging;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
@@ -84,7 +83,7 @@ public final class ZmqChannel implements HasDestroy {
 
         // set socket identity.
         if (_target.props.identity() != null) {
-          socket.setIdentity(_target.props.identity().getBytes());
+          socket.setIdentity(_target.props.identity());
         }
 
         // set ROUTER_MANDATORY flag.
@@ -151,7 +150,7 @@ public final class ZmqChannel implements HasDestroy {
       opts.put("hwm_recv", socket.getRcvHWM());
       opts.put("timeout_send", socket.getSendTimeOut());
       opts.put("timeout_recv", socket.getReceiveTimeOut());
-      opts.put("custom_identity", makeHash(ImmutableList.of(socket.getIdentity())));
+      opts.put("custom_identity", makeHash(socket.getIdentity()));
       opts.put("reconn_intrvl", socket.getReconnectIVL());
       opts.put("reconn_intrvl_max", socket.getReconnectIVLMax());
       opts.put("linger", socket.getLinger());

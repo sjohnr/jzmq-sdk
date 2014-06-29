@@ -28,26 +28,43 @@ public final class Props {
     private Builder() {
     }
 
+    private Builder(Props src) {
+      _target.bindAddr.addAll(src.bindAddr);
+      _target.connectAddr.addAll(src.connectAddr);
+      _target.hwmSend = src.hwmSend;
+      _target.hwmRecv = src.hwmRecv;
+      _target.identity = src.identity;
+      _target.linger = src.linger;
+      _target.sendTimeout = src.sendTimeout;
+      _target.recvTimeout = src.recvTimeout;
+      _target.routerMandatory = src.routerMandatory;
+      _target.payloadBufCapacity = src.payloadBufCapacity;
+    }
+
     public Builder withBindAddr(String address) {
+      _target.bindAddr = new ArrayList<String>();
       _target.setBindAddr(address);
       return this;
     }
 
     public Builder withBindAddr(Iterable<String> addresses) {
+      _target.bindAddr = new ArrayList<String>();
       for (String address : addresses) {
-        withBindAddr(address);
+        _target.setBindAddr(address);
       }
       return this;
     }
 
     public Builder withConnectAddr(String address) {
+      _target.connectAddr = new ArrayList<String>();
       _target.setConnectAddr(address);
       return this;
     }
 
     public Builder withConnectAddr(Iterable<String> addresses) {
+      _target.connectAddr = new ArrayList<String>();
       for (String address : addresses) {
-        withConnectAddr(address);
+        _target.setConnectAddr(address);
       }
       return this;
     }
@@ -62,7 +79,7 @@ public final class Props {
       return this;
     }
 
-    public Builder withIdentity(String identity) {
+    public Builder withIdentity(byte[] identity) {
       _target.setIdentity(identity);
       return this;
     }
@@ -107,7 +124,7 @@ public final class Props {
   private List<String> connectAddr = new ArrayList<String>();
   private long hwmSend = DEFAULT_HWM_SEND;
   private long hwmRecv = DEFAULT_HWM_RECV;
-  private String identity;
+  private byte[] identity;
   private long linger = DEFAULT_LINGER;
   private int sendTimeout = DEFAULT_SEND_TIMEOUT;
   private int recvTimeout = DEFAULT_RECV_TIMEOUT;
@@ -123,6 +140,10 @@ public final class Props {
 
   public static Builder builder() {
     return new Builder();
+  }
+
+  public static Builder builder(Props src) {
+    return new Builder(src);
   }
 
   public void setBindAddr(String bindAddr) {
@@ -151,7 +172,7 @@ public final class Props {
     this.hwmRecv = hwmRecv;
   }
 
-  public void setIdentity(String identity) {
+  public void setIdentity(byte[] identity) {
     this.identity = identity;
   }
 
@@ -183,7 +204,7 @@ public final class Props {
     return hwmRecv;
   }
 
-  public String identity() {
+  public byte[] identity() {
     return identity;
   }
 
