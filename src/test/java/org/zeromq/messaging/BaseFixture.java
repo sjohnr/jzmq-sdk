@@ -10,8 +10,13 @@ import java.util.List;
 
 public class BaseFixture implements HasInit, HasDestroy {
 
+  protected final ZmqContext ctx;
   private final List<HasDestroy> _destroyables = new ArrayList<HasDestroy>();
   private final ZmqThreadPool _threadPool = ZmqThreadPool.newCachedDaemonThreadPool();
+
+  protected BaseFixture(ZmqContext ctx) {
+    this.ctx = ctx;
+  }
 
   @Override
   public final void init() {
@@ -21,18 +26,20 @@ public class BaseFixture implements HasInit, HasDestroy {
   @Override
   public final void destroy() {
     _threadPool.destroy();
-    for (HasDestroy i : _destroyables) {
-      i.destroy();
+    for (HasDestroy hasDestroy : _destroyables) {
+      hasDestroy.destroy();
     }
   }
 
-  public final void with(HasDestroy d) {
-    assert d != null;
-    _destroyables.add(d);
+  @SuppressWarnings("unchecked")
+  public final <T> T with(HasDestroy hasDestroy) {
+    assert hasDestroy != null;
+    _destroyables.add(hasDestroy);
+    return (T) hasDestroy;
   }
 
-  public final void with(ZmqProcess r) {
-    assert r != null;
-    _threadPool.withProcess(r);
+  public final void with(ZmqProcess process) {
+    assert process != null;
+    _threadPool.withProcess(process);
   }
 }

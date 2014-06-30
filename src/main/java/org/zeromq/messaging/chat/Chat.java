@@ -59,31 +59,31 @@ public final class Chat extends ZmqAbstractActor {
       super(new Chat());
     }
 
-    public Builder withFrontendPubProps(Props frontendPubProps) {
-      _target.setFrontendPubProps(frontendPubProps);
+    public Builder withFrontendPub(Props props) {
+      _target.setFrontendPub(props);
       return this;
     }
 
-    public Builder withClusterPubProps(Props clusterPubProps) {
-      _target.setClusterPubProps(clusterPubProps);
+    public Builder withClusterPub(Props clusterPub) {
+      _target.setClusterPub(clusterPub);
       return this;
     }
 
-    public Builder withFrontendSubProps(Props frontendSubProps) {
-      _target.setFrontendSubProps(frontendSubProps);
+    public Builder withFrontendSub(Props props) {
+      _target.setFrontendSub(props);
       return this;
     }
 
-    public Builder withClusterSubProps(Props clusterSubProps) {
-      _target.setClusterSubProps(clusterSubProps);
+    public Builder withClusterSub(Props props) {
+      _target.setClusterSub(props);
       return this;
     }
   }
 
-  private Props frontendPubProps;
-  private Props clusterPubProps;
-  private Props frontendSubProps;
-  private Props clusterSubProps;
+  private Props frontendPub;
+  private Props clusterPub;
+  private Props frontendSub;
+  private Props clusterSub;
 
   //// CONSTRUCTORS
 
@@ -96,53 +96,53 @@ public final class Chat extends ZmqAbstractActor {
     return new Builder();
   }
 
-  public void setFrontendPubProps(Props frontendPubProps) {
-    this.frontendPubProps = frontendPubProps;
+  public void setFrontendPub(Props frontendPub) {
+    this.frontendPub = frontendPub;
   }
 
-  public void setClusterPubProps(Props clusterPubProps) {
-    this.clusterPubProps = clusterPubProps;
+  public void setClusterPub(Props clusterPub) {
+    this.clusterPub = clusterPub;
   }
 
-  public void setFrontendSubProps(Props frontendSubProps) {
-    this.frontendSubProps = frontendSubProps;
+  public void setFrontendSub(Props frontendSub) {
+    this.frontendSub = frontendSub;
   }
 
-  public void setClusterSubProps(Props clusterSubProps) {
-    this.clusterSubProps = clusterSubProps;
+  public void setClusterSub(Props clusterSub) {
+    this.clusterSub = clusterSub;
   }
 
   @Override
   public void checkInvariant() {
     super.checkInvariant();
-    checkArgument(!frontendPubProps.bindAddr().isEmpty());
-    checkArgument(!clusterPubProps.bindAddr().isEmpty());
-    checkArgument(!frontendSubProps.bindAddr().isEmpty());
-    checkArgument(!clusterSubProps.connectAddr().isEmpty());
+    checkArgument(!frontendPub.bindAddr().isEmpty());
+    checkArgument(!clusterPub.bindAddr().isEmpty());
+    checkArgument(!frontendSub.bindAddr().isEmpty());
+    checkArgument(!clusterSub.connectAddr().isEmpty());
   }
 
   @Override
   public void init() {
     checkInvariant();
 
-    put(FRONTEND_PUB, ZmqChannel.XSUB(ctx).withProps(frontendPubProps).build()).watchRecv(_poller);
-    put(CLUSTER_PUB, ZmqChannel.XPUB(ctx).withProps(clusterPubProps).build()).watchRecv(_poller);
-    put(FRONTEND_SUB, ZmqChannel.XPUB(ctx).withProps(frontendSubProps).build()).watchRecv(_poller);
-    put(CLUSTER_SUB, ZmqChannel.XSUB(ctx).withProps(clusterSubProps).build()).watchRecv(_poller);
+    put(FRONTEND_PUB, ZmqChannel.XSUB(ctx).with(frontendPub).build()).watchRecv(_poller);
+    put(CLUSTER_PUB, ZmqChannel.XPUB(ctx).with(clusterPub).build()).watchRecv(_poller);
+    put(FRONTEND_SUB, ZmqChannel.XPUB(ctx).with(frontendSub).build()).watchRecv(_poller);
+    put(CLUSTER_SUB, ZmqChannel.XSUB(ctx).with(clusterSub).build()).watchRecv(_poller);
 
     // By default, unconditionally, Chat is set to handle duplicate subscriptions/unsubscriptions.
-    channel(CLUSTER_PUB).setExtendedPubSubVerbose();
-    channel(FRONTEND_SUB).setExtendedPubSubVerbose();
+    get(CLUSTER_PUB).setExtendedPubSubVerbose();
+    get(FRONTEND_SUB).setExtendedPubSubVerbose();
   }
 
   @Override
   public void exec() throws Exception {
     poll();
 
-    ZmqChannel frontendPub = channel(FRONTEND_PUB);
-    ZmqChannel clusterPub = channel(CLUSTER_PUB);
-    ZmqChannel clusterSub = channel(CLUSTER_SUB);
-    ZmqChannel frontendSub = channel(FRONTEND_SUB);
+    ZmqChannel frontendPub = get(FRONTEND_PUB);
+    ZmqChannel clusterPub = get(CLUSTER_PUB);
+    ZmqChannel clusterSub = get(CLUSTER_SUB);
+    ZmqChannel frontendSub = get(FRONTEND_SUB);
 
     if (frontendPub.canRecv()) {
       for (; ; ) {

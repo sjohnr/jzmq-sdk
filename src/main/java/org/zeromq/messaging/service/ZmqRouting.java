@@ -2,11 +2,11 @@ package org.zeromq.messaging.service;
 
 import org.zeromq.messaging.ZmqFrames;
 
-interface ZmqRouting {
+public interface ZmqRouting {
 
-	void putRouting(ZmqFrames identities);
+	void putRouting(ZmqFrames route);
 
-	ZmqFrames getRouting(ZmqFrames identities);
+	ZmqFrames getRouting(ZmqFrames route);
 
 	int available();
 }

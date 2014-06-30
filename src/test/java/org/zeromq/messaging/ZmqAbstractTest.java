@@ -37,15 +37,15 @@ public abstract class ZmqAbstractTest {
     return "payload".getBytes();
   }
 
-  public static String connAddr(int port) {
+  public static String conn(int port) {
     return "tcp://localhost:" + port;
   }
 
-  public static String bindAddr(int port) {
+  public static String bind(int port) {
     return "tcp://*:" + port;
   }
 
-  public static String inprocAddr(String addr) {
+  public static String inproc(String addr) {
     return "inproc://" + addr;
   }
 

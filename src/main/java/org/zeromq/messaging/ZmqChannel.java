@@ -34,7 +34,7 @@ public final class ZmqChannel implements HasDestroy {
       _target.ctx = ctx;
     }
 
-    public Builder withProps(Props props) {
+    public Builder with(Props props) {
       _target.props = props;
       return this;
     }

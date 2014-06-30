@@ -7,7 +7,6 @@ import org.zeromq.messaging.ZmqAbstractActor;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqFrames;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -22,9 +21,11 @@ public final class Worker extends ZmqAbstractActor {
   public static final byte[] PONG = "pong".getBytes();
 
   /**
-   * Worker's {@code incoming} traffic gateway. Socket is -- bound {@code DEALER} with "identity".
+   * Worker's incoming traffic gateway. Socket is -- bound {@code DEALER} with "identity".
+   * <p/>
+   * Designates a fact that actor is working in <b>master mode</b>.
    * <ul>
-   * <li>via this socket must be expected "comeback" traffic from all connected ROUTERs</li>
+   * <li>via this socket must be expected incoming "reply" traffic from {@code routers}</li>
    * </ul>
    * <pre>
    *   byte[] <--         <--conn-- *ROUTER
@@ -32,12 +33,14 @@ public final class Worker extends ZmqAbstractActor {
    *   byte[] <--         <--conn-- *ROUTER
    * </pre>
    */
-  private static final String COMEBACK = "comeback:";
+  private static final String MASTER = "master[:]";
   /**
-   * Worker's {@code incoming} traffic gateway. Socket is -- connected {@code DEALER} with "identity".
+   * Worker's incoming traffic gateway. Socket is -- connected {@code DEALER} with "identity".
+   * <p/>
+   * Designates a fact that actor is working in <b>slave mode</b>.
    * <ul>
-   * <li>via this socket must be expected incoming "caller" traffic from all connected ROUTERs</li>
-   * <li>PING must be sent to all connected ROUTERs and PONG shall be expected back</li>
+   * <li>via this socket must be expected incoming "request" traffic from {@code routers}</li>
+   * <li>PING must be sent to all {@code routers} and PONG shall be expected back</li>
    * </ul>
    * <pre>
    *   byte[] <--         --[conn,PING]--> :ROUTER
@@ -45,27 +48,27 @@ public final class Worker extends ZmqAbstractActor {
    *     PONG <--         --[conn,PING]--> :ROUTER
    * </pre>
    */
-  private static final String ACCEPTOR = "acceptor*";
+  private static final String SLAVE = "slave[*]";
   /**
-   * Worker's {@code outgoing} traffic gateway. It can {@code bind} and/or {@code connect}, in either case
+   * Worker's outgoing traffic gateway. It can {@code bind} and/or {@code connect}, in either case
    * this socket is -- {@code ROUTER} with "routing table".
    * <p/>
-   * If {@code bind}:
+   * If {@code bind} than it's <b>master mode</b>:
    * <ul>
-   * <li>via this socket must be expected outgoing "caller" traffic</li>
-   * <li>"routing table" must contain socket identities of DEALERs (those who had sent PING here)</li>
-   * <li>this socket has to serve PING from DEALERs and populate "routing table"</li>
-   * <li>on PING from DEALER this socket shall send PONG back</li>
+   * <li>via this socket must be expected outgoing "request" traffic</li>
+   * <li>"routing table" must contain socket identities of {@code slaves} (those who had sent PING here)</li>
+   * <li>this socket has to serve PING from {@code slaves} and populate "routing table"</li>
+   * <li>on PING from {@code slave} this socket shall send PONG back</li>
    * </ul>
    * <pre>
    *   byte[] -->         <--[conn,PING]-- *DEALER
    *     PING <-- ROUTER: <--[conn,PING]-- *DEALER
    *     PONG -->         <--[conn,PING]-- *DEALER
    * </pre>
-   * If {@code connect}:
+   * If {@code connect} than it's <b>slave mode</b>:
    * <ul>
-   * <li>via this socket must be expected "comeback" traffic</li>
-   * <li>"routing table" must contain socket identities of DEALERs (those who had send PONG on inbound socket)</li>
+   * <li>via this socket must be expected outgoing "reply" traffic</li>
+   * <li>"routing table" must contain socket identities of {@code masters} (those who had sent PONG here)</li>
    * </ul>
    * <pre>
    *   byte[] -->         --conn--> :DEALER
@@ -73,7 +76,7 @@ public final class Worker extends ZmqAbstractActor {
    *   byte[] -->         --conn--> :DEALER
    * </pre>
    */
-  private static final String OUTCOME = "outcome:*";
+  private static final String ROUTER = "router[:*]";
 
   public static final class Builder extends ZmqAbstractActor.Builder<Builder, Worker> {
 
@@ -81,42 +84,42 @@ public final class Worker extends ZmqAbstractActor {
       super(new Worker());
     }
 
-    public Builder withIncomeProps(Props incomeProps) {
-      _target.setIncomeProps(incomeProps);
+    public Builder withMaster(Props props) {
+      _target.setMaster(props);
       return this;
     }
 
-    public Builder withComebackIdentity(String comebackIdentity) {
-      _target.setComebackIdentity(comebackIdentity);
+    public Builder withSlave(Props props) {
+      _target.setSlave(props);
       return this;
     }
 
-    public Builder withAcceptorIdentity(String acceptorIdentity) {
-      _target.setAcceptorIdentity(acceptorIdentity);
+    public Builder withRouter(Props props) {
+      _target.setRouter(props);
       return this;
     }
 
-    public Builder withOutcomeProps(Props outcomeProps) {
-      _target.setOutcomeProps(outcomeProps);
+    public Builder withSlaveRouting(ZmqRouting routing) {
+      _target.setSlaveRouting(routing);
       return this;
     }
 
-    public Builder withOutcomeRouting(ZmqRouting outcomeRouting) {
-      _target.setOutcomeRouting(outcomeRouting);
+    public Builder withMasterRouting(ZmqRouting routing) {
+      _target.setMasterRouting(routing);
       return this;
     }
 
-    public Builder withProcessor(ZmqProcessor processor) {
+    public Builder with(ZmqProcessor processor) {
       _target.setProcessor(processor);
       return this;
     }
   }
 
-  private Props incomeProps;
-  private byte[] comebackIdentity;
-  private byte[] acceptorIdentity;
-  private Props outcomeProps;
-  private ZmqRouting outcomeRouting;
+  private Props master;
+  private Props slave;
+  private Props router;
+  private ZmqRouting slaveRouting;
+  private ZmqRouting masterRouting;
   private ZmqProcessor processor;
 
   //// CONSTRUCTORS
@@ -126,24 +129,28 @@ public final class Worker extends ZmqAbstractActor {
 
   //// METHODS
 
-  public void setIncomeProps(Props incomeProps) {
-    this.incomeProps = incomeProps;
+  public static Builder builder() {
+    return new Builder();
   }
 
-  public void setComebackIdentity(String comebackIdentity) {
-    this.comebackIdentity = comebackIdentity.getBytes();
+  public void setMaster(Props master) {
+    this.master = master;
   }
 
-  public void setAcceptorIdentity(String acceptorIdentity) {
-    this.acceptorIdentity = acceptorIdentity.getBytes();
+  public void setSlave(Props slave) {
+    this.slave = slave;
   }
 
-  public void setOutcomeProps(Props outcomeProps) {
-    this.outcomeProps = outcomeProps;
+  public void setRouter(Props router) {
+    this.router = router;
   }
 
-  public void setOutcomeRouting(ZmqRouting outcomeRouting) {
-    this.outcomeRouting = outcomeRouting;
+  public void setSlaveRouting(ZmqRouting slaveRouting) {
+    this.slaveRouting = slaveRouting;
+  }
+
+  public void setMasterRouting(ZmqRouting masterRouting) {
+    this.masterRouting = masterRouting;
   }
 
   public void setProcessor(ZmqProcessor processor) {
@@ -153,123 +160,161 @@ public final class Worker extends ZmqAbstractActor {
   @Override
   public void checkInvariant() {
     super.checkInvariant();
-    checkArgument(incomeProps != null);
-    checkArgument(incomeProps.bindAddr().size() <= 1);
-    checkArgument(comebackIdentity != null);
-    checkArgument(acceptorIdentity != null);
-    checkArgument(outcomeProps != null);
-    checkArgument(outcomeProps.bindAddr().size() <= 1);
-    checkArgument(outcomeRouting != null);
+    if (master != null) {
+      checkArgument(!master.bindAddr().isEmpty(), "Master: bindAddr is required!");
+      checkArgument(master.bindAddr().size() == 1);
+      checkArgument(master.connectAddr().isEmpty(), "Master: can't have connecAddr!");
+      checkArgument(master.identity() != null, "Master: identity is required!");
+      checkArgument(slaveRouting != null, "Master: slaveRouting is required!");
+    }
+    if (slave != null) {
+      checkArgument(slave.bindAddr().isEmpty(), "Slave: can't have bindAddr!");
+      checkArgument(!slave.connectAddr().isEmpty(), "Slave: connectAddr is required!");
+      checkArgument(slave.identity() != null, "Slave: identity is required!");
+      checkArgument(masterRouting != null, "Slave: masterRouting is required!");
+    }
+    {
+      checkArgument(router != null);
+      if (master != null) {
+        checkArgument(!router.bindAddr().isEmpty(), "Router: bindAddr is required!");
+        checkArgument(router.bindAddr().size() == 1);
+      }
+      if (slave != null) {
+        checkArgument(!router.connectAddr().isEmpty(), "Router: connectAddr is required!");
+      }
+    }
     checkArgument(processor != null);
   }
 
   @Override
   public void init() {
-    // Setup <<comeback>> DEALER.
-    for (String bindAddr : incomeProps.bindAddr()) {
-      ZmqChannel comeback = ZmqChannel.DEALER(ctx).withProps(Props.builder(incomeProps)
-                                                                  .withBindAddr(bindAddr)
-                                                                  .withConnectAddr(new ArrayList<String>())
-                                                                  .withIdentity(comebackIdentity)
-                                                                  .build())
-                                      .build();
-      put(COMEBACK, comeback).watchRecv(_poller);
+    if (master != null) {
+      put(MASTER, ZmqChannel.DEALER(ctx).with(master).build()).watchRecv(_poller);
     }
-    // Setup <<acceptor>> DEALER.
-    for (String connectAddr : incomeProps.connectAddr()) {
-      ZmqChannel acceptor = ZmqChannel.DEALER(ctx).withProps(Props.builder(incomeProps)
-                                                                  .withBindAddr(new ArrayList<String>())
-                                                                  .withConnectAddr(connectAddr)
-                                                                  .withIdentity(acceptorIdentity)
-                                                                  .build())
-                                      .build();
-      put(ACCEPTOR, acceptor).watchRecv(_poller);
+    if (slave != null) {
+      put(SLAVE, ZmqChannel.DEALER(ctx).with(slave).build()).watchRecv(_poller);
     }
-    // Setup <<outcome>> ROUTER.
-    put(OUTCOME, ZmqChannel.ROUTER(ctx).withProps(outcomeProps).build()).watchRecv(_poller);
+    put(ROUTER, ZmqChannel.ROUTER(ctx).with(router).build()).watchRecv(_poller);
   }
 
   @Override
   public void exec() throws Exception {
     poll();
 
-    ZmqChannel acceptor = channel(ACCEPTOR);
-    if (acceptor != null) {
-      if (!acceptor.canRecv()) {
-        // Send PING (dont send blindly, check "timer" before send).
-        for (String connectAddr : incomeProps.connectAddr()) {
-          acceptor.route(new ZmqFrames(), PING, DONTWAIT);
-          LOGGER.info("Send PING on {}.", connectAddr);
-        }
-      }
-      else {
-        for (; ; ) {
-          ZmqFrames frames = acceptor.recv(DONTWAIT);
-          if (frames == null)
-            break;
+    ZmqChannel master = get(MASTER);
+    ZmqChannel slave = get(SLAVE);
+    ZmqChannel router = get(ROUTER);
 
-          byte[] payload = frames.getPayload();
-          ZmqFrames route = frames.getIdentities();
-          if (isPong(payload)) {
-            if (route.size() != 1) {
-              LOGGER.error("Wrong PONG! Got route.size={}.", route.size());
-            }
-            else {
-              LOGGER.info("Got PONG, route.hash={}.", makeHash(route.get(0)));
-              outcomeRouting.putRouting(route);
-            }
-          }
-          else {
-            if (LOGGER.isDebugEnabled()) {
-              LOGGER.debug("Got \"acceptor\" traffic (payload={} bytes).", payload.length);
-            }
-            processor.accept(route, payload, channel(OUTCOME), outcomeRouting);
-          }
-        }
-      }
-    }
-
-    ZmqChannel outcome = channel(OUTCOME);
-    if (outcome.canRecv()) {
+    if (router.canRecv()) {
       for (; ; ) {
-        ZmqFrames frames = outcome.recv(DONTWAIT);
+        ZmqFrames frames = router.recv(DONTWAIT);
         if (frames == null)
           break;
 
         byte[] payload = frames.getPayload();
         ZmqFrames route = frames.getIdentities();
         if (isPing(payload)) {
-          if (route.size() != 1) {
-            LOGGER.error("Wrong PING! Got route.size={}.", route.size());
+          if (route.size() == 1) {
+            LOGGER.info("Got PING, route.hash={}.", makeHash(route.get(0)));
+            slaveRouting.putRouting(route);
+            {
+              // Send PONG back, use identities [route|master_identity].
+              ZmqFrames masterRoute = new ZmqFrames();
+              masterRoute.add(route.get(0));
+              masterRoute.add(getMasterIdentity());
+              router.route(masterRoute, PONG, DONTWAIT);
+              LOGGER.info("Send PONG back, route.hash={}.", makeHash(this.master.identity()));
+            }
           }
           else {
-            LOGGER.info("Got PING, route.hash={}.", makeHash(route.get(0)));
-            outcomeRouting.putRouting(route);
-            // Send PONG back, use identities [route|comebackIdentity].
-            ZmqFrames pongRoute = new ZmqFrames();
-            pongRoute.add(route.get(0));
-            pongRoute.add(comebackIdentity);
-            outcome.route(pongRoute, PONG, DONTWAIT);
-            LOGGER.info("Send PONG back, route.hash={}.", makeHash(comebackIdentity));
+            LOGGER.error("Wrong PING! Got route.size={}.", route.size());
+          }
+        }
+        else {
+          logTraffic("router", payload);
+          processor.onMessage(route,
+                              payload,
+                              router,
+                              masterRouting,
+                              slaveRouting,
+                              getMasterIdentity(),
+                              getSlaveIdentity());
+        }
+      }
+    }
+
+    if (slave != null) {
+      if (!slave.canRecv()) {
+        // Send PING (dont send blindly, check "timer" before send, e.g. every X seconds).
+        for (String connectAddr : this.slave.connectAddr()) {
+          slave.route(new ZmqFrames(), PING, DONTWAIT);
+          LOGGER.info("Send PING on {}.", connectAddr);
+        }
+      }
+      else {
+        for (; ; ) {
+          ZmqFrames frames = slave.recv(DONTWAIT);
+          if (frames == null)
+            break;
+
+          byte[] payload = frames.getPayload();
+          ZmqFrames route = frames.getIdentities();
+          if (isPong(payload)) {
+            if (route.size() == 1) {
+              LOGGER.info("Got PONG, route.hash={}.", makeHash(route.get(0)));
+              masterRouting.putRouting(route);
+            }
+            else {
+              LOGGER.error("Wrong PONG! Got route.size={}.", route.size());
+            }
+          }
+          else {
+            logTraffic("master", payload);
+            processor.onMasterMessage(route,
+                                      payload,
+                                      router,
+                                      masterRouting,
+                                      slaveRouting,
+                                      getMasterIdentity(),
+                                      getSlaveIdentity());
           }
         }
       }
     }
 
-    ZmqChannel comeback = channel(COMEBACK);
-    if (comeback != null && comeback.canRecv()) {
-      for (; ; ) {
-        ZmqFrames frames = comeback.recv(DONTWAIT);
-        if (frames == null)
-          break;
+    if (master != null) {
+      if (master.canRecv()) {
+        for (; ; ) {
+          ZmqFrames frames = master.recv(DONTWAIT);
+          if (frames == null)
+            break;
 
-        byte[] payload = frames.getPayload();
-        ZmqFrames route = frames.getIdentities();
-        if (LOGGER.isDebugEnabled()) {
-          LOGGER.debug("Got \"comeback\" traffic (payload={} bytes).", payload.length);
+          byte[] payload = frames.getPayload();
+          ZmqFrames route = frames.getIdentities();
+          logTraffic("slave", payload);
+          processor.onSlaveMessage(route,
+                                   payload,
+                                   router,
+                                   masterRouting,
+                                   slaveRouting,
+                                   getMasterIdentity(),
+                                   getSlaveIdentity());
         }
-        processor.comeback(route, payload, channel(OUTCOME), outcomeRouting);
       }
+    }
+  }
+
+  private byte[] getSlaveIdentity() {
+    return slave != null ? slave.identity() : null;
+  }
+
+  private byte[] getMasterIdentity() {
+    return master != null ? master.identity() : null;
+  }
+
+  private void logTraffic(String prefix, byte[] payload) {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Got {} traffic (payload={} bytes).", prefix, payload.length);
     }
   }
 

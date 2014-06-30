@@ -29,12 +29,12 @@ public final class ZmqProcess implements Runnable {
     private Builder() {
     }
 
-    public Builder withActor(ZmqActor actor) {
+    public Builder with(ZmqActor actor) {
       _target.actor = actor;
       return this;
     }
 
-    public Builder withExceptionHandler(ExceptionHandler exceptionHandler) {
+    public Builder with(ExceptionHandler exceptionHandler) {
       _target.exceptionHandler = exceptionHandler;
       return this;
     }

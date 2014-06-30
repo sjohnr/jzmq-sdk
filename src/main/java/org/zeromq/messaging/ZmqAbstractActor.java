@@ -24,7 +24,7 @@ public abstract class ZmqAbstractActor implements ZmqActor, HasInvariant {
       this._target = target;
     }
 
-    public final B withCtx(ZmqContext ctx) {
+    public final B with(ZmqContext ctx) {
       _target.setCtx(ctx);
       return (B) this;
     }
@@ -86,7 +86,7 @@ public abstract class ZmqAbstractActor implements ZmqActor, HasInvariant {
     return channel;
   }
 
-  protected final ZmqChannel channel(String id) {
+  protected final ZmqChannel get(String id) {
     return _channels.get(id);
   }
 }

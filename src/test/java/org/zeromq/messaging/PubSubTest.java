@@ -1,39 +1,16 @@
 package org.zeromq.messaging;
 
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.zeromq.messaging.ZmqFrames.EMPTY_FRAME;
 
 public class PubSubTest extends ZmqAbstractTest {
 
-  static final Logger LOG = LoggerFactory.getLogger(PubSubTest.class);
-
-  static class Fixture {
-
-    final ZmqContext ctx;
-
-    Fixture(ZmqContext ctx) {
-      this.ctx = ctx;
-    }
-
-    ZmqChannel newPublisher() {
-      return ZmqChannel.PUB(ctx).withProps(Props.builder().withBindAddr(inprocAddr("PubSubTest")).build()).build();
-    }
-
-    ZmqChannel newSubscriber() {
-      return ZmqChannel.SUB(ctx).withProps(Props.builder().withConnectAddr(inprocAddr("PubSubTest")).build()).build();
-    }
-  }
-
   @Test
   public void t0() throws InterruptedException {
-    LOG.info("Test send/recv.");
-
-    Fixture f = new Fixture(ctx());
-    ZmqChannel publisher = f.newPublisher();
-    ZmqChannel subscriber = f.newSubscriber();
+    PubSubFixture f = new PubSubFixture(ctx());
+    ZmqChannel publisher = f.publisher();
+    ZmqChannel subscriber = f.subscriber();
 
     try {
       byte[] topicA = "A".getBytes();
@@ -64,18 +41,15 @@ public class PubSubTest extends ZmqAbstractTest {
       assert subscriber.recv(0) == null;
     }
     finally {
-      subscriber.destroy();
-      publisher.destroy();
+      f.destroy();
     }
   }
 
   @Test
   public void t1() throws InterruptedException {
-    LOG.info("Testing subscribtions and .send()/.recv() .");
-
-    Fixture f = new Fixture(ctx());
-    ZmqChannel publisher = f.newPublisher();
-    ZmqChannel subscriber = f.newSubscriber();
+    PubSubFixture f = new PubSubFixture(ctx());
+    ZmqChannel publisher = f.publisher();
+    ZmqChannel subscriber = f.subscriber();
 
     try {
       byte[] topic = "topic".getBytes();
@@ -97,18 +71,15 @@ public class PubSubTest extends ZmqAbstractTest {
       assert subscriber.recv(0) == null;
     }
     finally {
-      subscriber.destroy();
-      publisher.destroy();
+      f.destroy();
     }
   }
 
   @Test
   public void t2() throws InterruptedException {
-    LOG.info("Testing subscribtions.");
-
-    Fixture f = new Fixture(ctx());
-    ZmqChannel publisher = f.newPublisher();
-    ZmqChannel subscriber = f.newSubscriber();
+    PubSubFixture f = new PubSubFixture(ctx());
+    ZmqChannel publisher = f.publisher();
+    ZmqChannel subscriber = f.subscriber();
 
     try {
       // subscribe many times.
@@ -144,8 +115,7 @@ public class PubSubTest extends ZmqAbstractTest {
       assert subscriber.recv(0) == null;
     }
     finally {
-      subscriber.destroy();
-      publisher.destroy();
+      f.destroy();
     }
   }
 }

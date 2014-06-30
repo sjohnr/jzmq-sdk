@@ -5,7 +5,27 @@ import org.zeromq.messaging.ZmqFrames;
 
 public interface ZmqProcessor {
 
-  void accept(ZmqFrames route, byte[] payload, ZmqChannel outcome, ZmqRouting outcomeRouting) throws Exception;
+  void onMessage(ZmqFrames route,
+                 byte[] payload,
+                 ZmqChannel router,
+                 ZmqRouting masterRouting,
+                 ZmqRouting slaveRouting,
+                 byte[] masterIdentity,
+                 byte[] slaveIdentity) throws Exception;
 
-  void comeback(ZmqFrames route, byte[] payload, ZmqChannel outcome, ZmqRouting outcomeRouting) throws Exception;
+  void onMasterMessage(ZmqFrames route,
+                       byte[] payload,
+                       ZmqChannel router,
+                       ZmqRouting masterRouting,
+                       ZmqRouting slaveRouting,
+                       byte[] masterIdentity,
+                       byte[] slaveIdentity) throws Exception;
+
+  void onSlaveMessage(ZmqFrames route,
+                      byte[] payload,
+                      ZmqChannel router,
+                      ZmqRouting masterRouting,
+                      ZmqRouting slaveRouting,
+                      byte[] masterIdentity,
+                      byte[] slaveIdentity) throws Exception;
 }
