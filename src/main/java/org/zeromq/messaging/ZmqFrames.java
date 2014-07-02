@@ -25,6 +25,24 @@ public final class ZmqFrames extends ArrayList<byte[]> {
     super(c);
   }
 
+  public ZmqFrames(byte[] frame) {
+    super(1);
+    add(frame);
+  }
+
+  public ZmqFrames(byte[] frame0, byte[] frame1) {
+    super(2);
+    add(frame0);
+    add(frame1);
+  }
+
+  public ZmqFrames(byte[] frame0, byte[] frame1, byte[] frame2) {
+    super(3);
+    add(frame0);
+    add(frame1);
+    add(frame2);
+  }
+
   public byte getExtPubSub() {
     checkArgument(size() == 1, "Wrong frames.size: " + size());
     byte b = get(0)[0];

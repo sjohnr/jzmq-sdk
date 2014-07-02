@@ -21,6 +21,34 @@ public final class Worker extends ZmqAbstractActor {
   public static final byte[] PONG = "pong".getBytes();
 
   /**
+   * Worker's outgoing traffic gateway. It can {@code bind} and/or {@code connect}, in either case
+   * this socket is -- {@code ROUTER} with "routing table".
+   * <p/>
+   * If {@code bind} than it's <b>master mode</b>:
+   * <ul>
+   * <li>via this socket must be expected outgoing "request" traffic</li>
+   * <li>"routing table" must contain socket identities of {@code slaves} (those who had sent PING here)</li>
+   * <li>this socket has to serve PING from {@code slaves} and populate "routing table"</li>
+   * <li>on PING from {@code slave} this socket shall send PONG back</li>
+   * </ul>
+   * <pre>
+   *   byte[] -->         <--[conn,PING]-- *DEALER
+   *     PING <-- ROUTER: <--[conn,PING]-- *DEALER
+   *     PONG -->         <--[conn,PING]-- *DEALER
+   * </pre>
+   * If {@code connect} than it's <b>slave mode</b>:
+   * <ul>
+   * <li>via this socket must be expected outgoing "reply" traffic</li>
+   * <li>"routing table" must contain socket identities of {@code masters} (those who had sent PONG here)</li>
+   * </ul>
+   * <pre>
+   *   byte[] -->         --conn--> :DEALER
+   *              ROUTER* --conn--> :DEALER
+   *   byte[] -->         --conn--> :DEALER
+   * </pre>
+   */
+  private static final String ROUTER = "router[:*]";
+  /**
    * Worker's incoming traffic gateway. Socket is -- bound {@code DEALER} with "identity".
    * <p/>
    * Designates a fact that actor is working in <b>master mode</b>.
@@ -49,39 +77,16 @@ public final class Worker extends ZmqAbstractActor {
    * </pre>
    */
   private static final String SLAVE = "slave[*]";
-  /**
-   * Worker's outgoing traffic gateway. It can {@code bind} and/or {@code connect}, in either case
-   * this socket is -- {@code ROUTER} with "routing table".
-   * <p/>
-   * If {@code bind} than it's <b>master mode</b>:
-   * <ul>
-   * <li>via this socket must be expected outgoing "request" traffic</li>
-   * <li>"routing table" must contain socket identities of {@code slaves} (those who had sent PING here)</li>
-   * <li>this socket has to serve PING from {@code slaves} and populate "routing table"</li>
-   * <li>on PING from {@code slave} this socket shall send PONG back</li>
-   * </ul>
-   * <pre>
-   *   byte[] -->         <--[conn,PING]-- *DEALER
-   *     PING <-- ROUTER: <--[conn,PING]-- *DEALER
-   *     PONG -->         <--[conn,PING]-- *DEALER
-   * </pre>
-   * If {@code connect} than it's <b>slave mode</b>:
-   * <ul>
-   * <li>via this socket must be expected outgoing "reply" traffic</li>
-   * <li>"routing table" must contain socket identities of {@code masters} (those who had sent PONG here)</li>
-   * </ul>
-   * <pre>
-   *   byte[] -->         --conn--> :DEALER
-   *              ROUTER* --conn--> :DEALER
-   *   byte[] -->         --conn--> :DEALER
-   * </pre>
-   */
-  private static final String ROUTER = "router[:*]";
 
   public static final class Builder extends ZmqAbstractActor.Builder<Builder, Worker> {
 
     private Builder() {
       super(new Worker());
+    }
+
+    public Builder withRouter(Props props) {
+      _target.setRouter(props);
+      return this;
     }
 
     public Builder withMaster(Props props) {
@@ -94,22 +99,17 @@ public final class Worker extends ZmqAbstractActor {
       return this;
     }
 
-    public Builder withRouter(Props props) {
-      _target.setRouter(props);
-      return this;
-    }
-
-    public Builder withSlaveRouting(ZmqRouting routing) {
-      _target.setSlaveRouting(routing);
-      return this;
-    }
-
-    public Builder withMasterRouting(ZmqRouting routing) {
+    public Builder withMasterRouting(Routing routing) {
       _target.setMasterRouting(routing);
       return this;
     }
 
-    public Builder with(ZmqProcessor processor) {
+    public Builder withSlaveRouting(Routing routing) {
+      _target.setSlaveRouting(routing);
+      return this;
+    }
+
+    public Builder with(Processor processor) {
       _target.setProcessor(processor);
       return this;
     }
@@ -118,9 +118,11 @@ public final class Worker extends ZmqAbstractActor {
   private Props master;
   private Props slave;
   private Props router;
-  private ZmqRouting slaveRouting;
-  private ZmqRouting masterRouting;
-  private ZmqProcessor processor;
+  private Processor processor;
+  /** 0 - master, 1 - slave */
+  private Routing[] routings = new Routing[2];
+  /** 0 - master, 1 - slave */
+  private Object[] identities = new Object[2];
 
   //// CONSTRUCTORS
 
@@ -133,6 +135,10 @@ public final class Worker extends ZmqAbstractActor {
     return new Builder();
   }
 
+  public void setRouter(Props router) {
+    this.router = router;
+  }
+
   public void setMaster(Props master) {
     this.master = master;
   }
@@ -141,38 +147,21 @@ public final class Worker extends ZmqAbstractActor {
     this.slave = slave;
   }
 
-  public void setRouter(Props router) {
-    this.router = router;
+  public void setMasterRouting(Routing masterRouting) {
+    this.routings[0] = masterRouting;
   }
 
-  public void setSlaveRouting(ZmqRouting slaveRouting) {
-    this.slaveRouting = slaveRouting;
+  public void setSlaveRouting(Routing slaveRouting) {
+    this.routings[1] = slaveRouting;
   }
 
-  public void setMasterRouting(ZmqRouting masterRouting) {
-    this.masterRouting = masterRouting;
-  }
-
-  public void setProcessor(ZmqProcessor processor) {
+  public void setProcessor(Processor processor) {
     this.processor = processor;
   }
 
   @Override
   public void checkInvariant() {
     super.checkInvariant();
-    if (master != null) {
-      checkArgument(!master.bindAddr().isEmpty(), "Master: bindAddr is required!");
-      checkArgument(master.bindAddr().size() == 1);
-      checkArgument(master.connectAddr().isEmpty(), "Master: can't have connecAddr!");
-      checkArgument(master.identity() != null, "Master: identity is required!");
-      checkArgument(slaveRouting != null, "Master: slaveRouting is required!");
-    }
-    if (slave != null) {
-      checkArgument(slave.bindAddr().isEmpty(), "Slave: can't have bindAddr!");
-      checkArgument(!slave.connectAddr().isEmpty(), "Slave: connectAddr is required!");
-      checkArgument(slave.identity() != null, "Slave: identity is required!");
-      checkArgument(masterRouting != null, "Slave: masterRouting is required!");
-    }
     {
       checkArgument(router != null);
       if (master != null) {
@@ -183,6 +172,19 @@ public final class Worker extends ZmqAbstractActor {
         checkArgument(!router.connectAddr().isEmpty(), "Router: connectAddr is required!");
       }
     }
+    if (master != null) {
+      checkArgument(!master.bindAddr().isEmpty(), "Master: bindAddr is required!");
+      checkArgument(master.bindAddr().size() == 1);
+      checkArgument(master.connectAddr().isEmpty(), "Master: can't have connecAddr!");
+      checkArgument(master.identity() != null, "Master: identity is required!");
+      checkArgument(routings[1] != null, "Master: slaveRouting is required!");
+    }
+    if (slave != null) {
+      checkArgument(slave.bindAddr().isEmpty(), "Slave: can't have bindAddr!");
+      checkArgument(!slave.connectAddr().isEmpty(), "Slave: connectAddr is required!");
+      checkArgument(slave.identity() != null, "Slave: identity is required!");
+      checkArgument(routings[0] != null, "Slave: masterRouting is required!");
+    }
     checkArgument(processor != null);
   }
 
@@ -190,9 +192,11 @@ public final class Worker extends ZmqAbstractActor {
   public void init() {
     if (master != null) {
       put(MASTER, ZmqChannel.DEALER(ctx).with(master).build()).watchRecv(_poller);
+      identities[0] = master.identity();
     }
     if (slave != null) {
       put(SLAVE, ZmqChannel.DEALER(ctx).with(slave).build()).watchRecv(_poller);
+      identities[1] = slave.identity();
     }
     put(ROUTER, ZmqChannel.ROUTER(ctx).with(router).build()).watchRecv(_poller);
   }
@@ -201,9 +205,9 @@ public final class Worker extends ZmqAbstractActor {
   public void exec() throws Exception {
     poll();
 
+    ZmqChannel router = get(ROUTER);
     ZmqChannel master = get(MASTER);
     ZmqChannel slave = get(SLAVE);
-    ZmqChannel router = get(ROUTER);
 
     if (router.canRecv()) {
       for (; ; ) {
@@ -215,15 +219,16 @@ public final class Worker extends ZmqAbstractActor {
         ZmqFrames route = frames.getIdentities();
         if (isPing(payload)) {
           if (route.size() == 1) {
-            LOGGER.info("Got PING, route.hash={}.", makeHash(route.get(0)));
-            slaveRouting.putRouting(route);
+            routings[1].put(route.get(0), payload);
             {
               // Send PONG back, use identities [route|master_identity].
               ZmqFrames masterRoute = new ZmqFrames();
               masterRoute.add(route.get(0));
-              masterRoute.add(getMasterIdentity());
+              masterRoute.add((byte[]) identities[0]);
               router.route(masterRoute, PONG, DONTWAIT);
-              LOGGER.info("Send PONG back, route.hash={}.", makeHash(this.master.identity()));
+              LOGGER.info("Got PING (route.hash={}), send PONG back (route.hash={}).",
+                          makeHash(route.get(0)),
+                          makeHash((byte[]) identities[0]));
             }
           }
           else {
@@ -232,13 +237,7 @@ public final class Worker extends ZmqAbstractActor {
         }
         else {
           logTraffic("router", payload);
-          processor.onMessage(route,
-                              payload,
-                              router,
-                              masterRouting,
-                              slaveRouting,
-                              getMasterIdentity(),
-                              getSlaveIdentity());
+          processor.set(route).set(payload).set(router).set(routings).set(identities).onRoot();
         }
       }
     }
@@ -262,7 +261,7 @@ public final class Worker extends ZmqAbstractActor {
           if (isPong(payload)) {
             if (route.size() == 1) {
               LOGGER.info("Got PONG, route.hash={}.", makeHash(route.get(0)));
-              masterRouting.putRouting(route);
+              routings[0].put(route.get(0), payload);
             }
             else {
               LOGGER.error("Wrong PONG! Got route.size={}.", route.size());
@@ -270,13 +269,7 @@ public final class Worker extends ZmqAbstractActor {
           }
           else {
             logTraffic("master", payload);
-            processor.onMasterMessage(route,
-                                      payload,
-                                      router,
-                                      masterRouting,
-                                      slaveRouting,
-                                      getMasterIdentity(),
-                                      getSlaveIdentity());
+            processor.set(route).set(payload).set(router).set(routings).set(identities).onMaster();
           }
         }
       }
@@ -292,24 +285,10 @@ public final class Worker extends ZmqAbstractActor {
           byte[] payload = frames.getPayload();
           ZmqFrames route = frames.getIdentities();
           logTraffic("slave", payload);
-          processor.onSlaveMessage(route,
-                                   payload,
-                                   router,
-                                   masterRouting,
-                                   slaveRouting,
-                                   getMasterIdentity(),
-                                   getSlaveIdentity());
+          processor.set(route).set(payload).set(router).set(routings).set(identities).onSlave();
         }
       }
     }
-  }
-
-  private byte[] getSlaveIdentity() {
-    return slave != null ? slave.identity() : null;
-  }
-
-  private byte[] getMasterIdentity() {
-    return master != null ? master.identity() : null;
   }
 
   private void logTraffic(String prefix, byte[] payload) {
