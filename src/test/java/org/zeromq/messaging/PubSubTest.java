@@ -8,7 +8,7 @@ public class PubSubTest extends ZmqAbstractTest {
 
   @Test
   public void t0() throws InterruptedException {
-    PubSubFixture f = new PubSubFixture(ctx());
+    PubSubFixture f = new PubSubFixture(c());
     ZmqChannel publisher = f.publisher();
     ZmqChannel subscriber = f.subscriber();
 
@@ -47,7 +47,7 @@ public class PubSubTest extends ZmqAbstractTest {
 
   @Test
   public void t1() throws InterruptedException {
-    PubSubFixture f = new PubSubFixture(ctx());
+    PubSubFixture f = new PubSubFixture(c());
     ZmqChannel publisher = f.publisher();
     ZmqChannel subscriber = f.subscriber();
 
@@ -77,7 +77,7 @@ public class PubSubTest extends ZmqAbstractTest {
 
   @Test
   public void t2() throws InterruptedException {
-    PubSubFixture f = new PubSubFixture(ctx());
+    PubSubFixture f = new PubSubFixture(c());
     ZmqChannel publisher = f.publisher();
     ZmqChannel subscriber = f.subscriber();
 

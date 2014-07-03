@@ -9,7 +9,7 @@ public class ChatTest extends ZmqAbstractTest {
 
   @Test
   public void t0() throws InterruptedException {
-    ChatFixture f = new ChatFixture(ctx());
+    ChatFixture f = new ChatFixture(c());
 
     f.chat(inproc("p>>"),
            inproc("p>>>>"),
@@ -18,8 +18,8 @@ public class ChatTest extends ZmqAbstractTest {
 
     f.init();
     try {
-      ZmqChannel pub = ZmqChannel.PUB(ctx()).with(Props.builder().withConnectAddr(inproc("p>>")).build()).build();
-      ZmqChannel sub = ZmqChannel.SUB(ctx()).with(Props.builder().withConnectAddr(inproc("s<<")).build()).build();
+      ZmqChannel pub = ZmqChannel.PUB(c()).with(Props.builder().withConnectAddr(inproc("p>>")).build()).build();
+      ZmqChannel sub = ZmqChannel.SUB(c()).with(Props.builder().withConnectAddr(inproc("s<<")).build()).build();
 
       byte[] topic = "xxx".getBytes();
       sub.subscribe(topic);
@@ -37,7 +37,7 @@ public class ChatTest extends ZmqAbstractTest {
 
   @Test
   public void t1() throws InterruptedException {
-    ChatFixture f = new ChatFixture(ctx());
+    ChatFixture f = new ChatFixture(c());
 
     f.chat(inproc("gala>>"),
            bind(4040),
@@ -51,11 +51,11 @@ public class ChatTest extends ZmqAbstractTest {
 
     f.init();
     try {
-      ZmqChannel galaSays = ZmqChannel.PUB(ctx()).with(Props.builder().withConnectAddr(inproc("gala>>")).build()).build();
-      ZmqChannel galaListens = ZmqChannel.SUB(ctx()).with(Props.builder().withConnectAddr(inproc("gala<<")).build()).build();
+      ZmqChannel galaSays = ZmqChannel.PUB(c()).with(Props.builder().withConnectAddr(inproc("gala>>")).build()).build();
+      ZmqChannel galaListens = ZmqChannel.SUB(c()).with(Props.builder().withConnectAddr(inproc("gala<<")).build()).build();
 
-      ZmqChannel alenkaSays = ZmqChannel.PUB(ctx()).with(Props.builder().withConnectAddr(inproc("alenka>>")).build()).build();
-      ZmqChannel alenkaListens = ZmqChannel.SUB(ctx()).with(Props.builder().withConnectAddr(inproc("alenka<<")).build()).build();
+      ZmqChannel alenkaSays = ZmqChannel.PUB(c()).with(Props.builder().withConnectAddr(inproc("alenka>>")).build()).build();
+      ZmqChannel alenkaListens = ZmqChannel.SUB(c()).with(Props.builder().withConnectAddr(inproc("alenka<<")).build()).build();
 
       byte[] topic = "xxx".getBytes();
       galaListens.subscribe(topic);
@@ -79,7 +79,7 @@ public class ChatTest extends ZmqAbstractTest {
 
   @Test
   public void t2() throws InterruptedException {
-    ChatFixture f = new ChatFixture(ctx());
+    ChatFixture f = new ChatFixture(c());
 
     f.chat(inproc("p>>"),
            inproc("p>>>>"),
@@ -88,8 +88,8 @@ public class ChatTest extends ZmqAbstractTest {
 
     f.init();
     try {
-      ZmqChannel pub = ZmqChannel.PUB(ctx()).with(Props.builder().withConnectAddr(inproc("p>>")).build()).build();
-      ZmqChannel sub = ZmqChannel.SUB(ctx()).with(Props.builder().withConnectAddr(inproc("s<<")).build()).build();
+      ZmqChannel pub = ZmqChannel.PUB(c()).with(Props.builder().withConnectAddr(inproc("p>>")).build()).build();
+      ZmqChannel sub = ZmqChannel.SUB(c()).with(Props.builder().withConnectAddr(inproc("s<<")).build()).build();
 
       byte[] topicXXX = "xxx".getBytes();
 

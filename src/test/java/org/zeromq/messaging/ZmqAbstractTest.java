@@ -11,7 +11,7 @@ public abstract class ZmqAbstractTest {
 
   private final ZmqContext _ctx = new ZmqContext();
 
-  protected final ZmqContext ctx() {
+  protected final ZmqContext c() {
     return _ctx;
   }
 

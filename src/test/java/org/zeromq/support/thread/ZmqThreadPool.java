@@ -37,7 +37,7 @@ public class ZmqThreadPool implements HasInit, HasDestroy {
                                               TimeUnit.SECONDS,
                                               new SynchronousQueue<Runnable>(),
                                               new ThreadFactoryBuilder().setDaemon(true)
-                                                                        .setNameFormat("zmq-daemon")
+                                                                        .setNameFormat("zmq-daemon-%d")
                                                                         .build());
     return target;
   }

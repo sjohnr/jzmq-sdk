@@ -157,7 +157,7 @@ public abstract class AbstractProcessor<T extends AbstractProcessor> implements 
   }
 
   /** Shortcut method. Takes existing {@link #route} and {@link #payload} and routes them. */
-  public final void route() {
-    router.route(route, payload, DONTWAIT);
+  public final boolean route() {
+    return router.route(route, payload, DONTWAIT);
   }
 }

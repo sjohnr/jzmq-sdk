@@ -8,7 +8,9 @@ import org.zeromq.messaging.ZmqAbstractTest;
 import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqFrames;
 import org.zeromq.messaging.service.AbstractProcessor;
+import org.zeromq.messaging.service.Processor;
 
+import static com.google.common.collect.ImmutableList.of;
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -21,10 +23,10 @@ public class WorkerTest extends ZmqAbstractTest {
   public void t0() throws InterruptedException {
     LOGGER.info("master <-*-> slave: master sends 'hello' and expects 'world' back.");
 
-    WorkerFixture f = new WorkerFixture(ctx());
+    WorkerFixture f = new WorkerFixture(c());
 
     f.master(Props.builder().withBindAddr(inproc("master@router")).build(),
-             masterAddr(inproc("master")).build(),
+             bind(inproc("master")).build(),
              new AbstractProcessor() {
                @Override
                public void onRoot() {
@@ -42,7 +44,7 @@ public class WorkerTest extends ZmqAbstractTest {
              });
 
     f.slave(Props.builder().withConnectAddr(inproc("master")).build(),
-            slaveAddr(inproc("master@router")).build(),
+            conn(inproc("master@router")).build(),
             new AbstractProcessor() {
               @Override
               public void onMaster() {
@@ -71,10 +73,10 @@ public class WorkerTest extends ZmqAbstractTest {
   public void t1() {
     LOGGER.info("master <-x-> no slave: connection between them isn't really ready, expect 'hello' back.");
 
-    WorkerFixture f = new WorkerFixture(ctx());
+    WorkerFixture f = new WorkerFixture(c());
 
     f.master(Props.builder().withBindAddr(inproc("master@router")).build(),
-             masterAddr(inproc("master")).build(),
+             bind(inproc("master")).build(),
              new AbstractProcessor() {
                @Override
                public void onRoot() {
@@ -102,13 +104,13 @@ public class WorkerTest extends ZmqAbstractTest {
   public void t2() {
     LOGGER.info("slave <-x-> no master: connection between them isn't really ready, expect 'hello' back.");
 
-    WorkerFixture f = new WorkerFixture(ctx());
+    WorkerFixture f = new WorkerFixture(c());
 
     f.slave(Props.builder()
                  .withBindAddr(inproc("t2@router"))
                  .withConnectAddr(conn(5151))
                  .build(),
-            slaveAddr(conn(5252)).build(),
+            conn(conn(5252)).build(),
             new AbstractProcessor() {
               @Override
               public void onRoot() {
@@ -136,10 +138,10 @@ public class WorkerTest extends ZmqAbstractTest {
   public void t3() throws InterruptedException {
     LOGGER.info("master <-*-> worker <-*-> slave: master sends 'hello' and expects 'world' back.");
 
-    WorkerFixture f = new WorkerFixture(ctx());
+    WorkerFixture f = new WorkerFixture(c());
 
     f.master(Props.builder().withBindAddr(inproc("master@router")).build(),
-             masterAddr(inproc("master")).build(),
+             bind(inproc("master")).build(),
              new AbstractProcessor() {
                @Override
                public void onRoot() {
@@ -160,8 +162,8 @@ public class WorkerTest extends ZmqAbstractTest {
                   .withConnectAddr(inproc("master"))
                   .withBindAddr(inproc("worker@router"))
                   .build(),
-             masterAddr(inproc("worker@master")).build(),
-             slaveAddr(inproc("master@router")).build(),
+             bind(inproc("worker@master")).build(),
+             conn(inproc("master@router")).build(),
              new AbstractProcessor() {
                @Override
                public void onMaster() {
@@ -179,7 +181,7 @@ public class WorkerTest extends ZmqAbstractTest {
              });
 
     f.slave(Props.builder().withConnectAddr(inproc("worker@master")).build(),
-            slaveAddr(inproc("worker@router")).build(),
+            conn(inproc("worker@router")).build(),
             new AbstractProcessor() {
               @Override
               public void onMaster() {
@@ -206,12 +208,12 @@ public class WorkerTest extends ZmqAbstractTest {
 
   @Test
   public void t4() throws InterruptedException {
-    LOGGER.info("master <-*-> slave: slave sends 'hello', master replying 'world' and so on until 42.");
+    LOGGER.info("master <-*-> slave: slave sends int, master incr int and reply and so on until 42.");
 
-    WorkerFixture f = new WorkerFixture(ctx());
+    WorkerFixture f = new WorkerFixture(c());
 
     f.master(Props.builder().withBindAddr(inproc("master@router")).build(),
-             masterAddr(inproc("master")).build(),
+             bind(inproc("master")).build(),
              new AbstractProcessor() {
                @Override
                public void onSlave() {
@@ -225,7 +227,7 @@ public class WorkerTest extends ZmqAbstractTest {
                  .withBindAddr(inproc("slave@router"))
                  .withConnectAddr(inproc("master"))
                  .build(),
-            slaveAddr(inproc("master@router")).build(),
+            conn(inproc("master@router")).build(),
             new AbstractProcessor() {
               @Override
               public void onRoot() {
@@ -262,19 +264,147 @@ public class WorkerTest extends ZmqAbstractTest {
     }
   }
 
-  private ZmqChannel client(String connectAddr) {
-    return ZmqChannel.DEALER(ctx()).with(Props.builder().withConnectAddr(connectAddr).build()).build();
+  @Test
+  public void t5() throws InterruptedException {
+    LOGGER.info("N masters <-*-> 1 slave: masters send 'hello', and slave replies 'world'.");
+
+    WorkerFixture f = new WorkerFixture(c());
+
+    f.master(Props.builder().withBindAddr(inproc("master0@router")).build(),
+             bind(inproc("master0")).build(),
+             t5MasterProcessor());
+    f.master(Props.builder().withBindAddr(inproc("master1@router")).build(),
+             bind(inproc("master1")).build(),
+             t5MasterProcessor());
+    f.master(Props.builder().withBindAddr(inproc("master2@router")).build(),
+             bind(inproc("master2")).build(),
+             t5MasterProcessor());
+
+    f.slave(Props.builder().withConnectAddr(of(inproc("master0"), inproc("master1"), inproc("master2"))).build(),
+            conn(of(inproc("master0@router"), inproc("master1@router"), inproc("master2@router"))).build(),
+            new AbstractProcessor() {
+              @Override
+              public void onMaster() {
+                assertEquals(2, route.size());
+                set(world()).route();
+              }
+            });
+
+    f.init();
+    LOGGER.info("Wait a second ...");
+    waitSec(); // wait a second.
+    try {
+      ZmqChannel channel = client(of(inproc("master0@router"), inproc("master1@router"), inproc("master2@router")));
+      channel.route(emptyIdentities(), hello(), 0);
+      channel.route(emptyIdentities(), hello(), 0);
+      channel.route(emptyIdentities(), hello(), 0);
+      assertNotNull(channel.recv(0));
+      assertNotNull(channel.recv(0));
+      assertNotNull(channel.recv(0));
+    }
+    finally {
+      f.destroy();
+    }
   }
 
-  private Props.Builder masterAddr(String bindAddr) {
+  @Test
+  public void t6() throws InterruptedException {
+    LOGGER.info("1 master <-*-> N slaves: master send 'hello', and slaves reply 'world'.");
+
+    WorkerFixture f = new WorkerFixture(c());
+
+    f.master(Props.builder().withBindAddr(inproc("master@router")).build(),
+             bind(inproc("master")).build(),
+             new AbstractProcessor() {
+               @Override
+               public void onRoot() {
+                 assertEquals(1, route.size());
+                 set(nextSlaveRoute()).route();
+               }
+
+               @Override
+               public void onSlave() {
+                 assertEquals(1, route.size());
+                 route();
+               }
+             });
+
+    f.slave(Props.builder().withConnectAddr(inproc("master")).build(),
+            conn(inproc("master@router")).build(),
+            t6SlaveProcessor());
+    f.slave(Props.builder().withConnectAddr(inproc("master")).build(),
+            conn(inproc("master@router")).build(),
+            t6SlaveProcessor());
+    f.slave(Props.builder().withConnectAddr(inproc("master")).build(),
+            conn(inproc("master@router")).build(),
+            t6SlaveProcessor());
+
+    f.init();
+    LOGGER.info("Wait a second ...");
+    waitSec(); // wait a second.
+    try {
+      ZmqChannel channel = client(inproc("master@router"));
+      channel.route(emptyIdentities(), hello(), 0);
+      channel.route(emptyIdentities(), hello(), 0);
+      channel.route(emptyIdentities(), hello(), 0);
+      ZmqFrames frames0 = channel.recv(0);
+      assertNotNull(frames0);
+      assertEquals("world", new String(frames0.getPayload()));
+      ZmqFrames frames1 = channel.recv(0);
+      assertNotNull(frames1);
+      assertEquals("world", new String(frames1.getPayload()));
+      ZmqFrames frames2 = channel.recv(0);
+      assertNotNull(frames2);
+      assertEquals("world", new String(frames2.getPayload()));
+    }
+    finally {
+      f.destroy();
+    }
+  }
+
+  private Processor t6SlaveProcessor() {
+    return new AbstractProcessor() {
+      @Override
+      public void onMaster() {
+        assertEquals(2, route.size());
+        set(world()).route();
+      }
+    };
+  }
+
+  private Processor t5MasterProcessor() {
+    return new AbstractProcessor() {
+      @Override
+      public void onRoot() {
+        assertEquals(1, route.size());
+        set(nextSlaveRoute()).route();
+      }
+
+      @Override
+      public void onSlave() {
+        assertEquals(1, route.size());
+        route();
+      }
+    };
+  }
+
+  private ZmqChannel client(String connectAddr) {
+    return ZmqChannel.DEALER(c()).with(Props.builder().withConnectAddr(connectAddr).build()).build();
+  }
+
+  private ZmqChannel client(Iterable<String> connectAddr) {
+    return ZmqChannel.DEALER(c()).with(Props.builder().withConnectAddr(connectAddr).build()).build();
+  }
+
+  private Props.Builder bind(String bindAddr) {
     return Props.builder().withBindAddr(bindAddr);
   }
 
-  private Props.Builder slaveAddr(String connectAddr) {
+  private Props.Builder conn(String connectAddr) {
     return Props.builder().withConnectAddr(connectAddr);
   }
 
-  private Props.Builder slaveAddr(Iterable<String> connectAddr) {
+  private Props.Builder conn(Iterable<String> connectAddr) {
     return Props.builder().withConnectAddr(connectAddr);
   }
 

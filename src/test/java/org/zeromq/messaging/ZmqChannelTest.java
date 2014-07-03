@@ -22,25 +22,25 @@ public class ZmqChannelTest extends ZmqAbstractTest {
   public void t0() {
     LOG.info("Test inproc:// connection behavior: connect first and bind second => exception.");
 
-    ZmqChannel.DEALER(ctx()).with(Props.builder().withConnectAddr(inproc("service")).build()).build();
-    ZmqChannel.DEALER(ctx()).with(Props.builder().withBindAddr(inproc("service")).build()).build();
+    ZmqChannel.DEALER(c()).with(Props.builder().withConnectAddr(inproc("service")).build()).build();
+    ZmqChannel.DEALER(c()).with(Props.builder().withBindAddr(inproc("service")).build()).build();
   }
 
   @Test
   public void t1() {
     LOG.info("Test inproc:// connection behavior: bind first and connect second => good.");
 
-    ZmqChannel.DEALER(ctx()).with(Props.builder().withBindAddr(inproc("service")).build()).build();
-    ZmqChannel.DEALER(ctx()).with(Props.builder().withConnectAddr(inproc("service")).build()).build();
+    ZmqChannel.DEALER(c()).with(Props.builder().withBindAddr(inproc("service")).build()).build();
+    ZmqChannel.DEALER(c()).with(Props.builder().withConnectAddr(inproc("service")).build()).build();
   }
 
   @Test(expected = ZmqException.class)
   public void t2() {
     LOG.info("Test inproc:// connection behavior: bind first and then connect several times.");
 
-    ZmqChannel.DEALER(ctx()).with(Props.builder().withBindAddr(inproc("service")).build()).build();
+    ZmqChannel.DEALER(c()).with(Props.builder().withBindAddr(inproc("service")).build()).build();
 
-    ZmqChannel.DEALER(ctx())
+    ZmqChannel.DEALER(c())
               .with(Props.builder().withConnectAddr(inproc("service")).build())
               .with(Props.builder().withConnectAddr(inproc("service-not-available")).build())
               .build();
@@ -52,7 +52,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
              "destroy channel and access it, " +
              "call poller functions w/o registering channel on poller.");
 
-    ZmqChannel rep = ZmqChannel.ROUTER(ctx()).with(Props.builder().withBindAddr(bind(6633)).build()).build();
+    ZmqChannel rep = ZmqChannel.ROUTER(c()).with(Props.builder().withBindAddr(bind(6633)).build()).build();
 
     // try reg channel twice.
     {
@@ -77,7 +77,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
     }
     // call .canRecv() without registering channel on poller.
     {
-      rep = ZmqChannel.ROUTER(ctx()).with(Props.builder().withBindAddr(bind(6633)).build()).build();
+      rep = ZmqChannel.ROUTER(c()).with(Props.builder().withBindAddr(bind(6633)).build()).build();
       try {
         rep.canRecv();
         fail();
@@ -91,8 +91,8 @@ public class ZmqChannelTest extends ZmqAbstractTest {
   public void t4() {
     LOG.info("Test poller operations on connected DEALER/ROUTER channels.");
 
-    ZmqChannel client = ZmqChannel.DEALER(ctx()).with(Props.builder().withConnectAddr(conn(6677)).build()).build();
-    ZmqChannel server = ZmqChannel.ROUTER(ctx()).with(Props.builder().withBindAddr(bind(6677)).build()).build();
+    ZmqChannel client = ZmqChannel.DEALER(c()).with(Props.builder().withConnectAddr(conn(6677)).build()).build();
+    ZmqChannel server = ZmqChannel.ROUTER(c()).with(Props.builder().withBindAddr(bind(6677)).build()).build();
 
     ZMQ.Poller client_poller = new ZMQ.Poller(1);
     client.watchRecv(client_poller);
@@ -136,8 +136,8 @@ public class ZmqChannelTest extends ZmqAbstractTest {
   public void t5() {
     LOG.info("Test send/recv on connected DEALER/ROUTER channels.");
 
-    ZmqChannel client = ZmqChannel.DEALER(ctx()).with(Props.builder().withConnectAddr(conn(6677)).build()).build();
-    ZmqChannel server = ZmqChannel.ROUTER(ctx()).with(Props.builder().withBindAddr(bind(6677)).build()).build();
+    ZmqChannel client = ZmqChannel.DEALER(c()).with(Props.builder().withConnectAddr(conn(6677)).build()).build();
+    ZmqChannel server = ZmqChannel.ROUTER(c()).with(Props.builder().withBindAddr(bind(6677)).build()).build();
 
     assert client.route(emptyIdentities(), payload(), 0);
     assert server.recv(DONTWAIT) == null; // at this point non-blocking .recv() returns null.
@@ -148,7 +148,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
   public void t6() {
     LOG.info("Test send with not-connected DEALER.");
 
-    ZmqChannel client = ZmqChannel.DEALER(ctx())
+    ZmqChannel client = ZmqChannel.DEALER(c())
                                   .with(Props.builder()
                                              .withConnectAddr(conn(6677))
                                              .withHwmSend(HWM_ONE)
@@ -163,7 +163,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
   public void t7() {
     LOG.info("Test send with not-connected ROUTER.");
 
-    ZmqChannel server = ZmqChannel.ROUTER(ctx())
+    ZmqChannel server = ZmqChannel.ROUTER(c())
                                   .with(Props.builder()
                                              .withBindAddr(bind(6677))
                                              .withRouterMandatory()
@@ -191,7 +191,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
   public void t8() {
     LOG.info("Test register/unregister channel on poller(s).");
 
-    ZmqChannel channel = ZmqChannel.ROUTER(ctx()).with(Props.builder().withBindAddr(bind(6677)).build()).build();
+    ZmqChannel channel = ZmqChannel.ROUTER(c()).with(Props.builder().withBindAddr(bind(6677)).build()).build();
 
     ZMQ.Poller p = new ZMQ.Poller(1);
     channel.watchRecv(p);
@@ -210,7 +210,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
   public void t9() {
     LOG.info("Test connected ROUTER/DEALER: what happens when its queue is full.");
 
-    ZmqChannel server = ZmqChannel.ROUTER(ctx())
+    ZmqChannel server = ZmqChannel.ROUTER(c())
                                   .with(Props.builder()
                                              .withBindAddr(bind(6677))
                                              .withRouterMandatory()
@@ -219,7 +219,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                              .build())
                                   .build();
 
-    ZmqChannel client = ZmqChannel.DEALER(ctx())
+    ZmqChannel client = ZmqChannel.DEALER(c())
                                   .with(Props.builder()
                                              .withConnectAddr(conn(6677))
                                              .withHwmSend(HWM_UNLIMITED)
@@ -244,14 +244,14 @@ public class ZmqChannelTest extends ZmqAbstractTest {
   public void t10() {
     LOG.info("Test inprocRef: basic functioning.");
 
-    ZmqChannel server = ZmqChannel.ROUTER(ctx())
+    ZmqChannel server = ZmqChannel.ROUTER(c())
                                   .with(Props.builder()
                                              .withBindAddr(inproc("inprocRefTest"))
                                              .withRouterMandatory()
                                              .build())
                                   .build();
 
-    ZmqChannel client = ZmqChannel.DEALER(ctx())
+    ZmqChannel client = ZmqChannel.DEALER(c())
                                   .with(Props.builder()
                                              .withConnectAddr(inproc("inprocRefTest"))
                                              .build())
@@ -278,7 +278,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
   public void t11() {
     LOG.info("Test connected ROUTER/DEALER: what happens when its queue is 1.");
 
-    ZmqChannel server = ZmqChannel.ROUTER(ctx())
+    ZmqChannel server = ZmqChannel.ROUTER(c())
                                   .with(Props.builder()
                                              .withBindAddr(bind(6677))
                                              .withHwmSend(HWM_UNLIMITED)
@@ -286,7 +286,7 @@ public class ZmqChannelTest extends ZmqAbstractTest {
                                              .build())
                                   .build();
 
-    ZmqChannel client = ZmqChannel.DEALER(ctx())
+    ZmqChannel client = ZmqChannel.DEALER(c())
                                   .with(Props.builder()
                                              .withConnectAddr(conn(6677))
                                              .withHwmSend(HWM_ONE)
@@ -312,14 +312,14 @@ public class ZmqChannelTest extends ZmqAbstractTest {
              "[identities|[]], " +
              "[identities|[]].");
 
-    ZmqChannel server = ZmqChannel.ROUTER(ctx())
+    ZmqChannel server = ZmqChannel.ROUTER(c())
                                   .with(Props.builder()
                                              .withBindAddr(bind(6677))
                                              .withRouterMandatory()
                                              .build())
                                   .build();
 
-    ZmqChannel client = ZmqChannel.DEALER(ctx())
+    ZmqChannel client = ZmqChannel.DEALER(c())
                                   .with(Props.builder()
                                              .withConnectAddr(conn(6677))
                                              .withIdentity("client".getBytes())
