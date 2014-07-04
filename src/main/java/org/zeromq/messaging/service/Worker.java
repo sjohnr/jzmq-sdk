@@ -202,6 +202,7 @@ public final class Worker extends ZmqAbstractActor {
       put(SLAVE, ZmqChannel.DEALER(ctx).with(slave).build()).watchRecv(_poller);
       identities[1] = slave.identity();
     }
+    router = Props.builder(router).withRouterMandatory().build();
     put(ROUTER, ZmqChannel.ROUTER(ctx).with(router).build()).watchRecv(_poller);
   }
 
