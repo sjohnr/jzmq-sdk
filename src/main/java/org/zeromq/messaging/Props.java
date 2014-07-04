@@ -84,6 +84,11 @@ public final class Props {
       return this;
     }
 
+    public Builder withIdentity(String identity) {
+      _target.setIdentity(identity);
+      return this;
+    }
+
     public Builder withLinger(long linger) {
       _target.setLinger(linger);
       return this;
@@ -174,6 +179,10 @@ public final class Props {
 
   public void setIdentity(byte[] identity) {
     this.identity = identity;
+  }
+
+  public void setIdentity(String identity) {
+    this.identity = identity.getBytes();
   }
 
   public void setLinger(long linger) {
