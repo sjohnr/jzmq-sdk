@@ -60,9 +60,7 @@ public class WorkerTest extends ZmqAbstractTest {
     try {
       ZmqChannel channel = client(inproc("master@router"));
       channel.route(emptyIdentities(), hello(), 0);
-      ZmqFrames frames = channel.recv(0);
-      assertNotNull(frames);
-      assertEquals("world", new String(frames.getPayload()));
+      assertPayload("world", channel.recv(0));
     }
     finally {
       f.destroy();
@@ -91,9 +89,7 @@ public class WorkerTest extends ZmqAbstractTest {
     try {
       ZmqChannel channel = client(inproc("master@router"));
       channel.route(emptyIdentities(), hello(), 0);
-      ZmqFrames frames = channel.recv(0);
-      assertNotNull(frames);
-      assertEquals("hello", new String(frames.getPayload()));
+      assertPayload("hello", channel.recv(0));
     }
     finally {
       f.destroy();
@@ -125,9 +121,7 @@ public class WorkerTest extends ZmqAbstractTest {
     try {
       ZmqChannel channel = client(inproc("t2@router"));
       channel.route(emptyIdentities(), hello(), 0);
-      ZmqFrames frames = channel.recv(0);
-      assertNotNull(frames);
-      assertEquals("hello", new String(frames.getPayload()));
+      assertPayload("hello", channel.recv(0));
     }
     finally {
       f.destroy();
@@ -197,9 +191,7 @@ public class WorkerTest extends ZmqAbstractTest {
     try {
       ZmqChannel channel = client(inproc("master@router"));
       channel.route(emptyIdentities(), hello(), 0);
-      ZmqFrames frames = channel.recv(0);
-      assertNotNull(frames);
-      assertEquals("world", new String(frames.getPayload()));
+      assertPayload("world", channel.recv(0));
     }
     finally {
       f.destroy();
@@ -255,9 +247,7 @@ public class WorkerTest extends ZmqAbstractTest {
     try {
       ZmqChannel channel = client(inproc("slave@router"));
       channel.route(emptyIdentities(), "0".getBytes(), 0);
-      ZmqFrames frames = channel.recv(0);
-      assertNotNull(frames);
-      assertEquals("42", new String(frames.getPayload()));
+      assertPayload("42", channel.recv(0));
     }
     finally {
       f.destroy();
@@ -298,9 +288,9 @@ public class WorkerTest extends ZmqAbstractTest {
       channel.route(emptyIdentities(), hello(), 0);
       channel.route(emptyIdentities(), hello(), 0);
       channel.route(emptyIdentities(), hello(), 0);
-      assertNotNull(channel.recv(0));
-      assertNotNull(channel.recv(0));
-      assertNotNull(channel.recv(0));
+      assertPayload("world", channel.recv(0));
+      assertPayload("world", channel.recv(0));
+      assertPayload("world", channel.recv(0));
     }
     finally {
       f.destroy();
@@ -348,14 +338,9 @@ public class WorkerTest extends ZmqAbstractTest {
       channel.route(emptyIdentities(), hello(), 0);
       channel.route(emptyIdentities(), hello(), 0);
       ZmqFrames frames0 = channel.recv(0);
-      assertNotNull(frames0);
-      assertEquals("world", new String(frames0.getPayload()));
-      ZmqFrames frames1 = channel.recv(0);
-      assertNotNull(frames1);
-      assertEquals("world", new String(frames1.getPayload()));
-      ZmqFrames frames2 = channel.recv(0);
-      assertNotNull(frames2);
-      assertEquals("world", new String(frames2.getPayload()));
+      assertPayload("world", channel.recv(0));
+      assertPayload("world", channel.recv(0));
+      assertPayload("world", channel.recv(0));
     }
     finally {
       f.destroy();
@@ -414,5 +399,10 @@ public class WorkerTest extends ZmqAbstractTest {
 
   public static byte[] world() {
     return "world".getBytes();
+  }
+
+  private void assertPayload(String payload, ZmqFrames frames) {
+    assertNotNull(frames);
+    assertEquals(payload, new String(frames.getPayload()));
   }
 }
