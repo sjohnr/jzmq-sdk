@@ -337,7 +337,6 @@ public class WorkerTest extends ZmqAbstractTest {
       channel.route(emptyIdentities(), hello(), 0);
       channel.route(emptyIdentities(), hello(), 0);
       channel.route(emptyIdentities(), hello(), 0);
-      ZmqFrames frames0 = channel.recv(0);
       assertPayload("world", channel.recv(0));
       assertPayload("world", channel.recv(0));
       assertPayload("world", channel.recv(0));
