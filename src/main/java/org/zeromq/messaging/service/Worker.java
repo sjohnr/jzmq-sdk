@@ -166,7 +166,6 @@ public final class Worker extends ZmqAbstractActor {
       checkArgument(router != null);
       if (master != null) {
         checkArgument(!router.bindAddr().isEmpty(), "Router: bindAddr is required!");
-        checkArgument(router.bindAddr().size() == 1);
       }
       if (slave != null) {
         checkArgument(!router.connectAddr().isEmpty(), "Router: connectAddr is required!");
@@ -226,7 +225,7 @@ public final class Worker extends ZmqAbstractActor {
               masterRoute.add(route.get(0));
               masterRoute.add((byte[]) identities[0]);
               router.route(masterRoute, PONG, DONTWAIT);
-              LOGGER.info("Got PING (route.hash={}), send PONG back (route.hash={}).",
+              LOGGER.info("Got PING (slave.hash={}), send PONG back (master.hash={}).",
                           makeHash(route.get(0)),
                           makeHash((byte[]) identities[0]));
             }
@@ -247,7 +246,7 @@ public final class Worker extends ZmqAbstractActor {
         // Send PING (dont send blindly, check "timer" before send, e.g. every X seconds).
         for (String connectAddr : this.slave.connectAddr()) {
           slave.route(new ZmqFrames(), PING, DONTWAIT);
-          LOGGER.info("Send PING on {}.", connectAddr);
+          LOGGER.info("Send PING (slave.hash={}) on {}.", makeHash((byte[]) identities[1]), connectAddr);
         }
       }
       else {
@@ -260,7 +259,7 @@ public final class Worker extends ZmqAbstractActor {
           ZmqFrames route = frames.getIdentities();
           if (isPong(payload)) {
             if (route.size() == 1) {
-              LOGGER.info("Got PONG, route.hash={}.", makeHash(route.get(0)));
+              LOGGER.info("Got PONG (master.hash={}).", makeHash(route.get(0)));
               routings[0].put(route.get(0), payload);
             }
             else {
