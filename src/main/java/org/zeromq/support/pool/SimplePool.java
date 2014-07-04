@@ -56,7 +56,7 @@ public final class SimplePool<T> implements Pool<T> {
 
     _pool = new LeaseImpl[capacity];
     _state = new BitSet(capacity);
-    indexes = new LinkedBlockingDeque<Integer>(capacity);
+    indexes = new LinkedBlockingDeque<>(capacity);
     for (int i = 0; i < capacity; i++) {
       indexes.add(i);
     }
