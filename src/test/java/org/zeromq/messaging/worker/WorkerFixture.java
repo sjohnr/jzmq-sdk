@@ -8,8 +8,6 @@ import org.zeromq.messaging.service.Routing;
 import org.zeromq.messaging.service.Worker;
 import org.zeromq.support.thread.ZmqProcess;
 
-import java.util.UUID;
-
 class WorkerFixture extends BaseFixture {
 
   WorkerFixture(ZmqContext ctx) {
@@ -43,24 +41,17 @@ class WorkerFixture extends BaseFixture {
               Routing slaveRouting,
               Processor processor) {
 
-    Worker.Builder builder = Worker.builder();
-    if (master != null) {
-      byte[] id = ("" + UUID.randomUUID().getMostSignificantBits()).getBytes();
-      builder.withMaster(Props.builder(master).withIdentity(id).build());
-    }
-    if (slave != null) {
-      byte[] id = ("" + UUID.randomUUID().getMostSignificantBits()).getBytes();
-      builder.withSlave(Props.builder(slave).withIdentity(id).build());
-    }
-
     with(ZmqProcess.builder()
-                   .with(builder.with(ctx)
-                                .withPollTimeout(100)
-                                .withRouter(router)
-                                .withMasterRouting(masterRouting)
-                                .withSlaveRouting(slaveRouting)
-                                .with(processor)
-                                .build()
+                   .with(Worker.builder()
+                               .with(ctx)
+                               .withPollTimeout(100)
+                               .withRouter(router)
+                               .withMaster(master)
+                               .withSlave(slave)
+                               .withMasterRouting(masterRouting)
+                               .withSlaveRouting(slaveRouting)
+                               .with(processor)
+                               .build()
                    )
                    .build()
     );

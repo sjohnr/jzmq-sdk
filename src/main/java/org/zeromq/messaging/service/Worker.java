@@ -8,6 +8,7 @@ import org.zeromq.messaging.ZmqChannel;
 import org.zeromq.messaging.ZmqFrames;
 
 import java.util.Arrays;
+import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.zeromq.ZMQ.DONTWAIT;
@@ -175,13 +176,11 @@ public final class Worker extends ZmqAbstractActor {
       checkArgument(!master.bindAddr().isEmpty(), "Master: bindAddr is required!");
       checkArgument(master.bindAddr().size() == 1);
       checkArgument(master.connectAddr().isEmpty(), "Master: can't have connecAddr!");
-      checkArgument(master.identity() != null, "Master: identity is required!");
       checkArgument(routings[1] != null, "Master: slaveRouting is required!");
     }
     if (slave != null) {
       checkArgument(slave.bindAddr().isEmpty(), "Slave: can't have bindAddr!");
       checkArgument(!slave.connectAddr().isEmpty(), "Slave: connectAddr is required!");
-      checkArgument(slave.identity() != null, "Slave: identity is required!");
       checkArgument(routings[0] != null, "Slave: masterRouting is required!");
     }
     checkArgument(processor != null);
@@ -190,10 +189,16 @@ public final class Worker extends ZmqAbstractActor {
   @Override
   public void init() {
     if (master != null) {
+      if (master.identity() == null) {
+        master = Props.builder(master).withIdentity(generateIdentity()).build();
+      }
       put(MASTER, ZmqChannel.DEALER(ctx).with(master).build()).watchRecv(_poller);
       identities[0] = master.identity();
     }
     if (slave != null) {
+      if (slave.identity() == null) {
+        slave = Props.builder(slave).withIdentity(generateIdentity()).build();
+      }
       put(SLAVE, ZmqChannel.DEALER(ctx).with(slave).build()).watchRecv(_poller);
       identities[1] = slave.identity();
     }
@@ -302,5 +307,9 @@ public final class Worker extends ZmqAbstractActor {
 
   private boolean isPong(byte[] payload) {
     return Arrays.equals(payload, PONG);
+  }
+
+  private byte[] generateIdentity() {
+    return ("" + UUID.randomUUID().getMostSignificantBits()).getBytes();
   }
 }
